@@ -1,0 +1,262 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SATPAM
+  CS
+  UTILITY
+  ADMIN
+}
+
+enum Divisi {
+  KEAMANAN
+  CUSTOMER_SERVICE
+  UTILITY
+  MANAJEMEN
+}
+
+enum JenisAbsensi {
+  MASUK
+  KELUAR
+  MULAI_ISTIRAHAT
+  SELESAI_ISTIRAHAT
+}
+
+// Kategori laporan — berlaku untuk semua divisi
+// KEAMANAN:        PATROLI, PENJAGAAN, PENGAWALAN, INSIDEN, PEMELIHARAAN
+// CUSTOMER_SERVICE: KOMPLAIN, INFORMASI, PENGADUAN, LAIN_LAIN
+// UTILITY:         KEBERSIHAN, KERUSAKAN, PERBAIKAN, PEMERIKSAAN_RUTIN
+enum KategoriLaporan {
+  // Keamanan
+  PATROLI
+  PENJAGAAN
+  PENGAWALAN
+  INSIDEN
+  PEMELIHARAAN
+  // Customer Service
+  KOMPLAIN
+  INFORMASI
+  PENGADUAN
+  LAIN_LAIN
+  // Utility
+  KEBERSIHAN
+  KERUSAKAN
+  PERBAIKAN
+  PEMERIKSAAN_RUTIN
+}
+
+enum StatusLaporan {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum JenisIzin {
+  IZIN
+  CUTI
+  SAKIT
+}
+
+enum StatusIzin {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum StatusKeamanan {
+  AMAN
+  ADA_TEMUAN
+  PERLU_PERIKSA
+}
+
+enum JenisSerahTerima {
+  PIKET      // SATPAM: serah terima shift + barang keamanan
+  PERALATAN  // UTILITY: serah terima alat kerja antar shift
+}
+
+enum StatusSerahTerima {
+  PENDING
+  SELESAI
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model AreaTugas {
+  id           String   @id @default(cuid())
+  nama         String
+  lat          Float
+  lng          Float
+  radius_meter Int      @default(500)
+  aktif        Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  staff Staff[]
+
+  @@map("area_tugas")
+}
+
+model Staff {
+  id            String   @id @default(cuid())
+  nik           String   @unique
+  nama          String
+  password_hash String
+  foto_profil   String?
+  role          Role     @default(SATPAM)
+  divisi        Divisi   @default(KEAMANAN)
+  area_tugas_id String?
+  fcm_token     String?
+  aktif         Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  area_tugas        AreaTugas?     @relation(fields: [area_tugas_id], references: [id])
+  absensi           Absensi[]
+  laporan           Laporan[]
+  laporan_perjam    LaporanPerJam[]
+  serah_terima_lama SerahTerima[]  @relation("StaffLama")
+  serah_terima_baru SerahTerima[]  @relation("StaffBaru")
+  izin_cuti         IzinCuti[]
+
+  @@index([area_tugas_id])
+  @@index([aktif])
+  @@index([role])
+  @@index([divisi])
+  @@map("staff")
+}
+
+model Absensi {
+  id           String       @id @default(cuid())
+  staff_id     String
+  jenis        JenisAbsensi
+  foto_url     String?
+  lat          Float?
+  lng          Float?
+  akurasi_gps  Float?
+  waktu_server DateTime     @default(now())
+  catatan      String?
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@index([staff_id])
+  @@index([waktu_server])
+  @@index([staff_id, waktu_server])
+  @@map("absensi")
+}
+
+model Laporan {
+  id             String         @id @default(cuid())
+  staff_id       String
+  divisi         Divisi
+  kategori       KategoriLaporan
+  judul          String
+  deskripsi      String         @db.Text
+  foto_urls      Json           @default("[]")
+  status         StatusLaporan  @default(DRAFT)
+  komentar_admin String?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@index([staff_id])
+  @@index([divisi])
+  @@index([status])
+  @@index([staff_id, created_at])
+  @@index([divisi, status])
+  @@map("laporan")
+}
+
+model LaporanPerJam {
+  id              String         @id @default(cuid())
+  staff_id        String
+  tanggal         DateTime       @db.Date
+  jam             Int            // 0-23
+  status_keamanan StatusKeamanan @default(AMAN)
+  foto_url        String?
+  catatan         String?
+  created_at      DateTime       @default(now())
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  // Satu jam hanya boleh ada satu laporan per staff per hari
+  @@unique([staff_id, tanggal, jam])
+  @@index([staff_id])
+  @@index([tanggal])
+  @@index([staff_id, tanggal])
+  @@map("laporan_perjam")
+}
+
+model SerahTerima {
+  id            String            @id @default(cuid())
+  staff_lama_id String
+  staff_baru_id String
+  jenis         JenisSerahTerima  @default(PIKET)
+  shift_date    DateTime          @db.Date
+  barang_list   Json              @default("[]")
+  // Format: [{ nama: string, kondisi: "BAIK"|"RUSAK"|"HILANG", catatan: string }]
+  catatan       String?
+  foto_urls     Json              @default("[]")
+  ttd_lama_url  String?
+  ttd_baru_url  String?
+  bast_pdf_url  String?
+  status        StatusSerahTerima @default(PENDING)
+  created_at    DateTime          @default(now())
+  updated_at    DateTime          @updatedAt
+
+  staff_lama Staff @relation("StaffLama", fields: [staff_lama_id], references: [id])
+  staff_baru Staff @relation("StaffBaru", fields: [staff_baru_id], references: [id])
+
+  @@index([staff_lama_id])
+  @@index([staff_baru_id])
+  @@index([jenis])
+  @@index([shift_date])
+  @@index([status])
+  @@map("serah_terima")
+}
+
+model RevokedToken {
+  id         String   @id @default(cuid())
+  token_jti  String   @unique
+  expired_at DateTime
+  created_at DateTime @default(now())
+
+  @@index([token_jti])
+  @@index([expired_at])
+  @@map("revoked_tokens")
+}
+
+model IzinCuti {
+  id              String      @id @default(cuid())
+  staff_id        String
+  jenis           JenisIzin
+  tanggal_mulai   DateTime    @db.Date
+  tanggal_selesai DateTime    @db.Date
+  keterangan      String      @db.Text
+  foto_url        String?     // opsional untuk surat sakit / bukti
+  status          StatusIzin  @default(PENDING)
+  komentar_admin  String?
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@index([staff_id])
+  @@index([jenis])
+  @@index([status])
+  @@index([tanggal_mulai, tanggal_selesai])
+  @@map("izin_cuti")
+}

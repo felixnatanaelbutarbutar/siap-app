@@ -1,0 +1,36 @@
+# Root gitignore
+node_modules/
+.DS_Store
+*.log
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# PM2
+.pm2/
+
+# Logs
+logs/
+*.log
+
+# Mobile
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/ios/Pods/
+mobile/ios/build/
+
+# Infra secrets
+infra/.env

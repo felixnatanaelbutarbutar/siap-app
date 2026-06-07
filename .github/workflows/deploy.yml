@@ -1,0 +1,47 @@
+name: Deploy SIAP to NevaCloud VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.NEVACLOUD_HOST }}
+          username: ${{ secrets.NEVACLOUD_USERNAME }}
+          key: ${{ secrets.NEVACLOUD_SSH_KEY }}
+          script: |
+            echo "🚀 Memulai Deployment SIAP App..."
+            
+            # Pindah ke direktori project
+            cd /opt/siap-app || exit 1
+            
+            # Tarik kode terbaru
+            git pull origin main
+            
+            # Build frontend web-admin
+            echo "📦 Membangun Web Admin Static Files..."
+            cd web-admin
+            npm install
+            npm run build
+            cd ..
+            
+            # Menyalakan ulang kontainer dengan Docker Compose Prod
+            echo "🐳 Me-restart Infrastruktur Produksi (Backend & Nginx)..."
+            cd infra
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml up -d --build
+            
+            # Membersihkan image yang tidak terpakai
+            docker image prune -f
+            
+            echo "✅ Deployment Selesai!"
