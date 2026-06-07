@@ -44,7 +44,7 @@ enum KategoriLaporan {
   PENGAWALAN
   INSIDEN
   PEMELIHARAAN
-  // Customer Service
+  // Cleaning Service
   KOMPLAIN
   INFORMASI
   PENGADUAN
@@ -73,6 +73,16 @@ enum StatusIzin {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum HariKerja {
+  SENIN
+  SELASA
+  RABU
+  KAMIS
+  JUMAT
+  SABTU
+  AHAD
 }
 
 enum StatusKeamanan {
@@ -130,6 +140,7 @@ model Staff {
   serah_terima_lama SerahTerima[]  @relation("StaffLama")
   serah_terima_baru SerahTerima[]  @relation("StaffBaru")
   izin_cuti         IzinCuti[]
+  jadwal_kerja      JadwalKerja[]
 
   @@index([area_tugas_id])
   @@index([aktif])
@@ -259,4 +270,35 @@ model IzinCuti {
   @@index([status])
   @@index([tanggal_mulai, tanggal_selesai])
   @@map("izin_cuti")
+}
+
+// ─── Jadwal Kerja ────────────────────────────────────────────────────────────
+
+model JadwalKerja {
+  id         String    @id @default(cuid())
+  staff_id   String
+  hari       HariKerja
+  jam_masuk  String    // "HH:MM" — waktu mulai shift
+  jam_keluar String    // "HH:MM" — waktu selesai shift (bisa melewati tengah malam)
+  aktif      Boolean   @default(true)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@unique([staff_id, hari])
+  @@index([staff_id])
+  @@index([hari])
+  @@map("jadwal_kerja")
+}
+
+// ─── Pengaturan Sistem ────────────────────────────────────────────────────────
+// Satu baris (singleton) untuk menyimpan konfigurasi sistem global
+
+model PengaturanSistem {
+  id                              String   @id @default("singleton")
+  toleransi_keterlambatan_menit   Int      @default(15) // menit toleransi sebelum dicatat terlambat
+  updated_at                      DateTime @updatedAt
+
+  @@map("pengaturan_sistem")
 }

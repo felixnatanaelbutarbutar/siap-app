@@ -3,16 +3,26 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../../services/api';
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
-import { Calendar, Filter, Download, Eye, X, MapPin } from 'lucide-react';
+import { Download, Eye, X, MapPin } from 'lucide-react';
 
 export const Route = createFileRoute('/_authenticated/absensi')({
   component: AbsensiPage,
 });
+
+const inputStyle = {
+  background: 'var(--bg-input)',
+  color: 'var(--text-base)',
+  border: '1px solid var(--border-bright)',
+  borderRadius: 8,
+  padding: '8px 12px',
+  fontSize: 13,
+  outline: 'none',
+};
 
 function AbsensiPage() {
   const [activeTab, setActiveTab] = useState<'HARIAN' | 'BULANAN'>('HARIAN');
@@ -29,9 +39,7 @@ function AbsensiPage() {
     const stored = localStorage.getItem('siap-admin-auth');
     const token = stored ? JSON.parse(stored)?.state?.token : null;
     const socket = io('http://localhost:3000', { auth: { token } });
-    socket.on('absensi:new', () => {
-      queryClient.invalidateQueries({ queryKey: ['absensi-harian'] });
-    });
+    socket.on('absensi:new', () => queryClient.invalidateQueries({ queryKey: ['absensi-harian'] }));
     return () => { socket.disconnect(); };
   }, [queryClient]);
 
@@ -87,105 +95,110 @@ function AbsensiPage() {
       const res = await api.get('/admin/export/absensi', { params, responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `rekap_absensi_${bulan}_${tahun}.csv`;
-      a.click();
+      a.href = url; a.download = `rekap_absensi_${bulan}_${tahun}.csv`; a.click();
       window.URL.revokeObjectURL(url);
-    } catch (e) {
-      alert('Gagal export CSV');
-    }
+    } catch (e) { alert('Gagal export CSV'); }
   };
 
   const DivisiBadge = ({ divisi }: { divisi: string }) => {
-    const colors: Record<string, string> = {
-      KEAMANAN: 'bg-indigo-50 text-indigo-700',
-      SATPAM: 'bg-indigo-50 text-indigo-700',
-      CUSTOMER_SERVICE: 'bg-emerald-50 text-emerald-700',
-      CS: 'bg-emerald-50 text-emerald-700',
-      UTILITY: 'bg-orange-50 text-orange-700',
+    const colorMap: Record<string, { bg: string; text: string }> = {
+      KEAMANAN: { bg: 'rgba(30,215,96,0.12)', text: 'var(--accent)' },
+      SATPAM: { bg: 'rgba(30,215,96,0.12)', text: 'var(--accent)' },
+      CUSTOMER_SERVICE: { bg: 'rgba(83,157,245,0.12)', text: 'var(--info)' },
+      CS: { bg: 'rgba(83,157,245,0.12)', text: 'var(--info)' },
+      UTILITY: { bg: 'rgba(255,164,43,0.12)', text: 'var(--warning)' },
     };
-    return <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${colors[divisi] || 'bg-slate-100 text-slate-600'}`}>{divisi}</span>;
+    const c = colorMap[divisi] || { bg: 'var(--bg-input)', text: 'var(--text-secondary)' };
+    return <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: c.bg, color: c.text }}>{divisi}</span>;
   };
 
   const StatusBadge = ({ status }: { status: string }) => {
-    const colors: Record<string, string> = {
-      HADIR: 'bg-emerald-50 text-emerald-700',
-      TERLAMBAT: 'bg-amber-50 text-amber-700',
-      ALFA: 'bg-red-50 text-red-700',
+    const colorMap: Record<string, { bg: string; text: string }> = {
+      HADIR: { bg: 'rgba(30,215,96,0.12)', text: 'var(--accent)' },
+      TERLAMBAT: { bg: 'rgba(255,164,43,0.12)', text: 'var(--warning)' },
+      ALFA: { bg: 'rgba(243,114,127,0.12)', text: 'var(--error)' },
     };
-    return <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${colors[status] || 'bg-slate-100 text-slate-600'}`}>{status}</span>;
+    const c = colorMap[status] || { bg: 'var(--bg-input)', text: 'var(--text-secondary)' };
+    return <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: c.bg, color: c.text }}>{status}</span>;
   };
 
+  const thStyle = { padding: '12px 20px', fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' as const, letterSpacing: '1px', textAlign: 'left' as const, borderBottom: '1px solid var(--border)' };
+  const tdStyle = { padding: '12px 20px', fontSize: 13, color: 'var(--text-secondary)', borderBottom: '1px solid var(--bg-hover)' };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeInUp">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Absensi</h1>
-        <p className="text-slate-600 text-sm mt-1">Kelola data kehadiran staff</p>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-base)' }}>Absensi</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Kelola data kehadiran staff</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 p-1 rounded-full w-fit" style={{ background: 'var(--bg-input)' }}>
         {(['HARIAN', 'BULANAN'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-700'}`}>
+            className="px-5 py-2 rounded-full text-sm font-bold uppercase transition-all"
+            style={{
+              background: activeTab === tab ? 'var(--accent)' : 'transparent',
+              color: activeTab === tab ? 'var(--accent-text)' : 'var(--text-secondary)',
+              letterSpacing: '1px',
+            }}>
             {tab === 'HARIAN' ? 'Log Harian' : 'Rekap Bulanan'}
           </button>
         ))}
       </div>
 
       {activeTab === 'HARIAN' && (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Filters */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap gap-4 items-end">
+          <div className="flex flex-wrap gap-4 items-end p-5 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tanggal</label>
-              <input type="date" value={dateHarian} onChange={e => setDateHarian(e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none" />
+              <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Tanggal</label>
+              <input type="date" value={dateHarian} onChange={e => setDateHarian(e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Divisi</label>
-              <select value={divisiHarian} onChange={e => setDivisiHarian(e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none">
+              <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Divisi</label>
+              <select value={divisiHarian} onChange={e => setDivisiHarian(e.target.value)} style={inputStyle}>
                 <option value="SEMUA">Semua Divisi</option>
                 <option value="KEAMANAN">Keamanan</option>
-                <option value="CUSTOMER_SERVICE">Customer Service</option>
+                <option value="CUSTOMER_SERVICE">Cleaning Service</option>
                 <option value="UTILITY">Utility</option>
               </select>
             </div>
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Nama</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Divisi</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Masuk</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Istirahat</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Keluar</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Total</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Status</th>
-                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-slate-600">Aksi</th>
+                <tr>
+                  {['Nama', 'Divisi', 'Masuk', 'Istirahat', 'Keluar', 'Total', 'Status', ''].map(h => (
+                    <th key={h} style={thStyle}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {logs?.map((log: any) => (
-                  <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{log.nama}</td>
-                    <td className="px-5 py-3.5"><DivisiBadge divisi={log.divisi} /></td>
-                    <td className="px-5 py-3.5 text-sm text-slate-600 font-mono">{log.masuk}</td>
-                    <td className="px-5 py-3.5 text-sm text-slate-600 font-mono">{log.istirahat}</td>
-                    <td className="px-5 py-3.5 text-sm text-slate-600 font-mono">{log.keluar}</td>
-                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{log.total}</td>
-                    <td className="px-5 py-3.5"><StatusBadge status={log.status} /></td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button onClick={() => setSelectedRow(log)} className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                  <tr key={log.id} className="transition-colors"
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <td style={{ ...tdStyle, color: 'var(--text-base)', fontWeight: 600 }}>{log.nama}</td>
+                    <td style={tdStyle}><DivisiBadge divisi={log.divisi} /></td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace' }}>{log.masuk}</td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace' }}>{log.istirahat}</td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace' }}>{log.keluar}</td>
+                    <td style={{ ...tdStyle, color: 'var(--text-base)', fontWeight: 600 }}>{log.total}</td>
+                    <td style={tdStyle}><StatusBadge status={log.status} /></td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>
+                      <button onClick={() => setSelectedRow(log)}
+                        style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                         <Eye className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
                 ))}
                 {(!logs || logs.length === 0) && (
-                  <tr><td colSpan={8} className="px-5 py-12 text-center text-slate-600 text-sm">Tidak ada data absensi untuk tanggal ini</td></tr>
+                  <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>Tidak ada data absensi untuk tanggal ini</td></tr>
                 )}
               </tbody>
             </table>
@@ -194,67 +207,62 @@ function AbsensiPage() {
       )}
 
       {activeTab === 'BULANAN' && (
-        <div className="space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap gap-4 items-end justify-between">
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4 items-end justify-between p-5 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="flex gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Bulan</label>
-                <select value={bulan} onChange={e => setBulan(Number(e.target.value))} className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                  {Array.from({ length: 12 }).map((_, i) => <option key={i} value={i + 1}>{format(new Date(2000, i), 'MMMM', { locale: id })}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Tahun</label>
-                <select value={tahun} onChange={e => setTahun(Number(e.target.value))} className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                  <option value={2026}>2026</option><option value={2025}>2025</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Divisi</label>
-                <select value={divisiBulanan} onChange={e => setDivisiBulanan(e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                  <option value="SEMUA">Semua</option><option value="KEAMANAN">Keamanan</option><option value="CUSTOMER_SERVICE">CS</option><option value="UTILITY">Utility</option>
-                </select>
-              </div>
+              {[
+                { label: 'Bulan', val: bulan, onChange: (v: number) => setBulan(v), options: Array.from({ length: 12 }).map((_, i) => ({ val: i + 1, label: format(new Date(2000, i), 'MMMM', { locale: id }) })) },
+                { label: 'Tahun', val: tahun, onChange: (v: number) => setTahun(v), options: [{ val: 2026, label: '2026' }, { val: 2025, label: '2025' }] },
+              ].map(({ label, val, onChange, options }) => (
+                <div key={label}>
+                  <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>{label}</label>
+                  <select value={val} onChange={e => onChange(Number(e.target.value))} style={inputStyle}>
+                    {options.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
+                  </select>
+                </div>
+              ))}
             </div>
-            <button onClick={handleExportCSV} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
+            <button onClick={handleExportCSV}
+              className="flex items-center gap-2 font-bold uppercase rounded-full px-5 py-2.5 transition-all"
+              style={{ background: 'var(--accent)', color: 'var(--accent-text)', fontSize: 13, letterSpacing: '1px' }}>
               <Download className="w-4 h-4" /> Export CSV
             </button>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Nama</th>
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Hadir</th>
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Jam Kerja</th>
-                    <th className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600">Rata-rata</th>
+                  <tr>
+                    {['Nama', 'Hadir', 'Jam Kerja', 'Rata-rata'].map(h => <th key={h} style={thStyle}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {stats?.tableData?.map((row: any) => (
-                    <tr key={row.staff_id || row.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                      <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{row.nama}</td>
-                      <td className="px-5 py-3.5 text-sm text-slate-600">{row.total_hadir || row.hadir}</td>
-                      <td className="px-5 py-3.5 text-sm text-slate-600">{row.total_jam_kerja || row.jamKerja}h</td>
-                      <td className="px-5 py-3.5 text-sm text-slate-600">{row.rata_jam_per_hari || row.rataRata}h/hari</td>
+                    <tr key={row.staff_id || row.id}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <td style={{ ...tdStyle, color: 'var(--text-base)', fontWeight: 600 }}>{row.nama}</td>
+                      <td style={tdStyle}>{row.total_hadir || row.hadir}</td>
+                      <td style={tdStyle}>{row.total_jam_kerja || row.jamKerja}h</td>
+                      <td style={tdStyle}>{row.rata_jam_per_hari || row.rataRata}h/hari</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-slate-900 text-sm mb-5">Tren Kehadiran</h3>
-              <ResponsiveContainer width="100%" height={300}>
+            <div className="p-5 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <h3 className="text-sm font-bold mb-5" style={{ color: 'var(--text-base)' }}>Tren Kehadiran</h3>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={stats?.chartData || []}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="tanggal" tick={{ fontSize: 10 }} stroke="#94a3b8" axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} stroke="#94a3b8" axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0' }} />
-                  <Bar dataKey="SATPAM" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="CS" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="UTILITY" fill="#f97316" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis dataKey="tanggal" tick={{ fontSize: 10, fill: 'var(--text-dim)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--text-dim)' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-input)', border: '1px solid var(--border-bright)', borderRadius: 8, color: 'var(--text-base)' }} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                  <Bar dataKey="SATPAM" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="CS" fill="var(--info)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="UTILITY" fill="var(--warning)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -264,29 +272,27 @@ function AbsensiPage() {
 
       {/* Detail Modal */}
       {selectedRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="font-semibold text-slate-900">Bukti Absensi: {selectedRow.nama}</h3>
-              <button onClick={() => setSelectedRow(null)} className="text-slate-600 hover:text-slate-600"><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-2xl rounded-xl overflow-hidden animate-fadeInUp" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-base) 0px 8px 24px' }}>
+            <div className="px-6 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--text-base)' }}>Bukti Absensi: {selectedRow.nama}</h3>
+              <button onClick={() => setSelectedRow(null)} style={{ color: 'var(--text-dim)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <div className="p-6 grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs font-medium text-slate-600 mb-2">Foto Masuk ({selectedRow.masuk})</p>
-                <div className="w-full aspect-[3/4] bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden">
-                  {selectedRow.foto_masuk ? <img src={selectedRow.foto_masuk} alt="Masuk" className="w-full h-full object-cover" /> : <span className="text-sm text-slate-600">Tidak ada foto</span>}
+              {[{ label: `Foto Masuk (${selectedRow.masuk})`, foto: selectedRow.foto_masuk }, { label: `Foto Keluar (${selectedRow.keluar})`, foto: selectedRow.foto_keluar }].map(({ label, foto }) => (
+                <div key={label}>
+                  <p className="text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>{label}</p>
+                  <div className="w-full rounded-xl flex items-center justify-center overflow-hidden" style={{ background: 'var(--bg-input)', aspectRatio: '3/4' }}>
+                    {foto ? <img src={foto} alt={label} className="w-full h-full object-cover" /> : <span className="text-sm" style={{ color: 'var(--text-dim)' }}>Tidak ada foto</span>}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-600 mb-2">Foto Keluar ({selectedRow.keluar})</p>
-                <div className="w-full aspect-[3/4] bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden">
-                  {selectedRow.foto_keluar ? <img src={selectedRow.foto_keluar} alt="Keluar" className="w-full h-full object-cover" /> : <span className="text-sm text-slate-600">Tidak ada foto</span>}
-                </div>
-              </div>
+              ))}
             </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-slate-600" />
-              <span className="text-sm text-slate-600">{selectedRow.lat ? `${selectedRow.lat}, ${selectedRow.lng}` : 'Tidak tersedia'}</span>
+            <div className="px-6 py-4 flex items-center gap-2" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
+              <MapPin className="w-4 h-4" style={{ color: 'var(--text-dim)' }} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{selectedRow.lat ? `${selectedRow.lat}, ${selectedRow.lng}` : 'Tidak tersedia'}</span>
             </div>
           </div>
         </div>

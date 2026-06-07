@@ -223,7 +223,7 @@ export const getDashboardActivities = async (req: Request, res: Response): Promi
     const laporanRecords = await prisma.laporan.findMany({
       take: 10,
       orderBy: { created_at: 'desc' },
-      include: { pembuat: { select: { nama: true, role: true } } }
+      include: { staff: { select: { nama: true, role: true } } }
     });
 
     const activities = [];
@@ -241,8 +241,8 @@ export const getDashboardActivities = async (req: Request, res: Response): Promi
     for (const l of laporanRecords) {
       activities.push({
         id: `lap-${l.id}`,
-        nama: l.pembuat.nama,
-        role: l.pembuat.role,
+        nama: l.staff.nama,
+        role: l.staff.role,
         waktu: l.created_at.toISOString(),
         aksi: `Mengirim laporan: ${l.kategori}`
       });

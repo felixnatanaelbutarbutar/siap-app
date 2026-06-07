@@ -6,68 +6,148 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 222.2 84% 4.9%;
+    /* LIGHT MODE */
+    --bg-base: #f5f5f7;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f0f0f4;
+    --bg-card: #ffffff;
+    --bg-input: #f0f0f4;
+    --bg-hover: #e0e0e0;
+    --text-base: #121212;
+    --text-secondary: #5a5a5a;
+    --text-dim: #888888;
+    --accent: #1db954;
+    --accent-dark: #1aa34a;
+    --accent-text: #ffffff;
+    --border: #e5e5e5;
+    --border-bright: #cccccc;
+    --error: #f3727f;
+    --warning: #ffa42b;
+    --info: #539df5;
+    --shadow-base: rgba(0,0,0,0.05);
 
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 0 0% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 141 69% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --destructive: 355 69% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 141 69% 48%;
+    --radius: 0.5rem;
+  }
 
-    --primary: 224 71% 45%; /* Indigo-600 */
-    --primary-foreground: 210 40% 98%;
+  .dark {
+    /* DARK MODE (Spotify Theme) */
+    --bg-base: #121212;
+    --bg-surface: #181818;
+    --bg-elevated: #1f1f1f;
+    --bg-card: #252525;
+    --bg-input: #252525;
+    --bg-hover: #1e1e1e;
+    --text-base: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-dim: #6d6d6d;
+    --accent: #1ed760;
+    --accent-dark: #1db954;
+    --accent-text: #000000;
+    --border: #2a2a2a;
+    --border-bright: #4d4d4d;
+    --error: #f3727f;
+    --warning: #ffa42b;
+    --info: #539df5;
+    --shadow-base: rgba(0,0,0,0.3);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 224 71% 45%;
-
-    --radius: 0.75rem;
-
-    --sidebar-bg: 222 47% 11%;
-    --sidebar-fg: 210 40% 98%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 9.4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 9.4%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 141 69% 58%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12.2%;
+    --secondary-foreground: 0 0% 70%;
+    --muted: 0 0% 12.2%;
+    --muted-foreground: 0 0% 70%;
+    --destructive: 355 69% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 16.5%;
+    --input: 0 0% 16.5%;
+    --ring: 141 69% 58%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border box-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: var(--bg-base);
+    color: var(--text-base);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
-/* Smooth scrollbar */
+/* Custom scrollbar — dark theme */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #181818;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #4d4d4d;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #6d6d6d;
 }
 
 /* Leaflet map fix */
 .leaflet-container {
   z-index: 0;
+  background: #181818;
+}
+
+/* Leaflet popup dark theme */
+.leaflet-popup-content-wrapper {
+  background: #252525 !important;
+  color: #ffffff !important;
+  border: 1px solid #4d4d4d !important;
+  border-radius: 8px !important;
+  box-shadow: rgba(0,0,0,0.5) 0px 8px 24px !important;
+}
+.leaflet-popup-tip {
+  background: #252525 !important;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.25s ease-out;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(30, 215, 96, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(30, 215, 96, 0); }
+}
+.animate-pulseGreen {
+  animation: pulseGreen 2s infinite;
 }

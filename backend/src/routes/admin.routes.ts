@@ -18,7 +18,7 @@ import {
   broadcastNotifikasi
 } from '../controllers/admin.controller';
 import { getAdminLaporan, reviewLaporan, getAdminLaporanPerJam } from '../controllers/laporan.controller';
-// Removed duplicate import
+import { getJadwal, createJadwal, updateJadwal, deleteJadwal, getRekapJadwal, getPengaturan, updatePengaturan } from '../controllers/jadwal.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/role.middleware';
 
@@ -93,6 +93,17 @@ router.patch('/staff/:id/toggle-aktif', toggleStaffAktif);
 router.get('/area-tugas', getAllAreaTugas);
 router.post('/area-tugas', createAreaTugas);
 router.put('/area-tugas/:id', updateAreaTugas);
+
+// ─── MANAJEMEN JADWAL ───────────────────────────────────────────────────────
+router.get('/jadwal', getJadwal);
+router.post('/jadwal', createJadwal);
+router.put('/jadwal/:id', updateJadwal);
+router.delete('/jadwal/:id', deleteJadwal);
+router.get('/rekap-jadwal', getRekapJadwal);
+
+// ─── PENGATURAN SISTEM ──────────────────────────────────────────────────────
+router.get('/pengaturan-sistem', getPengaturan);
+router.put('/pengaturan-sistem', updatePengaturan);
 
 // ─── NOTIFIKASI ─────────────────────────────────────────────────────────────
 router.post('/notifikasi/broadcast', broadcastNotifikasi);

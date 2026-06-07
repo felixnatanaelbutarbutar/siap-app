@@ -16,9 +16,11 @@ import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSerahTerimaRouteImport } from './routes/_authenticated/serah-terima'
 import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
 import { Route as AuthenticatedLaporanRouteImport } from './routes/_authenticated/laporan'
+import { Route as AuthenticatedJadwalRouteImport } from './routes/_authenticated/jadwal'
 import { Route as AuthenticatedIzinCutiRouteImport } from './routes/_authenticated/izin-cuti'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAbsensiRouteImport } from './routes/_authenticated/absensi'
+import { Route as AuthenticatedJadwalStaffIdRouteImport } from './routes/_authenticated/jadwal_.$staffId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -55,6 +57,11 @@ const AuthenticatedLaporanRoute = AuthenticatedLaporanRouteImport.update({
   path: '/laporan',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJadwalRoute = AuthenticatedJadwalRouteImport.update({
+  id: '/jadwal',
+  path: '/jadwal',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedIzinCutiRoute = AuthenticatedIzinCutiRouteImport.update({
   id: '/izin-cuti',
   path: '/izin-cuti',
@@ -70,6 +77,12 @@ const AuthenticatedAbsensiRoute = AuthenticatedAbsensiRouteImport.update({
   path: '/absensi',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJadwalStaffIdRoute =
+  AuthenticatedJadwalStaffIdRouteImport.update({
+    id: '/jadwal_/$staffId',
+    path: '/jadwal/$staffId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -77,10 +90,12 @@ export interface FileRoutesByFullPath {
   '/absensi': typeof AuthenticatedAbsensiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/izin-cuti': typeof AuthenticatedIzinCutiRoute
+  '/jadwal': typeof AuthenticatedJadwalRoute
   '/laporan': typeof AuthenticatedLaporanRoute
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -88,10 +103,12 @@ export interface FileRoutesByTo {
   '/absensi': typeof AuthenticatedAbsensiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/izin-cuti': typeof AuthenticatedIzinCutiRoute
+  '/jadwal': typeof AuthenticatedJadwalRoute
   '/laporan': typeof AuthenticatedLaporanRoute
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -101,10 +118,12 @@ export interface FileRoutesById {
   '/_authenticated/absensi': typeof AuthenticatedAbsensiRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/izin-cuti': typeof AuthenticatedIzinCutiRoute
+  '/_authenticated/jadwal': typeof AuthenticatedJadwalRoute
   '/_authenticated/laporan': typeof AuthenticatedLaporanRoute
   '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
   '/_authenticated/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/jadwal_/$staffId': typeof AuthenticatedJadwalStaffIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,10 +133,12 @@ export interface FileRouteTypes {
     | '/absensi'
     | '/dashboard'
     | '/izin-cuti'
+    | '/jadwal'
     | '/laporan'
     | '/pengaturan'
     | '/serah-terima'
     | '/staff'
+    | '/jadwal/$staffId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -125,10 +146,12 @@ export interface FileRouteTypes {
     | '/absensi'
     | '/dashboard'
     | '/izin-cuti'
+    | '/jadwal'
     | '/laporan'
     | '/pengaturan'
     | '/serah-terima'
     | '/staff'
+    | '/jadwal/$staffId'
   id:
     | '__root__'
     | '/'
@@ -137,10 +160,12 @@ export interface FileRouteTypes {
     | '/_authenticated/absensi'
     | '/_authenticated/dashboard'
     | '/_authenticated/izin-cuti'
+    | '/_authenticated/jadwal'
     | '/_authenticated/laporan'
     | '/_authenticated/pengaturan'
     | '/_authenticated/serah-terima'
     | '/_authenticated/staff'
+    | '/_authenticated/jadwal_/$staffId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLaporanRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jadwal': {
+      id: '/_authenticated/jadwal'
+      path: '/jadwal'
+      fullPath: '/jadwal'
+      preLoaderRoute: typeof AuthenticatedJadwalRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/izin-cuti': {
       id: '/_authenticated/izin-cuti'
       path: '/izin-cuti'
@@ -221,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAbsensiRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jadwal_/$staffId': {
+      id: '/_authenticated/jadwal_/$staffId'
+      path: '/jadwal/$staffId'
+      fullPath: '/jadwal/$staffId'
+      preLoaderRoute: typeof AuthenticatedJadwalStaffIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -228,20 +267,24 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAbsensiRoute: typeof AuthenticatedAbsensiRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIzinCutiRoute: typeof AuthenticatedIzinCutiRoute
+  AuthenticatedJadwalRoute: typeof AuthenticatedJadwalRoute
   AuthenticatedLaporanRoute: typeof AuthenticatedLaporanRoute
   AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
   AuthenticatedSerahTerimaRoute: typeof AuthenticatedSerahTerimaRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
+  AuthenticatedJadwalStaffIdRoute: typeof AuthenticatedJadwalStaffIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAbsensiRoute: AuthenticatedAbsensiRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIzinCutiRoute: AuthenticatedIzinCutiRoute,
+  AuthenticatedJadwalRoute: AuthenticatedJadwalRoute,
   AuthenticatedLaporanRoute: AuthenticatedLaporanRoute,
   AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
   AuthenticatedSerahTerimaRoute: AuthenticatedSerahTerimaRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
+  AuthenticatedJadwalStaffIdRoute: AuthenticatedJadwalStaffIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
