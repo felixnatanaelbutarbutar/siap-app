@@ -15,6 +15,7 @@ import adminRoutes from './routes/admin.routes';
 import laporanRoutes from './routes/laporan.routes';
 import izinRoutes from './routes/izin.routes';
 import serahTerimaRoutes from './routes/serahterima.routes';
+import pengumumanRoutes from './routes/pengumuman.routes';
 import { prisma } from './lib/prisma';
 import { initSocket } from './lib/socket';
 import { Role, JenisAbsensi } from '@prisma/client';
@@ -53,6 +54,7 @@ app.use('/admin', adminRoutes);
 app.use('/laporan', laporanRoutes);
 app.use('/izin', izinRoutes);
 app.use('/serah-terima', serahTerimaRoutes);
+app.use('/pengumuman', pengumumanRoutes);
 
 // ─── Global Error Handler ────────────────────────────────────────────────────
 app.use(errorHandler);
@@ -86,7 +88,7 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-// ─── Reminder Laporan Per Jam (Khusus SATPAM) ─────────────────────────────────
+// ─── Reminder Laporan Per 3 Jam (Khusus SATPAM) ───────────────────────────────
 // Jalan setiap jam, menit 0 (misal: 08:00, 09:00, dst)
 cron.schedule('0 * * * *', async () => {
   try {
@@ -110,28 +112,33 @@ cron.schedule('0 * * * *', async () => {
         where: { staff_id: satpam.id, waktu_server: { gte: startOfDay, lte: endOfDay } }
       });
 
-      const sudahMasuk = absensiHariIni.some(a => a.jenis === JenisAbsensi.MASUK);
+      const absenMasuk = absensiHariIni.find(a => a.jenis === JenisAbsensi.MASUK);
       const sudahKeluar = absensiHariIni.some(a => a.jenis === JenisAbsensi.KELUAR);
 
-      if (sudahMasuk && !sudahKeluar) {
-        // Cek apakah sudah membuat laporan untuk jam saat ini
-        const laporanTerbuat = await prisma.laporanPerJam.findFirst({
-          where: { staff_id: satpam.id, tanggal: startOfDay, jam: currentHour }
-        });
+      if (absenMasuk && !sudahKeluar) {
+        const jamMasuk = absenMasuk.waktu_server.getHours();
+        
+        // Hitung apakah sekarang adalah kelipatan 3 jam sejak absen masuk
+        if (currentHour > jamMasuk && (currentHour - jamMasuk) % 3 === 0) {
+          // Cek apakah sudah membuat laporan untuk jam saat ini
+          const laporanTerbuat = await prisma.laporanPerJam.findFirst({
+            where: { staff_id: satpam.id, tanggal: startOfDay, jam: currentHour }
+          });
 
-        if (!laporanTerbuat && satpam.fcm_token) {
-          await sendToDevice(
-            satpam.fcm_token,
-            'Reminder Laporan Per Jam',
-            `Anda belum mengisi laporan per jam untuk pukul ${currentHour}:00. Harap segera diisi.`,
-            { type: 'reminder_laporan_perjam', jam: currentHour.toString() }
-          );
+          if (!laporanTerbuat && satpam.fcm_token) {
+            await sendToDevice(
+              satpam.fcm_token,
+              'Reminder Laporan Per 3 Jam',
+              `Anda belum mengisi laporan rutin per 3 jam untuk pukul ${currentHour}:00. Harap segera diisi.`,
+              { type: 'reminder_laporan_perjam', jam: currentHour.toString() }
+            );
+          }
         }
       }
     }
-    logger.info(`✅ Cron Job: Reminder Laporan Per Jam untuk pukul ${currentHour}:00 selesai dicek.`);
+    logger.info(`✅ Cron Job: Reminder Laporan Per 3 Jam untuk pukul ${currentHour}:00 selesai dicek.`);
   } catch (error) {
-    logger.error('Error pada cron reminder laporan per jam:', error);
+    logger.error('Error pada cron reminder laporan per 3 jam:', error);
   }
 });
 

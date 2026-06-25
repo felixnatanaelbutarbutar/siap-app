@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Outfit-Black',
     fontSize: 20,
-    color: '#111111',
+    color: '#161d16',
     textAlign: 'center',
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   message: {
     fontFamily: 'Inter-Bold',
     fontSize: 14,
-    color: '#707072',
+    color: '#3d4a3d',
     textAlign: 'center',
   },
 });

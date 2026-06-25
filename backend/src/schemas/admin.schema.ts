@@ -35,7 +35,7 @@ export const updateStaffSchema = z.object({
   role: z.nativeEnum(Role).optional(),
   divisi: z.nativeEnum(Divisi).optional(),
   area_tugas_id: z.string().optional().nullable(),
-  aktif: z.boolean().optional(),
+  aktif: z.union([z.boolean(), z.string().transform((v) => v === 'true')]).optional(),
 });
 
 // Master Area Tugas Schema

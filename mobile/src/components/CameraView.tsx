@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     marginTop: 20,
     padding: 12,
-    backgroundColor: '#111111',
+    backgroundColor: '#006e2f',
     borderRadius: 8,
   },
   overlayTop: {

@@ -39,7 +39,7 @@ export const LaporanPerJamScreen = () => {
     },
   });
 
-  // Mutasi Kirim Laporan Per Jam
+  // Mutasi Kirim Laporan Per 3 Jam
   const mutation = useMutation({
     mutationFn: async () => {
       if (selectedHour === null || !fotoUrl) throw new Error('Data tidak lengkap');
@@ -65,13 +65,13 @@ export const LaporanPerJamScreen = () => {
       return res.data;
     },
     onSuccess: () => {
-      Alert.alert('Sukses', 'Laporan per jam berhasil dikirim.');
+      Alert.alert('Sukses', 'Laporan per 3 jam berhasil dikirim.');
       queryClient.invalidateQueries({ queryKey: ['laporanPerJam'] });
       setModalVisible(false);
       resetForm();
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'Gagal mengirim laporan per jam.');
+      Alert.alert('Error', error.response?.data?.message || 'Gagal mengirim laporan per 3 jam.');
     }
   });
 
@@ -96,8 +96,8 @@ export const LaporanPerJamScreen = () => {
 
       await notifee.createTriggerNotification(
         {
-          title: 'Waktunya Laporan Per Jam!',
-          body: 'Segera periksa area dan isi laporan per jam Anda.',
+          title: 'Waktunya Laporan Per 3 Jam!',
+          body: 'Segera periksa area dan isi laporan rutin 3 jam Anda.',
           android: {
             channelId: 'default',
           },
@@ -121,19 +121,29 @@ export const LaporanPerJamScreen = () => {
   if (loadingAbsen || loadingLaporan) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#111111" />
+        <ActivityIndicator size="large" color="#161d16" />
       </View>
     );
   }
 
-  const sudahMasuk = absensiHariIni?.some((a: any) => a.jenis === 'MASUK');
+  const absenMasuk = absensiHariIni?.find((a: any) => a.jenis === 'MASUK');
+  const sudahMasuk = !!absenMasuk;
   const sudahKeluar = absensiHariIni?.some((a: any) => a.jenis === 'KELUAR');
   const shiftAktif = sudahMasuk && !sudahKeluar;
   
   const currentHour = new Date().getHours();
 
-  // Generate 24 hours timeline
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  // Generate 3-hour interval timeline
+  let hours: number[] = [];
+  if (absenMasuk) {
+    const jamMasuk = new Date(absenMasuk.waktu_server).getHours();
+    for (let i = jamMasuk; i < 24; i += 3) {
+      hours.push(i);
+    }
+  } else {
+    // Default fallback if not checked in
+    hours = [0, 3, 6, 9, 12, 15, 18, 21];
+  }
 
   return (
     <View style={styles.container}>
@@ -143,16 +153,16 @@ export const LaporanPerJamScreen = () => {
           const lapor = laporanPerJam?.find((l: any) => l.jam === hour);
           const isCurrentHour = hour === currentHour;
           
-          let circleColor = '#e5e5e5'; // Default Abu-abu
+          let circleColor = '#dce5d9'; // Default Abu-abu
           let statusText = 'Belum Ada Jadwal';
           let canTap = false;
 
           if (lapor) {
             circleColor = '#1eaa52'; // Hijau
             statusText = 'Selesai (' + lapor.status_keamanan + ')';
-          } else if (shiftAktif && hour <= currentHour) {
+          } else if (shiftAktif && currentHour >= hour) {
             circleColor = '#f1c40f'; // Kuning
-            statusText = isCurrentHour ? 'Perlu Dilaporkan (Sekarang)' : 'Terlewat / Belum Dilaporkan';
+            statusText = (currentHour - hour < 3) ? 'Perlu Dilaporkan (Sekarang)' : 'Terlewat / Belum Dilaporkan';
             canTap = true;
           }
 
@@ -184,8 +194,9 @@ export const LaporanPerJamScreen = () => {
             <Text style={styles.label}>STATUS KEAMANAN</Text>
             <View style={styles.statusGrid}>
               {STATUS_KEAMANAN.map(s => (
-                <TouchableOpacity 
+                <TouchableOpacity
                   key={s}
+                  activeOpacity={0.8}
                   style={[styles.statusItem, statusKeamanan === s && styles.statusItemActive]}
                   onPress={() => setStatusKeamanan(s)}
                 >
@@ -213,12 +224,12 @@ export const LaporanPerJamScreen = () => {
               value={catatan}
               onChangeText={setCatatan}
               style={styles.input}
-              underlineColor="#111111"
-              activeUnderlineColor="#111111"
+              underlineColor="#dce5d9"
+              activeUnderlineColor="#006e2f"
             />
 
             <View style={styles.actionRow}>
-              <Button mode="outlined" onPress={() => { setModalVisible(false); resetForm(); }} style={[styles.btn, { borderColor: '#111111' }]} labelStyle={{ color: '#111111' }}>
+              <Button mode="outlined" onPress={() => { setModalVisible(false); resetForm(); }} style={[styles.btn, { borderColor: '#006e2f' }]} labelStyle={{ color: '#006e2f' }}>
                 BATAL
               </Button>
               <Button 
@@ -226,7 +237,7 @@ export const LaporanPerJamScreen = () => {
                 onPress={() => mutation.mutate()} 
                 loading={mutation.isPending} 
                 disabled={!fotoUrl || mutation.isPending}
-                style={[styles.btn, { backgroundColor: '#111111' }]}
+                style={[styles.btn, { backgroundColor: '#006e2f' }]}
               >
                 KIRIM
               </Button>
@@ -250,7 +261,7 @@ export const LaporanPerJamScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   center: {
     flex: 1,
@@ -262,11 +273,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 16,
-    color: '#111111',
+    color: '#161d16',
   },
   timelineContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 200,
+    flexGrow: 1,
   },
   timelineRow: {
     flexDirection: 'row',
@@ -279,7 +291,7 @@ const styles = StyleSheet.create({
   timeText: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#111111',
+    color: '#161d16',
   },
   circle: {
     width: 16,
@@ -292,30 +304,30 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    color: '#707072',
+    color: '#3d4a3d',
     fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(22,29,22,0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
     padding: 24,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#111111',
+    color: '#161d16',
   },
   label: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#707072',
+    color: '#3d4a3d',
     marginTop: 16,
     marginBottom: 8,
   },
@@ -327,42 +339,45 @@ const styles = StyleSheet.create({
   statusItem: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    backgroundColor: '#e8f0e4',
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: '#bccbb9',
   },
   statusItemActive: {
-    backgroundColor: '#111111',
-    borderColor: '#111111',
+    backgroundColor: '#006e2f',
+    borderColor: '#006e2f',
   },
   statusItemText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#707072',
+    color: '#3d4a3d',
   },
   statusItemTextActive: {
     color: '#ffffff',
   },
   addFotoBtn: {
     height: 100,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    backgroundColor: '#e8f0e4',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#111111',
+    borderColor: '#bccbb9',
     borderStyle: 'dashed',
   },
   addFotoText: {
     fontWeight: 'bold',
-    color: '#111111',
+    color: '#006e2f',
   },
   fotoPreview: {
     width: '100%',
     height: 150,
-    backgroundColor: '#e5e5e5',
+    borderRadius: 12,
+    backgroundColor: '#dce5d9',
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e8f0e4',
   },
   actionRow: {
     flexDirection: 'row',
@@ -371,6 +386,6 @@ const styles = StyleSheet.create({
   },
   btn: {
     flex: 1,
-    borderRadius: 0,
+    borderRadius: 12,
   }
 });

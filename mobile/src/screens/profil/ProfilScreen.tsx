@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'react-native-image-picker';
 import { api } from '../../services/api';
 import { useMutation } from '@tanstack/react-query';
+import { getAvatarUrl } from '../../utils/url';
 
 export const ProfilScreen = () => {
   const { user, logout, updateFotoProfil } = useAuthStore();
@@ -59,31 +60,38 @@ export const ProfilScreen = () => {
   };
 
   const ActionRow = ({ icon, label, onPress }: { icon: string, label: string, onPress: () => void }) => (
-    <TouchableOpacity style={styles.actionRow} onPress={onPress}>
-      <Icon name={icon} size={24} color="#111111" />
+    <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.6}>
+      <View style={styles.actionIconBox}>
+        <Icon name={icon} size={20} color="#006e2f" />
+      </View>
       <Text style={styles.actionRowLabel}>{label}</Text>
-      <Icon name="chevron-right" size={24} color="#111111" />
+      <Icon name="chevron-right" size={20} color="#6d7b6c" />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} bounces={false}>
-        <View style={styles.header}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* <View style={styles.header}>
           <Text style={styles.pageTitle}>PROFIL</Text>
-        </View>
+        </View> */}
 
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handlePilihFoto} style={styles.avatarContainer}>
             {user?.foto_profil ? (
-              <Image source={{ uri: `http://localhost:9000/siap-storage/${user.foto_profil}` }} style={styles.avatarImage} />
+              <Image source={{ uri: getAvatarUrl(user.foto_profil) || undefined }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarInitials}>{user?.nama?.substring(0, 2).toUpperCase() || 'SI'}</Text>
               </View>
             )}
             <View style={styles.editBadge}>
-              <Icon name="camera-plus" size={16} color="#ffffff" />
+              <Icon name="camera-plus" size={16} color="#161d16" />
             </View>
           </TouchableOpacity>
 
@@ -116,11 +124,11 @@ export const ProfilScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   header: {
     paddingHorizontal: 24,
@@ -130,15 +138,16 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#111111',
+    color: '#161d16',
     letterSpacing: -1,
   },
   profileSection: {
     alignItems: 'center',
     paddingHorizontal: 24,
+    paddingTop: 40,
     paddingBottom: 48,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: '#dce5d9',
   },
   avatarContainer: {
     position: 'relative',
@@ -147,25 +156,27 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: 120,
     height: 120,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 60,
+    backgroundColor: '#e8f0e4',
   },
   avatarPlaceholder: {
     width: 120,
     height: 120,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 60,
+    backgroundColor: '#e8f0e4',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarInitials: {
     fontSize: 40,
     fontWeight: '800',
-    color: '#111111',
+    color: '#161d16',
   },
   editBadge: {
     position: 'absolute',
     bottom: -12,
     right: -12,
-    backgroundColor: '#111111',
+    backgroundColor: '#006e2f',
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -177,20 +188,20 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#111111',
+    color: '#161d16',
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   userRole: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#707072',
+    color: '#3d4a3d',
     marginBottom: 8,
   },
   userNik: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#9e9ea0',
+    color: '#6d7b6c',
   },
   pdpDisclosureRow: {
     paddingTop: 24,
@@ -198,27 +209,35 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 20,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: '#dce5d9',
+  },
+  actionIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e8f0e4',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   actionRowLabel: {
     flex: 1,
     fontSize: 16,
     fontWeight: '700',
-    color: '#111111',
+    color: '#161d16',
     marginLeft: 16,
   },
   logoutSection: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
+    paddingHorizontal: 25,
+    paddingTop: 40,
     paddingBottom: 48,
   },
   logoutButton: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
     borderWidth: 2,
-    borderColor: '#111111',
+    borderColor: '#ba1a1a',
     borderRadius: 30, // Nike pill shape
     height: 60,
     justifyContent: 'center',
@@ -227,7 +246,7 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#111111',
+    color: '#ba1a1a',
     letterSpacing: 1,
   },
   footer: {
@@ -237,7 +256,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#9e9ea0',
+    color: '#6d7b6c',
     letterSpacing: 1,
   },
 });

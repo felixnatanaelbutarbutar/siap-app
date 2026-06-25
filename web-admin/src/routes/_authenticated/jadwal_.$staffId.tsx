@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import { Plus, Pencil, Trash2, ArrowLeft, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, CalendarDays } from 'lucide-react';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 export const Route = createFileRoute('/_authenticated/jadwal_/$staffId')({
   component: DetailJadwalStaffPage,
@@ -19,6 +20,7 @@ function DetailJadwalStaffPage() {
 
   // Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>(null);
   const [formHari, setFormHari] = useState('SENIN');
   const [formMasuk, setFormMasuk] = useState('08:00');
@@ -153,7 +155,7 @@ function DetailJadwalStaffPage() {
                     <td style={{ ...tdStyle, textAlign: 'left' }}>
                       <div className="flex gap-2">
                         <button onClick={() => handleOpenModal(j)} style={{ color: 'var(--text-dim)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-dim)')}><Pencil className="w-4 h-4" /></button>
-                        <button onClick={() => { if(confirm('Hapus shift ini?')) mutation.mutate({ action: 'delete', id: j.id }) }} style={{ color: 'var(--text-dim)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--error)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-dim)')}><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => setConfirmDeleteId(j.id)} style={{ color: 'var(--text-dim)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--error)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-dim)')}><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -213,6 +215,17 @@ function DetailJadwalStaffPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Hapus Jadwal"
+        message="Yakin ingin menghapus shift jadwal ini?"
+        confirmText="Hapus"
+        onConfirm={() => {
+          if (confirmDeleteId) mutation.mutate({ action: 'delete', id: confirmDeleteId });
+        }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }

@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bannerText: {
-    color: '#111111',
+    color: '#161d16',
     fontWeight: 'bold',
     fontSize: 12,
   }

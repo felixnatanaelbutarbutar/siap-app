@@ -28,7 +28,16 @@ function IzinCutiPage() {
       const res = await api.put(`/admin/izin/${id}`, { status, komentar_admin: komentar });
       return res.data;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-izin'] }); setSelectedIzin(null); setKomentar(''); }
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-izin'] });
+      setSelectedIzin(null);
+      setKomentar('');
+      // Show brief success indicator
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: data.message || 'Status izin berhasil diperbarui.', type: 'success' } }));
+    },
+    onError: () => {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Gagal memperbarui status izin.', type: 'error' } }));
+    }
   });
 
   if (isLoading) return (
@@ -153,7 +162,7 @@ function IzinCutiPage() {
                 <div>
                   <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Lampiran Bukti</label>
                   <a
-                    href={`http://localhost:9000/siap-storage/${selectedIzin.foto_url}`}
+                    href={selectedIzin.foto_url}
                     target="_blank" rel="noreferrer"
                     className="inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold uppercase transition-all text-sm"
                     style={{ background: 'rgba(30,215,96,0.08)', border: '1px solid rgba(30,215,96,0.2)', color: 'var(--accent)', letterSpacing: '0.8px' }}

@@ -14,6 +14,7 @@ import {
 } from '../schemas/admin.schema';
 import bcrypt from 'bcryptjs';
 import Papa from 'papaparse';
+import { uploadFile } from '../services/storage.service';
 
 // ─── DASHBOARD & STATISTIK ──────────────────────────────────────────────────
 
@@ -446,6 +447,11 @@ export const updateStaff = async (req: Request, res: Response): Promise<void> =>
     if (data.password) {
       data.password_hash = await bcrypt.hash(data.password, 12);
       delete data.password;
+    }
+
+    if (req.file) {
+      const fileName = await uploadFile(req.file.buffer, req.file.originalname, req.file.mimetype);
+      data.foto_profil = fileName;
     }
 
     const staff = await prisma.staff.update({

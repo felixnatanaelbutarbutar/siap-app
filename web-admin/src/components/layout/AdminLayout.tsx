@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useAuthStore } from '../../store/authStore';
+import { ConfirmModal } from '../ConfirmModal';
 import {
   LayoutDashboard,
   MapPin,
@@ -14,12 +15,14 @@ import {
   CalendarDays,
   Moon,
   Sun,
+  Megaphone,
 } from 'lucide-react';
 import { useNotificationStore } from '../../store/notificationStore';
 
 export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const pendingReports = useNotificationStore((s) => s.pendingReports);
 
   const [isDark, setIsDark] = useState(() => {
@@ -50,6 +53,8 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     { label: 'Izin & Cuti', icon: CalendarClock, to: '/izin-cuti' },
     { label: 'Staff', icon: Users, to: '/staff' },
     { label: 'Jadwal Kerja', icon: CalendarDays, to: '/jadwal' },
+    { label: 'Kalender Shift', icon: CalendarClock, to: '/kalender' },
+    { label: 'Pengumuman', icon: Megaphone, to: '/pengumuman' },
     { label: 'Pengaturan', icon: Settings, to: '/pengaturan' },
   ];
 
@@ -135,7 +140,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             {isDark ? 'Mode Terang' : 'Mode Gelap'}
           </button>
           <button
-            onClick={handleLogout}
+            onClick={() => setConfirmLogout(true)}
             className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
             style={{ color: 'var(--text-secondary)' }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--error)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(243,114,127,0.08)'; }}
@@ -153,6 +158,15 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmLogout}
+        title="Konfirmasi Keluar"
+        message="Apakah Anda yakin ingin keluar dari sesi Admin saat ini?"
+        confirmText="Keluar"
+        onConfirm={handleLogout}
+        onCancel={() => setConfirmLogout(false)}
+      />
     </div>
   );
 };

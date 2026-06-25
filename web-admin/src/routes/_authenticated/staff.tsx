@@ -23,6 +23,7 @@ function StaffPage() {
   const [formDivisi, setFormDivisi] = useState('KEAMANAN');
   const [formArea, setFormArea] = useState('');
   const [formStatus, setFormStatus] = useState(true);
+  const [formFoto, setFormFoto] = useState<File | null>(null);
 
   const { data: staffList } = useQuery({
     queryKey: ['staff-list', activeTab],
@@ -53,7 +54,7 @@ function StaffPage() {
       setFormPassword(''); setFormDivisi(staff.divisi); setFormArea(staff.area_tugas_id || ''); setFormStatus(staff.aktif);
     } else {
       setEditData(null); setFormNik(''); setFormNama(''); setFormPassword('');
-      setFormDivisi('KEAMANAN'); setFormArea(''); setFormStatus(true);
+      setFormDivisi('KEAMANAN'); setFormArea(''); setFormStatus(true); setFormFoto(null);
     }
     setIsModalOpen(true);
   };
@@ -62,9 +63,17 @@ function StaffPage() {
     e.preventDefault();
     try {
       if (editData) {
-        const body: any = { nama: formNama, divisi: formDivisi, area_tugas_id: formArea || undefined, aktif: formStatus };
-        if (formPassword) body.password = formPassword;
-        await api.put(`/admin/staff/${editData.id}`, body);
+        const formData = new FormData();
+        formData.append('nama', formNama);
+        formData.append('divisi', formDivisi);
+        if (formArea) formData.append('area_tugas_id', formArea);
+        formData.append('aktif', String(formStatus));
+        if (formPassword) formData.append('password', formPassword);
+        if (formFoto) formData.append('foto_profil', formFoto);
+        
+        await api.put(`/admin/staff/${editData.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
         await api.post('/admin/staff', { nik: formNik, nama: formNama, password: formPassword, role: getRoleFromDivisi(formDivisi), divisi: formDivisi, area_tugas_id: formArea || undefined });
       }
@@ -189,9 +198,15 @@ function StaffPage() {
                   <input type="text" value={formNama} onChange={e => setFormNama(e.target.value)} required style={inputStyle} />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Password {editData && '(Kosongkan jika tidak diubah)'}</label>
-                <input type="password" value={formPassword} onChange={e => setFormPassword(e.target.value)} required={!editData} style={inputStyle} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Password {editData && '(Kosongkan jika tidak diubah)'}</label>
+                  <input type="password" value={formPassword} onChange={e => setFormPassword(e.target.value)} required={!editData} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Foto Profil {editData && '(Opsional)'}</label>
+                  <input type="file" accept="image/*" onChange={e => setFormFoto(e.target.files?.[0] || null)} disabled={!editData} style={{ ...inputStyle, padding: '7px 14px' }} title={!editData ? "Foto hanya bisa diupload saat mengedit staff" : ""} />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

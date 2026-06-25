@@ -95,7 +95,7 @@ function LaporanPage() {
           <button key={tab} onClick={() => setActiveTab(tab)}
             className="px-5 py-2 rounded-full text-sm font-bold uppercase transition-all"
             style={{ background: activeTab === tab ? 'var(--accent)' : 'transparent', color: activeTab === tab ? 'var(--accent-text)' : 'var(--text-secondary)', letterSpacing: '1px' }}>
-            {tab === 'HARIAN' ? 'Laporan Harian' : 'Per Jam (Satpam)'}
+            {tab === 'HARIAN' ? 'Laporan Harian' : 'Per 3 Jam (Satpam)'}
           </button>
         ))}
       </div>
@@ -153,7 +153,7 @@ function LaporanPage() {
       {activeTab === 'PER_JAM' && (
         <div className="space-y-4">
           <div className="p-6 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <h3 className="font-bold text-sm mb-5" style={{ color: 'var(--text-base)' }}>Timeline Audit 24 Jam</h3>
+            <h3 className="font-bold text-sm mb-5" style={{ color: 'var(--text-base)' }}>Timeline Audit Laporan 24 Jam (Per 3 Jam)</h3>
             <div className="flex overflow-x-auto pb-4 gap-2">
               {timelineHours.map(hour => {
                 const isShift = hour >= mockShiftStart && hour <= mockShiftEnd;

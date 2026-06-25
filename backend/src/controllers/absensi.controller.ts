@@ -443,3 +443,30 @@ export const getAdminAbsensi = async (req: Request, res: Response): Promise<void
     res.status(500).json({ success: false, message: 'Terjadi kesalahan internal.' });
   }
 };
+
+export const getJadwalHariIni = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const staff_id = req.user?.id;
+    if (!staff_id) {
+      res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+      return;
+    }
+
+    const hariKerjaMap = ['AHAD', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'] as const;
+    const dayIndex = new Date().getDay();
+    const hariSekarang = hariKerjaMap[dayIndex];
+
+    const jadwal = await prisma.jadwalKerja.findFirst({
+      where: {
+        staff_id,
+        hari: hariSekarang,
+        aktif: true,
+      }
+    });
+
+    res.json({ success: true, data: jadwal });
+  } catch (error) {
+    logger.error('Error getting jadwal hari ini:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};

@@ -72,13 +72,13 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
   if (isLoading || !data) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#111111" />
+        <ActivityIndicator size="large" color="#161d16" />
       </View>
     );
   }
 
   const sigWebStyle = `
-    .m-signature-pad {box-shadow: none; border: 1px solid #e5e5e5; border-radius: 0px;} 
+    .m-signature-pad {box-shadow: none; border: 1px solid #dce5d9; border-radius: 0px;} 
     .m-signature-pad--footer {display: none; margin: 0px;}
     body,html {width: 100%; height: 100%; background-color: #f5f5f5;}
   `;
@@ -113,17 +113,21 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
           <Text style={styles.subtitle}>Dari: {data.pengirim_nama}</Text>
 
           <Text style={styles.sectionLabel}>DETAIL BARANG</Text>
-          {data.items.map((item: any, index: number) => (
-            <View key={index} style={styles.itemCard}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.status}</Text>
+          {data.items.map((item: any, index: number) => {
+            const badgeBg = item.status === 'BAIK' ? '#cdeed5' : item.status === 'RUSAK' ? '#ffdad6' : '#ffefd4';
+            const badgeFg = item.status === 'BAIK' ? '#006e2f' : item.status === 'RUSAK' ? '#ba1a1a' : '#c77800';
+            return (
+              <View key={index} style={styles.itemCard}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+                  <Text style={[styles.badgeText, { color: badgeFg }]}>{item.status}</Text>
+                </View>
+                {item.catatan ? (
+                  <Text style={styles.itemCatatan}>Catatan: {item.catatan}</Text>
+                ) : null}
               </View>
-              {item.catatan ? (
-                <Text style={styles.itemCatatan}>Catatan: {item.catatan}</Text>
-              ) : null}
-            </View>
-          ))}
+            );
+          })}
 
           <Text style={styles.sectionLabel}>CATATAN SHIFT</Text>
           <View style={styles.noteBox}>
@@ -141,10 +145,10 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
             />
           </View>
           <View style={styles.sigActionRow}>
-            <TouchableOpacity onPress={() => { sigRef.current?.clearSignature(); setSignature(null); }} style={styles.sigClearBtn}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => { sigRef.current?.clearSignature(); setSignature(null); }} style={styles.sigClearBtn}>
               <Text style={styles.sigClearText}>ULANGI</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => sigRef.current?.readSignature()} style={styles.sigSaveBtn}>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => sigRef.current?.readSignature()} style={styles.sigSaveBtn}>
               <Text style={styles.sigSaveText}>SIMPAN TTD</Text>
             </TouchableOpacity>
           </View>
@@ -166,31 +170,31 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1, backgroundColor: '#f3fcef' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#111111', textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#707072', textAlign: 'center', marginBottom: 24 },
-  sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#707072', marginTop: 16, marginBottom: 8 },
-  itemCard: { backgroundColor: '#f5f5f5', padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#e5e5e5' },
-  itemName: { fontSize: 16, fontWeight: 'bold', color: '#111111', marginBottom: 8 },
-  badge: { alignSelf: 'flex-start', backgroundColor: '#111111', paddingHorizontal: 8, paddingVertical: 4 },
-  badgeText: { color: '#ffffff', fontSize: 10, fontWeight: 'bold' },
-  itemCatatan: { marginTop: 8, fontSize: 12, color: '#707072' },
-  noteBox: { backgroundColor: '#f5f5f5', padding: 16, borderLeftWidth: 4, borderLeftColor: '#111111' },
-  noteText: { fontSize: 14, color: '#111111' },
-  signatureContainer: { height: 150, borderWidth: 1, borderColor: '#111111', backgroundColor: '#f5f5f5' },
+  scrollContent: { padding: 16, paddingBottom: 200, flexGrow: 1 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#161d16', textAlign: 'center' },
+  subtitle: { fontSize: 14, color: '#3d4a3d', textAlign: 'center', marginBottom: 24 },
+  sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#3d4a3d', marginTop: 16, marginBottom: 8 },
+  itemCard: { backgroundColor: '#e8f0e4', padding: 16, marginBottom: 12, borderRadius: 12, borderWidth: 1, borderColor: '#dce5d9' },
+  itemName: { fontSize: 16, fontWeight: 'bold', color: '#161d16', marginBottom: 8 },
+  badge: { alignSelf: 'flex-start', backgroundColor: '#cdeed5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  badgeText: { color: '#006e2f', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
+  itemCatatan: { marginTop: 8, fontSize: 12, color: '#3d4a3d' },
+  noteBox: { backgroundColor: '#e8f0e4', padding: 16, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#006e2f' },
+  noteText: { fontSize: 14, color: '#161d16' },
+  signatureContainer: { height: 150, borderWidth: 1, borderRadius: 12, overflow: 'hidden', borderColor: '#dce5d9', backgroundColor: '#e8f0e4' },
   sigActionRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   sigClearBtn: { padding: 8 },
-  sigClearText: { color: '#707072', fontWeight: 'bold', fontSize: 12 },
-  sigSaveBtn: { padding: 8, backgroundColor: '#111111' },
+  sigClearText: { color: '#3d4a3d', fontWeight: 'bold', fontSize: 12 },
+  sigSaveBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#006e2f' },
   sigSaveText: { color: '#ffffff', fontWeight: 'bold', fontSize: 12 },
-  submitBtn: { marginTop: 32, backgroundColor: '#111111', borderRadius: 0, paddingVertical: 8 },
+  submitBtn: { marginTop: 32, backgroundColor: '#006e2f', borderRadius: 30, paddingVertical: 8 },
   submitBtnLabel: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
-  
+
   pdfContainer: { flex: 1 },
-  pdf: { flex: 1, backgroundColor: '#f5f5f5' },
-  actionRow: { flexDirection: 'row', padding: 16, gap: 12, backgroundColor: '#ffffff' },
-  btnShare: { flex: 1, backgroundColor: '#111111', borderRadius: 0 },
-  btnBack: { flex: 1, borderColor: '#111111', borderRadius: 0 },
+  pdf: { flex: 1, backgroundColor: '#e8f0e4' },
+  actionRow: { flexDirection: 'row', padding: 16, gap: 12, backgroundColor: '#f3fcef' },
+  btnShare: { flex: 1, backgroundColor: '#006e2f', borderRadius: 30 },
+  btnBack: { flex: 1, borderColor: '#006e2f', borderRadius: 30 },
 });

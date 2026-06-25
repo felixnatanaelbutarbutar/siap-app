@@ -40,15 +40,26 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#111111',
-        headerStyle: { backgroundColor: '#111111' },
+        tabBarActiveTintColor: '#006e2f',
+        tabBarInactiveTintColor: '#6d7b6c',
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopColor: '#e8f0e4',
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        headerStyle: { backgroundColor: '#006e2f' },
         headerTintColor: '#ffffff',
+        headerTitleStyle: { fontWeight: '800' },
       }}
     >
       <Tab.Screen 
         name="Beranda" 
         component={BerandaScreen} 
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Icon name="home" color={color} size={size} />
         }}
       />
@@ -71,10 +82,10 @@ const MainTabs = () => {
 
       {user.role === 'SATPAM' && (
         <Tab.Screen 
-          name="Per Jam" 
+          name="Per 3 Jam" 
           component={LaporanPerJamScreen} 
           options={{
-            title: 'Per Jam',
+            title: 'Per 3 Jam',
             tabBarIcon: ({ color, size }) => <Icon name="clock-check" color={color} size={size} />
           }}
         />

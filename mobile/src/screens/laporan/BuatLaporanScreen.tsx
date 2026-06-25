@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { api } from '../../services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CameraView } from '../../components/CameraView';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const KATEGORI_PER_ROLE: Record<string, string[]> = {
   SATPAM: ['PATROLI', 'PENJAGAAN', 'PENGAWALAN', 'INSIDEN', 'PEMELIHARAAN'],
@@ -77,8 +78,9 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.sectionLabel}>KATEGORI LAPORAN</Text>
-        <TouchableOpacity style={styles.dropdownButton} onPress={() => setCategoryModalVisible(true)}>
+        <TouchableOpacity style={styles.dropdownButton} onPress={() => setCategoryModalVisible(true)} activeOpacity={0.8}>
           <Text style={styles.dropdownText}>{kategori}</Text>
+          <Icon name="chevron-down" size={22} color="#3d4a3d" />
         </TouchableOpacity>
 
         <Text style={styles.sectionLabel}>JUDUL</Text>
@@ -87,8 +89,8 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
           value={judul}
           onChangeText={setJudul}
           style={styles.input}
-          underlineColor="#111111"
-          activeUnderlineColor="#111111"
+          underlineColor="#dce5d9"
+          activeUnderlineColor="#006e2f"
         />
 
         <Text style={styles.sectionLabel}>DESKRIPSI</Text>
@@ -99,8 +101,8 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
           style={[styles.input, styles.textArea]}
           multiline
           numberOfLines={4}
-          underlineColor="#111111"
-          activeUnderlineColor="#111111"
+          underlineColor="#dce5d9"
+          activeUnderlineColor="#006e2f"
         />
 
         <Text style={styles.sectionLabel}>LAMPIRAN FOTO (MAX 3)</Text>
@@ -108,14 +110,15 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
           {fotos.map((uri, idx) => (
             <View key={idx} style={styles.photoWrapper}>
               <Image source={{ uri }} style={styles.photoThumbnail} />
-              <TouchableOpacity style={styles.removePhotoBtn} onPress={() => handleRemovePhoto(idx)}>
-                <Text style={styles.removePhotoText}>X</Text>
+              <TouchableOpacity style={styles.removePhotoBtn} onPress={() => handleRemovePhoto(idx)} activeOpacity={0.8}>
+                <Icon name="close" size={14} color="#ffffff" />
               </TouchableOpacity>
             </View>
           ))}
           {fotos.length < 3 && (
-            <TouchableOpacity style={styles.addPhotoBtn} onPress={() => setIsCameraOpen(true)}>
-              <Text style={styles.addPhotoText}>+ FOTO</Text>
+            <TouchableOpacity style={styles.addPhotoBtn} onPress={() => setIsCameraOpen(true)} activeOpacity={0.8}>
+              <Icon name="camera-plus" size={22} color="#006e2f" />
+              <Text style={styles.addPhotoText}>FOTO</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -150,9 +153,10 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>PILIH KATEGORI</Text>
             {categories.map((cat) => (
-              <TouchableOpacity 
-                key={cat} 
-                style={styles.modalOption} 
+              <TouchableOpacity
+                key={cat}
+                activeOpacity={0.7}
+                style={styles.modalOption}
                 onPress={() => {
                   setKategori(cat);
                   setCategoryModalVisible(false);
@@ -161,9 +165,10 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
                 <Text style={[styles.modalOptionText, kategori === cat && styles.modalOptionTextActive]}>
                   {cat}
                 </Text>
+                {kategori === cat && <Icon name="check" size={20} color="#006e2f" />}
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setCategoryModalVisible(false)}>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setCategoryModalVisible(false)} activeOpacity={0.85}>
               <Text style={styles.modalCloseText}>BATAL</Text>
             </TouchableOpacity>
           </View>
@@ -185,30 +190,35 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 200,
+    flexGrow: 1,
   },
   sectionLabel: {
     fontWeight: 'bold',
     fontSize: 12,
-    color: '#707072',
+    color: '#3d4a3d',
     marginTop: 20,
     marginBottom: 8,
   },
   dropdownButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e8f0e4',
     padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   dropdownText: {
     fontWeight: 'bold',
-    color: '#111111',
+    color: '#161d16',
     fontSize: 16,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e8f0e4',
     fontWeight: '500',
   },
   textArea: {
@@ -225,37 +235,36 @@ const styles = StyleSheet.create({
   photoThumbnail: {
     width: 100,
     height: 100,
-    backgroundColor: '#e5e5e5',
+    borderRadius: 12,
+    backgroundColor: '#dce5d9',
   },
   removePhotoBtn: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#111111',
+    top: 6,
+    right: 6,
+    backgroundColor: '#ba1a1a',
     width: 24,
     height: 24,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  removePhotoText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
   addPhotoBtn: {
     width: 100,
     height: 100,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    backgroundColor: '#e8f0e4',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#111111',
+    borderColor: '#bccbb9',
     borderStyle: 'dashed',
   },
   addPhotoText: {
     fontWeight: 'bold',
-    color: '#111111',
+    color: '#006e2f',
+    fontSize: 12,
+    marginTop: 4,
   },
   actionRow: {
     flexDirection: 'row',
@@ -264,17 +273,17 @@ const styles = StyleSheet.create({
   },
   btn: {
     flex: 1,
-    borderRadius: 0, // Blocky shape for Nike design
+    borderRadius: 30,
   },
   draftBtn: {
-    borderColor: '#111111',
+    borderColor: '#006e2f',
   },
   draftBtnLabel: {
-    color: '#111111',
+    color: '#006e2f',
     fontWeight: 'bold',
   },
   submitBtn: {
-    backgroundColor: '#111111',
+    backgroundColor: '#006e2f',
   },
   submitBtnLabel: {
     color: '#ffffff',
@@ -282,39 +291,45 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(22,29,22,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
     width: '100%',
     padding: 24,
+    borderRadius: 24,
   },
   modalTitle: {
     fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 16,
+    color: '#161d16',
   },
   modalOption: {
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: '#dce5d9',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   modalOptionText: {
     fontSize: 16,
-    color: '#707072',
+    color: '#3d4a3d',
     fontWeight: '500',
   },
   modalOptionTextActive: {
-    color: '#111111',
+    color: '#006e2f',
     fontWeight: 'bold',
   },
   modalCloseBtn: {
     marginTop: 24,
-    paddingVertical: 12,
-    backgroundColor: '#111111',
+    paddingVertical: 14,
+    borderRadius: 30,
+    backgroundColor: '#006e2f',
     alignItems: 'center',
   },
   modalCloseText: {

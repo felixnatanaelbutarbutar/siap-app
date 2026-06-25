@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, Modal, Image, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Alert, Modal, Image, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import { api } from '../../services/api';
@@ -7,10 +7,17 @@ import { insertAbsensiOffline } from '../../store/database';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import notifee, { TriggerType, RepeatFrequency } from '@notifee/react-native';
+import notifee, { TriggerType, RepeatFrequency, IntervalTrigger, TimeUnit } from '@notifee/react-native';
 
 import { CameraView } from '../../components/CameraView';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+const JENIS_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
+  MASUK:            { icon: 'login-variant',   color: '#006e2f', bg: '#e8f0e4', label: 'Masuk' },
+  KELUAR:           { icon: 'logout-variant',  color: '#ba1a1a', bg: '#ffdad6', label: 'Keluar' },
+  MULAI_ISTIRAHAT:  { icon: 'coffee-outline',  color: '#c77800', bg: '#ffefd4', label: 'Mulai Istirahat' },
+  SELESAI_ISTIRAHAT:{ icon: 'coffee',          color: '#006e2f', bg: '#e8f0e4', label: 'Selesai Istirahat' },
+};
 
 export const AbsensiScreen = () => {
   const user = useAuthStore((state) => state.user);
@@ -18,6 +25,12 @@ export const AbsensiScreen = () => {
 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [jenisAbsenTerpilih, setJenisAbsenTerpilih] = useState<'MASUK' | 'KELUAR' | 'MULAI_ISTIRAHAT' | 'SELESAI_ISTIRAHAT' | null>(null);
+
+  const pageAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(pageAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+  }, []);
 
   const { data: absensiHariIni, isLoading, refetch } = useQuery({
     queryKey: ['absensi', 'hari-ini'],
@@ -94,27 +107,27 @@ export const AbsensiScreen = () => {
         if (jenisAbsenTerpilih === 'MASUK') {
           try {
             await notifee.requestPermission();
-            const trigger: any = {
-              type: TriggerType.TIMESTAMP,
-              timestamp: new Date(Date.now() + 3600000).getTime(), 
-              repeatFrequency: RepeatFrequency.HOURLY,
+            const trigger: IntervalTrigger = {
+              type: TriggerType.INTERVAL,
+              interval: 3,
+              timeUnit: TimeUnit.HOURS,
             };
             await notifee.createTriggerNotification(
               {
                 id: 'satpam_hourly_reminder',
-                title: 'Waktunya Laporan Per Jam!',
-                body: 'Segera periksa area dan isi laporan per jam Anda.',
+                title: 'Waktunya Laporan Per 3 Jam!',
+                body: 'Segera periksa area dan isi laporan rutin 3 jam Anda.',
                 android: { channelId: 'default' },
               },
               trigger
             );
-            console.log('Notifee: Reminder per jam diaktifkan');
+            console.log('Notifee: Reminder per 3 jam diaktifkan');
           } catch (e) {
             console.log('Notifee Error:', e);
           }
         } else if (jenisAbsenTerpilih === 'KELUAR') {
           await notifee.cancelNotification('satpam_hourly_reminder');
-          console.log('Notifee: Reminder per jam dibatalkan');
+          console.log('Notifee: Reminder per 3 jam dibatalkan');
         }
       }
     }
@@ -123,7 +136,7 @@ export const AbsensiScreen = () => {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#111111" />
+        <ActivityIndicator size="large" color="#161d16" />
       </View>
     );
   }
@@ -132,10 +145,19 @@ export const AbsensiScreen = () => {
   const sudahKeluar = absensiHariIni?.some((a: any) => a.jenis === 'KELUAR');
   const sedangIstirahat = absensiHariIni?.some((a: any) => a.jenis === 'MULAI_ISTIRAHAT') && !absensiHariIni?.some((a: any) => a.jenis === 'SELESAI_ISTIRAHAT');
 
+  const statusBg = sudahKeluar ? '#e8f0e4' : sedangIstirahat ? '#ffefd4' : sudahMasuk ? '#e8f0e4' : '#e8f0e4';
+  const statusDot = sudahKeluar ? '#515f74' : sedangIstirahat ? '#c77800' : sudahMasuk ? '#007d48' : '#006e2f';
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} bounces={false}>
-        
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <Animated.View style={{ opacity: pageAnim }}>
+
         {/* HEADER */}
         <View style={styles.header}>
           <Text style={styles.pageTitle}>ABSENSI HARI INI</Text>
@@ -143,40 +165,47 @@ export const AbsensiScreen = () => {
         </View>
 
         {/* STATUS BAR */}
-        <View style={styles.statusSection}>
-          <Text style={styles.statusLabel}>STATUS SHIFT</Text>
+        <View style={[styles.statusSection, { backgroundColor: statusBg }]}>
+          <View style={styles.statusLabelRow}>
+            <View style={[styles.statusDot, { backgroundColor: statusDot }]} />
+            <Text style={styles.statusLabel}>STATUS SHIFT</Text>
+          </View>
           {sudahKeluar ? (
-            <Text style={[styles.statusValue, { color: '#111111' }]}>SELESAI SHIFT</Text>
+            <Text style={[styles.statusValue, { color: '#161d16' }]}>SELESAI SHIFT</Text>
           ) : sedangIstirahat ? (
-            <Text style={[styles.statusValue, { color: '#F59E0B' }]}>SEDANG ISTIRAHAT</Text>
+            <Text style={[styles.statusValue, { color: '#c77800' }]}>SEDANG ISTIRAHAT</Text>
           ) : sudahMasuk ? (
             <Text style={[styles.statusValue, { color: '#007d48' }]}>SHIFT AKTIF</Text>
           ) : (
-            <Text style={[styles.statusValue, { color: '#d30005' }]}>BELUM ABSEN</Text>
+            <Text style={[styles.statusValue, { color: '#006e2f' }]}>BELUM ABSEN</Text>
           )}
         </View>
 
         {/* ACTIONS */}
         <View style={styles.actionContainer}>
           {!sudahMasuk && !sudahKeluar && (
-            <TouchableOpacity style={[styles.pillButton, { backgroundColor: '#111111' }]} onPress={() => handleBukaKamera('MASUK')}>
+            <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#006e2f' }]} onPress={() => handleBukaKamera('MASUK')}>
+              <Icon name="login-variant" size={20} color="#ffffff" style={{ marginRight: 10 }} />
               <Text style={styles.pillButtonText}>ABSEN MASUK</Text>
             </TouchableOpacity>
           )}
-          
+
           {sudahMasuk && !sudahKeluar && !sedangIstirahat && (
             <>
-              <TouchableOpacity style={[styles.pillButton, { backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#e5e5e5' }]} onPress={() => handleBukaKamera('MULAI_ISTIRAHAT')}>
-                <Text style={[styles.pillButtonText, { color: '#111111' }]}>MULAI ISTIRAHAT</Text>
+              <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#e8f0e4', borderWidth: 1, borderColor: '#dce5d9' }]} onPress={() => handleBukaKamera('MULAI_ISTIRAHAT')}>
+                <Icon name="coffee-outline" size={20} color="#161d16" style={{ marginRight: 10 }} />
+                <Text style={[styles.pillButtonText, { color: '#161d16' }]}>MULAI ISTIRAHAT</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.pillButton, { backgroundColor: '#d30005', marginTop: 16 }]} onPress={() => handleBukaKamera('KELUAR')}>
+              <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#006e2f', marginTop: 16 }]} onPress={() => handleBukaKamera('KELUAR')}>
+                <Icon name="logout-variant" size={20} color="#ffffff" style={{ marginRight: 10 }} />
                 <Text style={styles.pillButtonText}>ABSEN KELUAR</Text>
               </TouchableOpacity>
             </>
           )}
 
           {sedangIstirahat && !sudahKeluar && (
-            <TouchableOpacity style={[styles.pillButton, { backgroundColor: '#007d48' }]} onPress={() => handleBukaKamera('SELESAI_ISTIRAHAT')}>
+            <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#007d48' }]} onPress={() => handleBukaKamera('SELESAI_ISTIRAHAT')}>
+              <Icon name="coffee" size={20} color="#ffffff" style={{ marginRight: 10 }} />
               <Text style={styles.pillButtonText}>SELESAI ISTIRAHAT</Text>
             </TouchableOpacity>
           )}
@@ -185,33 +214,41 @@ export const AbsensiScreen = () => {
         {/* TIMELINE */}
         <View style={styles.timelineSection}>
           <Text style={styles.timelineHeader}>TIMELINE HARI INI</Text>
-          
+
           {absensiHariIni?.length === 0 && (
             <Text style={styles.timelineEmpty}>Belum ada catatan absensi hari ini.</Text>
           )}
 
-          {absensiHariIni?.map((item: any) => (
-            <View key={item.id} style={styles.timelineItem}>
-              <View style={styles.timelineIcon}>
-                <Icon name="check-circle" size={24} color="#111111" />
+          {absensiHariIni?.map((item: any, index: number) => {
+            const cfg = JENIS_CONFIG[item.jenis] || { icon: 'check-circle', color: '#161d16', bg: '#e8f0e4', label: item.jenis };
+            const isLast = index === (absensiHariIni.length - 1);
+            return (
+              <View key={item.id} style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineIcon, { backgroundColor: cfg.bg }]}>
+                    <Icon name={cfg.icon} size={22} color={cfg.color} />
+                  </View>
+                  {!isLast && <View style={styles.timelineConnector} />}
+                </View>
+                <View style={[styles.timelineContent, isLast && { borderBottomWidth: 0 }]}>
+                  <Text style={[styles.timelineTitle, { color: cfg.color }]}>{cfg.label}</Text>
+                  <Text style={styles.timelineTime}>{format(new Date(item.waktu_server || item.waktu_lokal), 'HH:mm', { locale: id })}</Text>
+                </View>
               </View>
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTitle}>{item.jenis.replace('_', ' ')}</Text>
-                <Text style={styles.timelineTime}>{format(new Date(item.waktu_server || item.waktu_lokal), 'HH:mm', { locale: id })}</Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Modal Kamera */}
         <Modal visible={isCameraOpen} animationType="slide" onRequestClose={() => setIsCameraOpen(false)}>
-          <CameraView 
-            jenis={jenisAbsenTerpilih} 
-            onClose={() => setIsCameraOpen(false)} 
-            onPhotoTaken={handleSelesaiFoto} 
+          <CameraView
+            jenis={jenisAbsenTerpilih}
+            onClose={() => setIsCameraOpen(false)}
+            onPhotoTaken={handleSelesaiFoto}
           />
         </Modal>
 
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -220,47 +257,56 @@ export const AbsensiScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f3fcef',
   },
   header: {
     paddingHorizontal: 24,
     paddingTop: 48,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: '#dce5d9',
   },
   pageTitle: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#111111',
+    color: '#161d16',
     letterSpacing: -1,
   },
   dateSubtitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#707072',
+    color: '#3d4a3d',
     marginTop: 8,
   },
   statusSection: {
     paddingHorizontal: 24,
-    paddingVertical: 32,
-    backgroundColor: '#f5f5f5',
+    paddingVertical: 28,
+  },
+  statusLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
   },
   statusLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#707072',
-    marginBottom: 8,
+    color: '#3d4a3d',
   },
   statusValue: {
     fontSize: 32,
@@ -271,11 +317,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 32,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: '#dce5d9',
   },
   pillButton: {
-    borderRadius: 30, // Nike pill button
+    borderRadius: 30,
     height: 60,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -293,44 +340,50 @@ const styles = StyleSheet.create({
   timelineHeader: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#111111',
+    color: '#161d16',
     marginBottom: 24,
   },
   timelineEmpty: {
     fontSize: 14,
-    color: '#707072',
+    color: '#3d4a3d',
     fontWeight: '500',
   },
-  timelineItem: {
+  timelineRow: {
     flexDirection: 'row',
+  },
+  timelineLeft: {
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    marginRight: 16,
+  },
+  timelineConnector: {
+    width: 2,
+    flex: 1,
+    backgroundColor: '#dce5d9',
+    marginVertical: 4,
   },
   timelineIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
   timelineContent: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#dce5d9',
   },
   timelineTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#111111',
   },
   timelineTime: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#707072',
+    color: '#3d4a3d',
   },
 });

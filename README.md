@@ -51,7 +51,16 @@ Sistem SIAP dipecah menjadi 3 _layer_ tulang punggung:
 
 Ikuti langkah-langkah di bawah ini untuk memulai seluruh infrastruktur SIAP dari Titik Nol (0).
 
-### 1. Bangun Infrastruktur Dasar (Docker)
+### 💡 Cara Super Cepat (Khusus Pengembang di Windows)
+Alih-alih menjalankan 4 perintah di atas satu persatu, Anda bisa mengklik ganda (*double-click*) file **`start-all.bat`** di folder utama proyek, atau jalankan perintah ini di terminal utama Anda:
+```cmd
+.\start-all.bat
+```
+> _Skrip ini akan secara otomatis membuka 3 jendela terminal baru (Backend, Web Admin, dan Mobile) sekaligus menyalakan Docker untuk Anda secara instan tanpa perlu repot!_
+
+---
+
+### 1. Bangun Infrastruktur Dasar (Docker - Cara Manual)
 Pastikan Docker Desktop sudah menyala di perangkat Anda.
 ```bash
 cd infra

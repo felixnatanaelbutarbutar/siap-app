@@ -84,7 +84,7 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
   };
 
   const sigWebStyle = `
-    .m-signature-pad {box-shadow: none; border: 1px solid #e5e5e5; border-radius: 0px;} 
+    .m-signature-pad {box-shadow: none; border: 1px solid #dce5d9; border-radius: 0px;} 
     .m-signature-pad--footer {display: none; margin: 0px;}
     body,html {width: 100%; height: 100%; background-color: #f5f5f5;}
   `;
@@ -95,7 +95,7 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
         <Text style={styles.headerTitle}>{title}</Text>
 
         <Text style={styles.sectionLabel}>STAFF PENGGANTI (PENERIMA)</Text>
-        <TouchableOpacity style={styles.dropdownBtn} onPress={() => setStaffModalVisible(true)}>
+        <TouchableOpacity style={styles.dropdownBtn} onPress={() => setStaffModalVisible(true)} activeOpacity={0.8}>
           <Text style={styles.dropdownText}>
             {penerimaId ? MOCK_STAFF.find(s => s.id === penerimaId)?.nama : 'PILIH STAFF...'}
           </Text>
@@ -108,8 +108,9 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
             
             <View style={styles.statusRow}>
               {['BAIK', 'RUSAK', 'HILANG'].map(s => (
-                <TouchableOpacity 
-                  key={s} 
+                <TouchableOpacity
+                  key={s}
+                  activeOpacity={0.8}
                   style={[styles.statusBtn, item.status === s && styles.statusBtnActive]}
                   onPress={() => updateItemStatus(index, s)}
                 >
@@ -124,8 +125,8 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
               value={item.catatan}
               onChangeText={(txt) => updateItemCatatan(index, txt)}
               style={styles.inputCatatan}
-              underlineColor="#e5e5e5"
-              activeUnderlineColor="#111111"
+              underlineColor="#dce5d9"
+              activeUnderlineColor="#006e2f"
             />
           </View>
         ))}
@@ -150,8 +151,8 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
           style={styles.textArea}
           multiline
           numberOfLines={3}
-          underlineColor="#e5e5e5"
-          activeUnderlineColor="#111111"
+          underlineColor="#dce5d9"
+          activeUnderlineColor="#006e2f"
         />
 
         <Text style={styles.sectionLabel}>TANDA TANGAN ANDA</Text>
@@ -219,39 +220,39 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#111111', marginBottom: 24, textAlign: 'center' },
-  sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#707072', marginTop: 16, marginBottom: 8 },
-  dropdownBtn: { backgroundColor: '#f5f5f5', padding: 16, borderWidth: 1, borderColor: '#e5e5e5' },
-  dropdownText: { fontSize: 16, fontWeight: 'bold', color: '#111111' },
-  itemCard: { backgroundColor: '#f5f5f5', padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#e5e5e5' },
-  itemName: { fontSize: 16, fontWeight: 'bold', color: '#111111', marginBottom: 12 },
+  container: { flex: 1, backgroundColor: '#f3fcef' },
+  scrollContent: { padding: 16, paddingBottom: 200, flexGrow: 1 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#161d16', marginBottom: 24, textAlign: 'center' },
+  sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#3d4a3d', marginTop: 16, marginBottom: 8 },
+  dropdownBtn: { backgroundColor: '#e8f0e4', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#dce5d9' },
+  dropdownText: { fontSize: 16, fontWeight: 'bold', color: '#161d16' },
+  itemCard: { backgroundColor: '#e8f0e4', padding: 16, marginBottom: 16, borderRadius: 12, borderWidth: 1, borderColor: '#dce5d9' },
+  itemName: { fontSize: 16, fontWeight: 'bold', color: '#161d16', marginBottom: 12 },
   statusRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  statusBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#cacacb' },
-  statusBtnActive: { backgroundColor: '#111111', borderColor: '#111111' },
-  statusBtnText: { fontSize: 12, fontWeight: 'bold', color: '#707072' },
+  statusBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#f3fcef', borderWidth: 1, borderColor: '#bccbb9' },
+  statusBtnActive: { backgroundColor: '#006e2f', borderColor: '#006e2f' },
+  statusBtnText: { fontSize: 12, fontWeight: 'bold', color: '#3d4a3d' },
   statusBtnTextActive: { color: '#ffffff' },
-  inputCatatan: { backgroundColor: '#ffffff', fontSize: 14, height: 40 },
+  inputCatatan: { backgroundColor: '#f3fcef', fontSize: 14, height: 40 },
   photoContainer: { flexDirection: 'row', gap: 12, marginBottom: 8 },
-  photoThumbnail: { width: 80, height: 80, backgroundColor: '#e5e5e5' },
-  addPhotoBtn: { width: 80, height: 80, backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#111111', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
-  addPhotoText: { fontWeight: 'bold', color: '#111111', fontSize: 10 },
-  textArea: { backgroundColor: '#f5f5f5' },
-  signatureContainer: { height: 150, borderWidth: 1, borderColor: '#111111', backgroundColor: '#f5f5f5' },
+  photoThumbnail: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#dce5d9' },
+  addPhotoBtn: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#e8f0e4', borderWidth: 1, borderColor: '#bccbb9', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
+  addPhotoText: { fontWeight: 'bold', color: '#006e2f', fontSize: 10 },
+  textArea: { backgroundColor: '#e8f0e4' },
+  signatureContainer: { height: 150, borderWidth: 1, borderRadius: 12, overflow: 'hidden', borderColor: '#dce5d9', backgroundColor: '#e8f0e4' },
   sigActionRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   sigClearBtn: { padding: 8 },
-  sigClearText: { color: '#707072', fontWeight: 'bold', fontSize: 12 },
-  sigSaveBtn: { padding: 8, backgroundColor: '#111111' },
+  sigClearText: { color: '#3d4a3d', fontWeight: 'bold', fontSize: 12 },
+  sigSaveBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#006e2f' },
   sigSaveText: { color: '#ffffff', fontWeight: 'bold', fontSize: 12 },
-  submitBtn: { marginTop: 32, backgroundColor: '#111111', borderRadius: 0, paddingVertical: 8 },
+  submitBtn: { marginTop: 32, backgroundColor: '#006e2f', borderRadius: 30, paddingVertical: 8 },
   submitBtnLabel: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
-  
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
-  modalContent: { backgroundColor: '#ffffff', padding: 24 },
-  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#111111', marginBottom: 16 },
-  modalOption: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
-  modalOptionText: { fontSize: 16, color: '#111111', fontWeight: '500' },
-  modalCloseBtn: { marginTop: 24, paddingVertical: 12, backgroundColor: '#111111', alignItems: 'center' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(22,29,22,0.6)', justifyContent: 'center', padding: 24 },
+  modalContent: { backgroundColor: '#f3fcef', padding: 24, borderRadius: 24 },
+  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#161d16', marginBottom: 16 },
+  modalOption: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#dce5d9' },
+  modalOptionText: { fontSize: 16, color: '#161d16', fontWeight: '500' },
+  modalCloseBtn: { marginTop: 24, paddingVertical: 14, borderRadius: 30, backgroundColor: '#006e2f', alignItems: 'center' },
   modalCloseText: { color: '#ffffff', fontWeight: 'bold' }
 });

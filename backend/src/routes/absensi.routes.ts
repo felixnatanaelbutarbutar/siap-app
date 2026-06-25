@@ -6,7 +6,8 @@ import {
   selesaiIstirahat, 
   getAbsensiHariIni, 
   getRiwayatAbsensi, 
-  getAdminAbsensi 
+  getAdminAbsensi,
+  getJadwalHariIni
 } from '../controllers/absensi.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/role.middleware';
@@ -26,6 +27,7 @@ router.post('/mulai-istirahat', roleLapangan, mulaiIstirahat);
 router.post('/selesai-istirahat', roleLapangan, selesaiIstirahat);
 
 router.get('/hari-ini', roleLapangan, getAbsensiHariIni);
+router.get('/jadwal-hari-ini', roleLapangan, getJadwalHariIni);
 router.get('/riwayat', roleLapangan, getRiwayatAbsensi);
 
 // ─── Endpoint Khusus ADMIN ──────────────────────────────────────────────────

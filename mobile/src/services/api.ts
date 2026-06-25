@@ -3,8 +3,8 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { Platform } from 'react-native';
 
 // Kita gunakan localhost dan ADB Reverse untuk koneksi backend tanpa halangan Firewall PC
-// Sesuaikan dengan environment yang tepat nanti.
-const BASE_URL = 'http://localhost:3000';
+// Namun agar lebih aman di Emulator Android, kita set 10.0.2.2 khusus Android
+const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
 export const api = axios.create({
   baseURL: BASE_URL,

@@ -265,7 +265,7 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
     const file = req.file;
 
     if (!file) {
-      res.status(400).json({ success: false, message: 'Foto laporan per jam wajib disertakan.' });
+      res.status(400).json({ success: false, message: 'Foto laporan per 3 jam wajib disertakan.' });
       return;
     }
 
@@ -290,7 +290,7 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
     const sudahKeluar = absensiHariIni.some(a => a.jenis === JenisAbsensi.KELUAR);
 
     if (!sudahMasuk || sudahKeluar) {
-      res.status(400).json({ success: false, message: 'Laporan per jam hanya bisa dibuat saat shift aktif.' });
+      res.status(400).json({ success: false, message: 'Laporan per 3 jam hanya bisa dibuat saat shift aktif.' });
       return;
     }
 
@@ -306,7 +306,7 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
     });
 
     if (existing) {
-      res.status(400).json({ success: false, message: `Laporan untuk jam ${jam}:00 sudah pernah dibuat hari ini.` });
+      res.status(400).json({ success: false, message: `Laporan per 3 jam untuk pukul ${jam}:00 sudah pernah dibuat hari ini.` });
       return;
     }
 
@@ -341,7 +341,7 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
       },
     });
 
-    res.status(201).json({ success: true, message: 'Laporan per jam berhasil disimpan.', data: laporan });
+    res.status(201).json({ success: true, message: 'Laporan per 3 jam berhasil disimpan.', data: laporan });
   } catch (error) {
     logger.error('Error createLaporanPerJam:', error);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });

@@ -141,6 +141,7 @@ model Staff {
   serah_terima_baru SerahTerima[]  @relation("StaffBaru")
   izin_cuti         IzinCuti[]
   jadwal_kerja      JadwalKerja[]
+  pengumuman        Pengumuman[]
 
   @@index([area_tugas_id])
   @@index([aktif])
@@ -301,4 +302,25 @@ model PengaturanSistem {
   updated_at                      DateTime @updatedAt
 
   @@map("pengaturan_sistem")
+}
+
+enum TipePengumuman {
+  INFO
+  PENTING
+  UPDATE
+}
+
+model Pengumuman {
+  id         String         @id @default(cuid())
+  judul      String
+  konten     String         @db.Text
+  tipe       TipePengumuman @default(INFO)
+  admin_id   String
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  // Relations
+  admin      Staff          @relation(fields: [admin_id], references: [id])
+
+  @@map("pengumuman")
 }
