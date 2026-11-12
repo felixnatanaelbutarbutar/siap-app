@@ -1,32 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
-import { api } from '../../services/api';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { api, SOCKET_URL } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { ShieldCheck, Sparkles, Wrench, AlertTriangle, Activity, Radio } from 'lucide-react';
+import { ModernMap, type MapCircleItem, type MapMarkerItem } from '../../components/ModernMap';
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   component: DashboardPage,
 });
 
-const createIcon = (color: string) => new L.DivIcon({
-  className: 'custom-marker',
-  html: `<div style="background-color:${color};width:12px;height:12px;border-radius:50%;border:2px solid var(--text-base);box-shadow:0 2px 8px rgba(0,0,0,0.6);"></div>`,
-  iconSize: [12, 12],
-  iconAnchor: [6, 6],
-});
-
-const ICONS = {
-  SATPAM: createIcon('var(--accent)'),
-  CS: createIcon('var(--info)'),
-  UTILITY: createIcon('var(--warning)'),
-  INACTIVE: createIcon('var(--border-bright)'),
+const ROLE_COLORS: Record<string, string> = {
+  SATPAM: '#1ed760',
+  CS: '#539df5',
+  UTILITY: '#ffa42b',
+  INACTIVE: '#6d6d6d',
 };
 
 // Dark card container
@@ -40,8 +32,32 @@ const DarkCard = ({ children, className = '', style = {} }: any) => (
 );
 
 function DashboardPage() {
+  const queryClient = useQueryClient();
+  const token = useAuthStore((s) => s.token);
   const [liveLocations, setLiveLocations] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+
+  const { data: areaList } = useQuery({
+    queryKey: ['area-tugas'],
+    queryFn: async () => { const { data } = await api.get('/admin/area-tugas'); return data.data || []; },
+  });
+
+  const { data: initialLocations } = useQuery({
+    queryKey: ['dashboard-live-tracking'],
+    queryFn: async () => { const { data } = await api.get('/admin/dashboard/live-tracking'); return data.data || []; },
+    refetchInterval: 60000,
+  });
+
+  useEffect(() => {
+    if (initialLocations) {
+      setLiveLocations(
+        initialLocations.map((loc: any) => ({
+          ...loc,
+          lastUpdate: loc.updated_at ? new Date(loc.updated_at).getTime() : Date.now(),
+        }))
+      );
+    }
+  }, [initialLocations]);
 
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ['dashboard-summary'],
@@ -63,17 +79,128 @@ function DashboardPage() {
   useEffect(() => { if (recentActivities) setActivities(recentActivities); }, [recentActivities]);
 
   useEffect(() => {
-    const s = io('http://localhost:3000');
-    s.on('update_location', (data: any) => {
-      setLiveLocations(prev => {
-        const idx = prev.findIndex(l => l.id === data.id);
-        if (idx >= 0) { const a = [...prev]; a[idx] = { ...a[idx], ...data, lastUpdate: Date.now() }; return a; }
-        return [...prev, { ...data, lastUpdate: Date.now() }];
+    if (!token) return;
+
+    const s = io(SOCKET_URL, { auth: { token } });
+
+    s.on('location:snapshot', (snapshot: any[]) => {
+      if (!Array.isArray(snapshot)) return;
+      setLiveLocations(
+        snapshot.map((loc) => ({
+          ...loc,
+          lastUpdate: loc.updated_at ? new Date(loc.updated_at).getTime() : Date.now(),
+        }))
+      );
+    });
+
+    s.on('location:updated', (data: any) => {
+      if (!data?.staff_id) return;
+      setLiveLocations((prev) => {
+        const idx = prev.findIndex((l) => l.staff_id === data.staff_id);
+        const updated = { ...data, lastUpdate: Date.now() };
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = { ...next[idx], ...updated };
+          return next;
+        }
+        return [...prev, updated];
       });
     });
-    s.on('new_activity', (data: any) => setActivities(prev => [data, ...prev].slice(0, 10)));
-    return () => { s.disconnect(); };
-  }, []);
+
+    s.on('absensi:new', (data: any) => {
+      const act = {
+        id: `ws-abs-${Date.now()}`,
+        nama: data.nama,
+        role: data.divisi,
+        waktu: data.waktu || new Date().toISOString(),
+        aksi: `Melakukan absensi ${String(data.jenis || '').replace('_', ' ')}`,
+      };
+      setActivities((prev) => [act, ...prev].slice(0, 10));
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-live-tracking'] });
+    });
+
+    s.on('laporan:new', (data: any) => {
+      const act = {
+        id: `ws-lap-${Date.now()}`,
+        nama: data.nama,
+        role: data.divisi,
+        waktu: new Date().toISOString(),
+        aksi: `Mengirim laporan: ${data.kategori || 'Baru'}`,
+      };
+      setActivities((prev) => [act, ...prev].slice(0, 10));
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+    });
+
+    s.on('serah_terima:new', (data: any) => {
+      const act = {
+        id: `ws-st-${Date.now()}`,
+        nama: data.nama,
+        role: data.divisi,
+        waktu: new Date().toISOString(),
+        aksi: `Memulai serah terima ${data.jenis || ''}`,
+      };
+      setActivities((prev) => [act, ...prev].slice(0, 10));
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+    });
+
+    return () => {
+      s.disconnect();
+    };
+  }, [token, queryClient]);
+
+  const mapData = useMemo(() => {
+    const validLive = liveLocations.filter(
+      (loc) => Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lng))
+    );
+    const validAreas = (areaList || []).filter(
+      (a: any) => Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lng))
+    );
+
+    const center: [number, number] =
+      validLive.length > 0
+        ? [Number(validLive[0].lat), Number(validLive[0].lng)]
+        : validAreas.length > 0
+          ? [Number(validAreas[0].lat), Number(validAreas[0].lng)]
+          : [-6.2088, 106.8456];
+
+    const circles: MapCircleItem[] = validAreas.map((area: any) => ({
+      id: String(area.id),
+      lat: Number(area.lat),
+      lng: Number(area.lng),
+      radiusMeters: Math.min(Number(area.radius_meter ?? area.radius ?? 200), 2500),
+      label: area.nama,
+      color: '#1ed760',
+    }));
+
+    const markers: MapMarkerItem[] = [
+      ...validAreas.map((area: any) => ({
+        id: `area-${area.id}`,
+        lat: Number(area.lat),
+        lng: Number(area.lng),
+        title: area.nama,
+        subtitle: `Area Tugas • Radius ${area.radius_meter ?? area.radius}m`,
+        color: '#1ed760',
+        variant: 'area' as const,
+      })),
+      ...validLive.map((loc) => {
+        const isInactive = Date.now() - loc.lastUpdate > 300000;
+        const color = isInactive ? ROLE_COLORS.INACTIVE : (ROLE_COLORS[loc.role] || ROLE_COLORS.INACTIVE);
+        return {
+          id: `staff-${loc.staff_id || loc.id}`,
+          lat: Number(loc.lat),
+          lng: Number(loc.lng),
+          title: loc.nama,
+          subtitle: `${loc.role} • ${loc.status_absensi || 'Aktif'}`,
+          color,
+          variant: 'staff' as const,
+          pulse: !isInactive,
+        };
+      }),
+    ];
+
+    return { center, circles, markers, hasDynamicCenter: validLive.length > 0 || validAreas.length > 0 };
+  }, [liveLocations, areaList]);
 
   const StatCard = ({ title, icon: Icon, color, hadir, tidakHadir, istirahat }: any) => (
     <DarkCard className="p-5 hover:scale-[1.01] transition-transform cursor-default">
@@ -164,27 +291,31 @@ function DashboardPage() {
             <span className="text-sm font-bold" style={{ color: 'var(--text-base)' }}>Live Tracking</span>
             <span className="ml-auto text-xs" style={{ color: 'var(--text-dim)' }}>{liveLocations.length} aktif</span>
           </div>
-          <div className="h-[360px] relative z-0">
+          <div className="h-[380px] relative z-0">
             {typeof window !== 'undefined' && (
-              <MapContainer center={[-6.200000, 106.816666]} zoom={16} style={{ height: '100%', width: '100%' }} attributionControl={false}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-                <Circle center={[-6.200000, 106.816666]} radius={200} pathOptions={{ color: 'var(--accent)', fillColor: 'var(--accent)', fillOpacity: 0.06, weight: 1 }} />
-                {liveLocations.map(loc => {
-                  const isInactive = Date.now() - loc.lastUpdate > 300000;
-                  const icon = isInactive ? ICONS.INACTIVE : ((ICONS as any)[loc.role] || ICONS.INACTIVE);
-                  return (
-                    <Marker key={loc.id} position={[loc.lat, loc.lng]} icon={icon}>
-                      <Popup><p className="font-bold" style={{ color: 'var(--text-base)' }}>{loc.nama}</p><p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{loc.role}</p></Popup>
-                    </Marker>
-                  );
-                })}
-              </MapContainer>
+              <ModernMap
+                center={mapData.center}
+                zoom={15.2}
+                pitch={35}
+                defaultStyle="standar"
+                circles={mapData.circles}
+                markers={mapData.markers}
+                followCenter={mapData.hasDynamicCenter}
+              />
             )}
             {liveLocations.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center z-[400]" style={{ background: 'rgba(18,18,18,0.5)' }}>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium" style={{ background: 'var(--bg-input)', color: 'var(--text-secondary)', border: '1px solid var(--border-bright)' }}>
-                  <Radio className="w-4 h-4" />
-                  Belum ada staff aktif
+              <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-md"
+                  style={{
+                    background: 'rgba(24, 24, 24, 0.88)',
+                    color: '#e5e5e5',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <Radio className="w-3.5 h-3.5" style={{ color: '#1ed760' }} />
+                  Belum ada staff live tracking
                 </div>
               </div>
             )}

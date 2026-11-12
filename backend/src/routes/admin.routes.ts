@@ -19,6 +19,7 @@ import {
 } from '../controllers/admin.controller';
 import { getAdminLaporan, reviewLaporan, getAdminLaporanPerJam } from '../controllers/laporan.controller';
 import { getJadwal, createJadwal, updateJadwal, deleteJadwal, getRekapJadwal, getPengaturan, updatePengaturan } from '../controllers/jadwal.controller';
+import { getAdminIzin, reviewIzin } from '../controllers/izin.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/role.middleware';
 import { uploadImage } from '../middleware/upload.middleware';
@@ -53,67 +54,8 @@ router.get('/serah-terima', getAdminSerahTerima);
 router.get('/inventaris/bermasalah', getAdminInventarisBermasalah);
 
 // ─── MANAJEMEN IZIN & CUTI ──────────────────────────────────────────────────
-router.get('/izin', async (req: any, res: any) => {
-  try {
-    const izinList = await (global as any).prisma.izinCuti.findMany({
-      include: {
-        staff: { select: { nama: true, nik: true, divisi: true } }
-      },
-      orderBy: { created_at: 'desc' }
-    });
-    res.json({ success: true, data: izinList });
-  } catch (error) {
-    console.error('Error get izin:', error);
-    res.status(500).json({ success: false, message: 'Gagal mengambil data izin' });
-  }
-});
-
-router.put('/izin/:id', async (req: any, res: any) => {
-  try {
-    const { id } = req.params;
-    const { status, komentar_admin } = req.body;
-    
-    // Fetch izin with staff fcm_token before updating
-    const izin = await (global as any).prisma.izinCuti.findUnique({
-      where: { id },
-      include: { staff: { select: { nama: true, fcm_token: true } } }
-    });
-    
-    if (!izin) {
-      return res.status(404).json({ success: false, message: 'Data izin tidak ditemukan.' });
-    }
-    
-    const updatedIzin = await (global as any).prisma.izinCuti.update({
-      where: { id },
-      data: { status, komentar_admin }
-    });
-
-    // Kirim push notification ke staff
-    if (izin.staff?.fcm_token) {
-      const { sendToDevice } = require('../services/notification.service');
-      const statusLabel = status === 'APPROVED' ? 'Disetujui ✅' : 'Ditolak ❌';
-      const title = `Permohonan Izin ${statusLabel}`;
-      const body = komentar_admin
-        ? `Catatan Admin: ${komentar_admin}`
-        : `Permohonan izin Anda telah ${status === 'APPROVED' ? 'disetujui' : 'ditolak'} oleh Admin.`;
-      
-      try {
-        await sendToDevice(izin.staff.fcm_token, title, body, {
-          type: 'izin_review',
-          izin_id: id,
-          status
-        });
-      } catch (fcmErr) {
-        console.error('Gagal kirim notif FCM izin:', fcmErr);
-      }
-    }
-
-    res.json({ success: true, data: updatedIzin, message: `Izin berhasil di-${status === 'APPROVED' ? 'setujui' : 'tolak'}.` });
-  } catch (error) {
-    console.error('Error update izin:', error);
-    res.status(500).json({ success: false, message: 'Gagal mengupdate status izin' });
-  }
-});
+router.get('/izin', getAdminIzin);
+router.put('/izin/:id', reviewIzin);
 
 // ─── MASTER DATA ────────────────────────────────────────────────────────────
 // Staff

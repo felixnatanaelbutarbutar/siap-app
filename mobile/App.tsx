@@ -17,11 +17,11 @@ const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#111111', // Pure black dari DESIGN.md
-    accent: '#707072', // Mute gray
-    background: '#ffffff',
-    surface: '#f5f5f5', // Soft cloud
-    text: '#111111',
+    primary: '#006e2f', // Hijau utama dari DESIGN_MOBILE.md
+    accent: '#007d48',
+    background: '#f3fcef',
+    surface: '#ffffff',
+    text: '#161d16',
   },
 };
 

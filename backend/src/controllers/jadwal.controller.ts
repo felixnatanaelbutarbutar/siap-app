@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { HariKerja } from '@prisma/client';
+import { createJadwalSchema, updateJadwalSchema, updatePengaturanSchema } from '../schemas/jadwal.schema';
 
 export const getJadwal = async (req: Request, res: Response) => {
   try {
     const { divisi, staff_id } = req.query;
     
-    let whereClause: any = {};
+    const whereClause: any = {};
     if (staff_id && staff_id !== 'SEMUA') {
       whereClause.staff_id = staff_id;
     } else if (divisi && divisi !== 'SEMUA') {
@@ -41,7 +41,13 @@ export const getJadwal = async (req: Request, res: Response) => {
 
 export const createJadwal = async (req: Request, res: Response) => {
   try {
-    const { staff_id, hari, jam_masuk, jam_keluar } = req.body;
+    const parsed = createJadwalSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+      return;
+    }
+
+    const { staff_id, hari, jam_masuk, jam_keluar } = parsed.data;
 
     // Validate if the schedule for this day already exists
     const existing = await prisma.jadwalKerja.findUnique({
@@ -67,11 +73,21 @@ export const createJadwal = async (req: Request, res: Response) => {
 export const updateJadwal = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { jam_masuk, jam_keluar, aktif } = req.body;
+    const parsed = updateJadwalSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+      return;
+    }
+
+    const existing = await prisma.jadwalKerja.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan.' });
+      return;
+    }
 
     const updatedJadwal = await prisma.jadwalKerja.update({
       where: { id },
-      data: { jam_masuk, jam_keluar, aktif }
+      data: parsed.data
     });
 
     res.json({ success: true, data: updatedJadwal, message: 'Jadwal berhasil diperbarui' });
@@ -84,6 +100,11 @@ export const updateJadwal = async (req: Request, res: Response) => {
 export const deleteJadwal = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const existing = await prisma.jadwalKerja.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan.' });
+      return;
+    }
     await prisma.jadwalKerja.delete({ where: { id } });
     res.json({ success: true, message: 'Jadwal berhasil dihapus' });
   } catch (error) {
@@ -109,7 +130,7 @@ export const getRekapJadwal = async (req: Request, res: Response) => {
     const toleransi = pengaturan?.toleransi_keterlambatan_menit || 15;
 
     // Build staff filter
-    let staffWhere: any = {};
+    const staffWhere: any = {};
     if (divisi && divisi !== 'SEMUA') {
       staffWhere.divisi = divisi as any;
     }
@@ -144,20 +165,18 @@ export const getRekapJadwal = async (req: Request, res: Response) => {
 
       // Calculate scheduled hours per day mapping
       const jadwalMap = new Map();
-      let totalJamKerjaTerjadwalMingguan = 0;
       
       for (const j of staff.jadwal_kerja) {
         // Map enum to JS day index (0=Sunday, 1=Monday, etc)
         const dayMap: Record<string, number> = { 'AHAD': 0, 'SENIN': 1, 'SELASA': 2, 'RABU': 3, 'KAMIS': 4, 'JUMAT': 5, 'SABTU': 6 };
         const jsDay = dayMap[j.hari];
         
-        let [mH, mM] = j.jam_masuk.split(':').map(Number);
-        let [kH, kM] = j.jam_keluar.split(':').map(Number);
+        const [mH, mM] = j.jam_masuk.split(':').map(Number);
+        const [kH, kM] = j.jam_keluar.split(':').map(Number);
         
         let durasi = (kH + kM/60) - (mH + mM/60);
         if (durasi < 0) durasi += 24; // Cross midnight shift
         
-        totalJamKerjaTerjadwalMingguan += durasi;
         jadwalMap.set(jsDay, { jam_masuk: j.jam_masuk, durasi });
       }
 
@@ -276,7 +295,13 @@ export const getPengaturan = async (req: Request, res: Response) => {
 
 export const updatePengaturan = async (req: Request, res: Response) => {
   try {
-    const { toleransi_keterlambatan_menit } = req.body;
+    const parsed = updatePengaturanSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+      return;
+    }
+
+    const { toleransi_keterlambatan_menit } = parsed.data;
     const pengaturan = await prisma.pengaturanSistem.upsert({
       where: { id: 'singleton' },
       update: { toleransi_keterlambatan_menit },

@@ -2,15 +2,16 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { logger } from '../utils/logger';
 import { sendToDivisi, sendToRole, sendMulticast } from '../services/notification.service';
-import { Divisi, JenisAbsensi, StatusLaporan, Role } from '@prisma/client';
-import { 
-  getStatistikSchema, 
+import { Divisi, JenisAbsensi, StatusLaporan } from '@prisma/client';
+import {
+  getStatistikSchema,
   exportAbsensiSchema,
   createStaffSchema,
   updateStaffSchema,
   createAreaTugasSchema,
   updateAreaTugasSchema,
-  broadcastNotifikasiSchema
+  broadcastNotifikasiSchema,
+  ROLE_DIVISI_MAP
 } from '../schemas/admin.schema';
 import bcrypt from 'bcryptjs';
 import Papa from 'papaparse';
@@ -336,7 +337,34 @@ export const getStatistikKehadiran = async (req: Request, res: Response): Promis
       };
     });
 
-    res.status(200).json({ success: true, data: statistik });
+    // Hitung tren kehadiran harian riil untuk grafik bulanan (menggantikan Math.random di web-admin)
+    const daysInMonth = endDate.getDate();
+    const staffDivMap = new Map(staffList.map((s) => [s.id, s.divisi]));
+    const dailySets: Record<number, { SATPAM: Set<string>; CS: Set<string>; UTILITY: Set<string> }> = {};
+    for (let day = 1; day <= daysInMonth; day++) {
+      dailySets[day] = { SATPAM: new Set(), CS: new Set(), UTILITY: new Set() };
+    }
+    for (const a of absensiList) {
+      if (a.jenis !== JenisAbsensi.MASUK) continue;
+      const day = a.waktu_server.getDate();
+      const div = staffDivMap.get(a.staff_id);
+      if (day >= 1 && day <= daysInMonth) {
+        if (div === Divisi.KEAMANAN) dailySets[day].SATPAM.add(a.staff_id);
+        else if (div === Divisi.CUSTOMER_SERVICE) dailySets[day].CS.add(a.staff_id);
+        else if (div === Divisi.UTILITY) dailySets[day].UTILITY.add(a.staff_id);
+      }
+    }
+    const dailyChart = Array.from({ length: daysInMonth }, (_, idx) => {
+      const day = idx + 1;
+      return {
+        tanggal: day,
+        SATPAM: dailySets[day].SATPAM.size,
+        CS: dailySets[day].CS.size,
+        UTILITY: dailySets[day].UTILITY.size,
+      };
+    });
+
+    res.status(200).json({ success: true, data: statistik, chart: dailyChart });
   } catch (error) {
     logger.error('Error getStatistikKehadiran:', error);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
@@ -443,6 +471,19 @@ export const updateStaff = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
+    const existing = await prisma.staff.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Staff tidak ditemukan.' });
+      return;
+    }
+
+    const nextRole = parsed.data.role ?? existing.role;
+    const nextDivisi = parsed.data.divisi ?? existing.divisi;
+    if (ROLE_DIVISI_MAP[nextRole] !== nextDivisi) {
+      res.status(400).json({ success: false, message: 'Kombinasi role dan divisi tidak sesuai.' });
+      return;
+    }
+
     const data: any = { ...parsed.data };
     if (data.password) {
       data.password_hash = await bcrypt.hash(data.password, 12);
@@ -450,7 +491,7 @@ export const updateStaff = async (req: Request, res: Response): Promise<void> =>
     }
 
     if (req.file) {
-      const fileName = await uploadFile(req.file.buffer, req.file.originalname, req.file.mimetype);
+      const fileName = await uploadFile(req.file.buffer, `profil/${id}_${Date.now()}_${req.file.originalname}`, req.file.mimetype);
       data.foto_profil = fileName;
     }
 

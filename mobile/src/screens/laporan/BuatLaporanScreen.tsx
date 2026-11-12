@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Modal, TouchableOpacity, Image, Alert } from 'react-native';
-import { Text, TextInput, Button, useTheme } from 'react-native-paper';
+import { Text, TextInput, Button } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import { api } from '../../services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,7 +14,6 @@ const KATEGORI_PER_ROLE: Record<string, string[]> = {
 };
 
 export const BuatLaporanScreen = ({ navigation }: any) => {
-  const theme = useTheme();
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   
@@ -61,7 +60,7 @@ export const BuatLaporanScreen = ({ navigation }: any) => {
     }
   });
 
-  const handlePhotoTaken = (uri: string, lat: number, lng: number) => {
+  const handlePhotoTaken = (uri: string) => {
     setIsCameraOpen(false);
     if (fotos.length < 3) {
       setFotos([...fotos, uri]);

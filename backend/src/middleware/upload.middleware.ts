@@ -5,11 +5,17 @@ import multer from 'multer';
 const storage = multer.memoryStorage();
 
 // Filter: hanya izinkan file gambar
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: unknown, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Format file tidak didukung. Harap unggah gambar.'));
+    const err = new Error('Format file tidak didukung. Harap unggah gambar.') as Error & {
+      status?: number;
+      code?: string;
+    };
+    err.status = 400;
+    err.code = 'INVALID_FILE_TYPE';
+    cb(err);
   }
 };
 

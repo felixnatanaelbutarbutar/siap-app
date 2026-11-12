@@ -1,0 +1,28 @@
+# Security design
+
+## Scope and evidence
+State inspected paths and classification source.
+
+## Assets, actors and trust boundaries
+Identify valuable data/actions, principals, external services, untrusted input points, tenants and trust transitions from observed evidence.
+
+## Threat model
+Describe project-specific attack paths such as broken object authorization, account abuse, scraping, resource exhaustion, injection, SSRF, credential exposure, and supply-chain risks where relevant.
+
+## Identity and authorization
+Define evidenced authentication and server-side per-action/per-object authorization; mark missing roles, tenant boundaries, sessions or ownership rules unresolved.
+
+## Bots, abuse and resource limits
+Specify evidence-backed rate/quotas, account/source limits, body/concurrency/queue/cost bounds, safe limit responses, monitoring and abuse tests. Do not invent numeric thresholds.
+
+## Agentic AI and tool safeguards
+If applicable, cover untrusted prompt/retrieval/tool content, least privilege, scoped identities, allowlisted validated tools, output checks, human approval for consequential actions, sandbox/egress limits, budgets and adversarial tests. Otherwise state technical N/A.
+
+## Data, secrets and operations
+Document observed validation, encoding, storage/retention, secrets/key lifecycle, encryption, logging/redaction, dependencies, monitoring and recovery controls. Separate implemented from Proposed controls.
+
+## Verification and incident response
+List actual commands/tests and results, planned security verification, monitoring/response ownership and recovery steps; mark unknowns unresolved.
+
+## Open risks and response
+Prioritize residual risks, missing evidence/decisions, affected release boundary and next safe action. Never claim “unhackable” or certified security.

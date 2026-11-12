@@ -1,8 +1,17 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000');
+
+export const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.PROD && typeof window !== 'undefined'
+    ? window.location.origin
+    : 'http://localhost:3000');
+
 export const api = axios.create({
-  baseURL: 'http://localhost:3000', // Backend tidak pakai prefix /api
+  baseURL: API_BASE_URL,
   timeout: 10000,
 });
 

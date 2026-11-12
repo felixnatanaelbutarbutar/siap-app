@@ -12,8 +12,6 @@ export const createLaporanSchema = z.object({
   kategori: z.nativeEnum(KategoriLaporan, { required_error: 'Kategori laporan wajib diisi.' }),
   judul: z.string({ required_error: 'Judul laporan wajib diisi.' }).min(5, 'Judul minimal 5 karakter.'),
   deskripsi: z.string({ required_error: 'Deskripsi laporan wajib diisi.' }).min(10, 'Deskripsi minimal 10 karakter.'),
-}).superRefine((data, ctx) => {
-  // Validasi tambahan akan dilakukan di controller untuk memastikan kategori sesuai divisi user
 });
 
 export const getLaporanSchema = z.object({

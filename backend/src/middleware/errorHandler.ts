@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
   logger.error(`${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
 
   // Default Error Format
@@ -20,6 +20,16 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
       message = 'Data tidak ditemukan di database.';
       code = 'PRISMA_P2025';
     }
+  }
+
+  // Multer Upload Error
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'Ukuran file melebihi batas maksimal 5 MB.'
+        : err.message || 'Gagal mengunggah file.';
+    code = err.code || 'UPLOAD_ERROR';
   }
 
   // Zod Validation Error (If any)

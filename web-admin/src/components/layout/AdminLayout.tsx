@@ -11,18 +11,21 @@ import {
   Users,
   Settings,
   LogOut,
-  Zap,
   CalendarDays,
   Moon,
   Sun,
   Megaphone,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useNotificationStore } from '../../store/notificationStore';
+import { BrandLogo } from '../BrandLogo';
 
 export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pendingReports = useNotificationStore((s) => s.pendingReports);
 
   const [isDark, setIsDark] = useState(() => {
@@ -59,29 +62,63 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'var(--bg-base)' }}>
+      {/* Mobile Header */}
+      <header
+        className="md:hidden h-14 px-4 flex items-center justify-between sticky top-0 z-20"
+        style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <BrandLogo variant="wordmark" className="h-6 w-auto" />
+          <span
+            className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(30,215,96,0.14)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}
+          >
+            Admin
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          aria-label="Buka menu navigasi"
+          className="p-2 rounded-lg"
+          style={{ color: 'var(--text-base)' }}
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </header>
+
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-20 md:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
       <aside
-        className="w-60 flex flex-col fixed inset-y-0 left-0 z-30"
+        className={`w-60 flex flex-col fixed inset-y-0 left-0 z-30 transform transition-transform duration-200 ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
         style={{ background: 'var(--bg-surface)', borderRight: '1px solid var(--border)' }}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center gap-2.5 px-6" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--accent)' }}
+        <div className="h-16 flex items-center justify-between gap-2 px-5" style={{ borderBottom: '1px solid var(--border)' }}>
+          <Link to="/dashboard" className="flex items-center focus:outline-none">
+            <BrandLogo variant="wordmark" className="h-7 w-auto" />
+          </Link>
+          <span
+            className="text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{ background: 'rgba(30,215,96,0.15)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}
           >
-            <Zap className="w-4 h-4" style={{ color: 'var(--accent-text)' }} />
-          </div>
-          <span className="text-base font-bold tracking-tight" style={{ color: 'var(--text-base)' }}>SIAP</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full ml-auto"
-            style={{ background: 'rgba(30,215,96,0.15)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}>
             Admin
           </span>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
           <p className="text-[10px] font-bold uppercase tracking-widest px-3 mb-3"
             style={{ color: 'var(--text-dim)', letterSpacing: '1.5px' }}>
             Menu Utama
@@ -90,20 +127,14 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             <Link
               key={item.to}
               to={item.to}
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-base)] border-l-4 border-transparent"
-              activeProps={{
-                style: { 
-                  background: 'var(--bg-hover)', 
-                  color: 'var(--text-base)', 
-                  borderLeftColor: 'var(--accent)'
-                },
-              }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="siap-nav-link"
             >
               <div className="flex items-center gap-3">
-                <item.icon className="w-[18px] h-[18px] transition-colors" />
-                {item.label}
+                <item.icon className="siap-nav-icon" />
+                <span>{item.label}</span>
               </div>
-              {item.badge && item.badge > 0 && (
+              {item.badge !== undefined && item.badge > 0 && (
                 <span
                   className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                   style={{ background: 'var(--error)', color: '#fff' }}
@@ -131,20 +162,14 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
           <button
             onClick={() => setIsDark(!isDark)}
-            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all mb-1"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-base)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-hover)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            className="siap-sidebar-action mb-1"
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             {isDark ? 'Mode Terang' : 'Mode Gelap'}
           </button>
           <button
             onClick={() => setConfirmLogout(true)}
-            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--error)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(243,114,127,0.08)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            className="siap-sidebar-action siap-sidebar-action-danger"
           >
             <LogOut className="w-4 h-4" />
             Keluar
@@ -153,7 +178,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 ml-60 flex flex-col min-w-0">
+      <main className="flex-1 md:ml-60 flex flex-col min-w-0">
         <div className="flex-1 p-6 overflow-auto">
           {children}
         </div>

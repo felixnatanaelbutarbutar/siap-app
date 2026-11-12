@@ -4,6 +4,7 @@ node_modules/
 *.log
 .env
 .env.local
+.env.test
 
 # Build artifacts
 dist/
@@ -34,3 +35,7 @@ mobile/ios/build/
 
 # Infra secrets
 infra/.env
+
+# Local caches & agent settings
+.tanstack/
+.claude/

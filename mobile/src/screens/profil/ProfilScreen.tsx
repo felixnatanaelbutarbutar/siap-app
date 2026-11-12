@@ -114,6 +114,11 @@ export const ProfilScreen = () => {
         </View>
         
         <View style={styles.footer}>
+          <Image
+            source={require('../../assets/logo-emerald.png')}
+            style={styles.footerLogo}
+            resizeMode="contain"
+          />
           <Text style={styles.footerText}>SIAP SYSTEM V1.0.0</Text>
         </View>
       </ScrollView>
@@ -252,6 +257,12 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     paddingBottom: 24,
+    gap: 8,
+  },
+  footerLogo: {
+    width: 76,
+    height: 22,
+    opacity: 0.78,
   },
   footerText: {
     fontSize: 10,

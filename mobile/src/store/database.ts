@@ -59,3 +59,11 @@ export const markAbsensiSynced = (id: number) => {
     console.error('Update status synced gagal:', error);
   }
 };
+
+export const markAbsensiFailed = (id: number) => {
+  try {
+    db.execute('UPDATE absensi_offline SET status = "failed" WHERE id = ?', [id]);
+  } catch (error) {
+    console.error('Update status failed gagal:', error);
+  }
+};

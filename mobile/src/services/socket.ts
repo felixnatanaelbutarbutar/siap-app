@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/auth.store';
 import Geolocation from 'react-native-geolocation-service';
 import { PermissionsAndroid, Platform } from 'react-native';
+import { API_BASE_URL } from './api';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -11,8 +12,7 @@ class SocketService {
     const token = useAuthStore.getState().token;
     if (!token) return;
 
-    // Menggunakan localhost karena ADB Reverse sudah aktif
-    this.socket = io('http://localhost:3000', {
+    this.socket = io(API_BASE_URL, {
       auth: { token },
     });
 

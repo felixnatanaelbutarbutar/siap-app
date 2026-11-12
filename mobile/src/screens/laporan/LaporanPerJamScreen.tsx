@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, Image } from 'react-native';
-import { Text, TextInput, Button, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import { format } from 'date-fns';
 import notifee, { TriggerType, RepeatFrequency } from '@notifee/react-native';
 import { CameraView } from '../../components/CameraView';
 
 const STATUS_KEAMANAN = ['AMAN', 'ADA_TEMUAN', 'PERLU_PERIKSA'];
 
 export const LaporanPerJamScreen = () => {
-  const theme = useTheme();
   const queryClient = useQueryClient();
   
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
@@ -113,7 +111,7 @@ export const LaporanPerJamScreen = () => {
     setModalVisible(true);
   };
 
-  const handlePhotoTaken = (uri: string, lat: number, lng: number) => {
+  const handlePhotoTaken = (uri: string) => {
     setFotoUrl(uri);
     setIsCameraOpen(false);
   };
@@ -151,7 +149,6 @@ export const LaporanPerJamScreen = () => {
       <ScrollView contentContainerStyle={styles.timelineContent}>
         {hours.map((hour) => {
           const lapor = laporanPerJam?.find((l: any) => l.jam === hour);
-          const isCurrentHour = hour === currentHour;
           
           let circleColor = '#dce5d9'; // Default Abu-abu
           let statusText = 'Belum Ada Jadwal';

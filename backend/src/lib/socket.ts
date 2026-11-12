@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
+import { prisma } from './prisma';
 import { logger } from '../utils/logger';
 
 let io: SocketIOServer;
@@ -15,29 +16,50 @@ interface LocationData {
   updated_at: Date;
 }
 
-// In-memory store untuk posisi terakhir staff (bisa pakai Redis untuk production/scale up)
 const activeLocations = new Map<string, LocationData>();
 
 export const initSocket = (server: HttpServer) => {
+  const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) || [
+    'http://localhost:5173',
+  ];
+
   io = new SocketIOServer(server, {
     cors: {
-      origin: '*', // Di production sebaiknya diset spesifik domain
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
+      credentials: true,
     },
   });
 
   // Middleware Autentikasi Socket
-  io.use((socket, next) => {
-    const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
+  io.use(async (socket, next) => {
+    const token =
+      socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
     if (!token) {
       return next(new Error('Authentication error: Token missing'));
     }
 
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      logger.error('JWT_SECRET tidak dikonfigurasi pada Socket.io!');
+      return next(new Error('Authentication error: Server misconfigured'));
+    }
+
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret') as any;
-      socket.data.user = decoded; // simpan data user di socket
+      const decoded = jwt.verify(token, secret) as any;
+
+      if (decoded?.jti) {
+        const revoked = await prisma.revokedToken.findUnique({
+          where: { token_jti: decoded.jti },
+        });
+        if (revoked) {
+          return next(new Error('Authentication error: Token revoked'));
+        }
+      }
+
+      socket.data.user = decoded;
       next();
-    } catch (err) {
+    } catch {
       next(new Error('Authentication error: Invalid token'));
     }
   });
@@ -46,18 +68,23 @@ export const initSocket = (server: HttpServer) => {
     const user = socket.data.user;
     logger.info(`Socket connected: ${socket.id} (User: ${user.id} - ${user.role})`);
 
-    // Jika admin connect, masukkan ke room "admin"
     if (user.role === 'ADMIN') {
       socket.join('admin');
-      // Kirim snapshot posisi saat ini ke admin yang baru connect
       const locationsSnapshot = Array.from(activeLocations.values());
       socket.emit('location:snapshot', locationsSnapshot);
     }
 
-    // Staff emit update lokasi
-    socket.on('location:update', (data: { lat: number; lng: number; akurasi: number }) => {
-      // Kita asumsikan update lokasi hanya dari staff lapangan
+    socket.on('location:update', (data: { lat: number; lng: number; akurasi?: number }) => {
       if (user.role === 'ADMIN') return;
+      if (
+        !data ||
+        typeof data.lat !== 'number' ||
+        typeof data.lng !== 'number' ||
+        !Number.isFinite(data.lat) ||
+        !Number.isFinite(data.lng)
+      ) {
+        return;
+      }
 
       const locationData: LocationData = {
         staff_id: user.id,
@@ -69,20 +96,12 @@ export const initSocket = (server: HttpServer) => {
         updated_at: new Date(),
       };
 
-      // Update in-memory map
       activeLocations.set(user.id, locationData);
-
-      // Broadcast hanya ke room admin
       io.to('admin').emit('location:updated', locationData);
     });
 
     socket.on('disconnect', () => {
       logger.info(`Socket disconnected: ${socket.id} (User: ${user.id})`);
-      // Hapus lokasi dari memory jika staff terputus (opsional, tergantung preferensi bisnis)
-      // activeLocations.delete(user.id);
-      
-      // Beritahu admin bahwa user offline/disconnect
-      // io.to('admin').emit('location:offline', { staff_id: user.id });
     });
   });
 

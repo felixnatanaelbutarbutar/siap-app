@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-import { PrismaClient, TipePengumuman } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
+import { createPengumumanSchema } from '../schemas/pengumuman.schema';
 
 // Get all announcements
-export const getPengumuman = async (req: Request, res: Response) => {
+export const getPengumuman = async (_req: Request, res: Response): Promise<void> => {
   try {
     const pengumuman = await prisma.pengumuman.findMany({
       orderBy: { created_at: 'desc' },
@@ -22,21 +21,28 @@ export const getPengumuman = async (req: Request, res: Response) => {
 };
 
 // Create new announcement (Admin only ideally, but we'll check token in route)
-export const createPengumuman = async (req: Request, res: Response) => {
+export const createPengumuman = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { judul, konten, tipe } = req.body;
-    // user ID comes from authMiddleware
     const admin_id = req.user?.id;
 
     if (!admin_id) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      res.status(401).json({ success: false, message: 'Unauthorized' });
+      return;
     }
+
+    const parsed = createPengumumanSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+      return;
+    }
+
+    const { judul, konten, tipe } = parsed.data;
 
     const pengumuman = await prisma.pengumuman.create({
       data: {
         judul,
         konten,
-        tipe: tipe as TipePengumuman || 'INFO',
+        tipe,
         admin_id
       }
     });
@@ -49,9 +55,14 @@ export const createPengumuman = async (req: Request, res: Response) => {
 };
 
 // Delete announcement
-export const deletePengumuman = async (req: Request, res: Response) => {
+export const deletePengumuman = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    const existing = await prisma.pengumuman.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Pengumuman tidak ditemukan.' });
+      return;
+    }
     await prisma.pengumuman.delete({ where: { id } });
     res.json({ success: true, message: 'Pengumuman deleted successfully' });
   } catch (error) {

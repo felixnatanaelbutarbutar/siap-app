@@ -6,7 +6,6 @@ import {
   selesaiIstirahat, 
   getAbsensiHariIni, 
   getRiwayatAbsensi, 
-  getAdminAbsensi,
   getJadwalHariIni
 } from '../controllers/absensi.controller';
 import { authenticate } from '../middleware/auth.middleware';

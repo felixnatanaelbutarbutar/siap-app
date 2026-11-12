@@ -1,4 +1,5 @@
 import React from 'react';
+import { Image, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -30,6 +31,14 @@ const LaporanStack = () => {
   );
 };
 
+const HeaderBrandEmblem = () => (
+  <Image
+    source={require('../assets/emblem-white.png')}
+    style={navStyles.headerEmblem}
+    resizeMode="contain"
+  />
+);
+
 // Bottom Tabs Wrapper
 const MainTabs = () => {
   const user = useAuthStore((state) => state.user);
@@ -53,6 +62,7 @@ const MainTabs = () => {
         headerStyle: { backgroundColor: '#006e2f' },
         headerTintColor: '#ffffff',
         headerTitleStyle: { fontWeight: '800' },
+        headerRight: HeaderBrandEmblem,
       }}
     >
       <Tab.Screen 
@@ -136,3 +146,12 @@ export const AppNavigator = () => {
     </Stack.Navigator>
   );
 };
+
+const navStyles = StyleSheet.create({
+  headerEmblem: {
+    width: 24,
+    height: 24,
+    marginRight: 16,
+    opacity: 0.92,
+  },
+});

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Alert, Modal, Image, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, Alert, Modal, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import { api } from '../../services/api';
@@ -7,7 +7,7 @@ import { insertAbsensiOffline } from '../../store/database';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import notifee, { TriggerType, RepeatFrequency, IntervalTrigger, TimeUnit } from '@notifee/react-native';
+import notifee, { TriggerType, IntervalTrigger, TimeUnit } from '@notifee/react-native';
 
 import { CameraView } from '../../components/CameraView';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -30,9 +30,9 @@ export const AbsensiScreen = () => {
 
   useEffect(() => {
     Animated.timing(pageAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-  }, []);
+  }, [pageAnim]);
 
-  const { data: absensiHariIni, isLoading, refetch } = useQuery({
+  const { data: absensiHariIni, isLoading } = useQuery({
     queryKey: ['absensi', 'hari-ini'],
     queryFn: async () => {
       const res = await api.get('/absensi/hari-ini');
@@ -80,16 +80,24 @@ export const AbsensiScreen = () => {
       Alert.alert('SUKSES', 'Absensi berhasil terkirim!');
       queryClient.invalidateQueries({ queryKey: ['absensi'] });
     },
-    onError: (error, variables) => {
+    onError: (error: any, variables) => {
       console.log('Error absen API:', error);
-      insertAbsensiOffline(
-        variables.jenis, 
-        variables.lat, 
-        variables.lng, 
-        variables.foto_uri, 
-        new Date().toISOString()
-      );
-      Alert.alert('OFFLINE', 'Anda sedang offline. Absen disimpan lokal dan akan dikirim saat online.');
+      // Simpan ke antrean offline HANYA bila gagal koneksi jaringan (!error.response)
+      if (!error?.response) {
+        insertAbsensiOffline(
+          variables.jenis,
+          variables.lat,
+          variables.lng,
+          variables.foto_uri || '',
+          new Date().toISOString()
+        );
+        Alert.alert('OFFLINE', 'Koneksi terputus. Absen disimpan lokal dan akan dikirim saat online.');
+        return;
+      }
+
+      const serverMsg =
+        error.response?.data?.message || 'Gagal mengirim absensi. Silakan periksa kembali dan coba lagi.';
+      Alert.alert('GAGAL ABSEN', serverMsg);
     }
   });
 

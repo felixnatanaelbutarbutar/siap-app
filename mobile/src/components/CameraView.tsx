@@ -61,7 +61,6 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
 
       // 3. Ambil Foto
       const photo = await camera.current.takePhoto({
-        qualityPrioritization: 'speed',
         flash: 'off',
       });
 

@@ -59,7 +59,7 @@ export const BerandaScreen = () => {
     return () => {
       blinkLoop.stop();
     };
-  }, []);
+  }, [contentAnim, contentOpacity, headerAnim, notifBlink]);
 
   const { data: pengumumanData, isLoading: loadingPengumuman, refetch: refetchPengumuman } = useQuery({
     queryKey: ['pengumuman'],
@@ -95,6 +95,21 @@ export const BerandaScreen = () => {
         <Animated.View style={[styles.greenHeaderWrapper, { opacity: headerAnim }]}>
           <View style={styles.greenHeaderContent}>
 
+            {/* Brand Strip + Announcement Bell */}
+            <View style={styles.brandBar}>
+              <Image
+                source={require('../../assets/logo-white.png')}
+                style={styles.headerBrandLogo}
+                resizeMode="contain"
+              />
+              <TouchableOpacity style={styles.bellIconBtn} onPress={handleOpenPengumuman} activeOpacity={0.7}>
+                <Icon name="bullhorn-outline" size={22} color="#ffffff" />
+                {pengumumanData && pengumumanData.length > 0 && (
+                  <Animated.View style={[styles.notifDot, { opacity: notifBlink }]} />
+                )}
+              </TouchableOpacity>
+            </View>
+
             {/* Top Bar (Avatar & Welcome) */}
             <View style={styles.topBar}>
               <View style={styles.userInfoRow}>
@@ -110,12 +125,6 @@ export const BerandaScreen = () => {
                   <Text style={styles.greetingText}>{user?.nama?.split(' ')[0] || 'Pengguna'}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.bellIconBtn} onPress={handleOpenPengumuman} activeOpacity={0.7}>
-                <Icon name="bullhorn-outline" size={24} color="#ffffff" />
-                {pengumumanData && pengumumanData.length > 0 && (
-                  <Animated.View style={[styles.notifDot, { opacity: notifBlink }]} />
-                )}
-              </TouchableOpacity>
             </View>
 
             {/* FLOATING STATUS CARD */}
@@ -307,15 +316,25 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 18,
     paddingBottom: 100, // extra space for floating card
     position: 'relative',
+  },
+  brandBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  headerBrandLogo: {
+    width: 88,
+    height: 26,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   userInfoRow: {
     flexDirection: 'row',
@@ -358,16 +377,21 @@ const styles = StyleSheet.create({
   },
   bellIconBtn: {
     position: 'relative',
-    padding: 4,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   notifDot: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#4ae176',
   },
   statusCard: {
     backgroundColor: '#ffffff',

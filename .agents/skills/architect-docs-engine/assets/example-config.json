@@ -1,0 +1,16 @@
+{
+  "project": {
+    "name": "Example Support Desk",
+    "summary": "A fictional internal service for registering support requests.",
+    "domain": "customer-support",
+    "documentation_language": "en",
+    "lifecycle": "existing",
+    "target_users": ["support-agent", "administrator"]
+  },
+  "tech_stack": {"language": "Python", "runtime": "Python 3.11+"},
+  "constraints": ["Fixture data is synthetic and development-only"],
+  "requirements_sources": ["project-brief.md", "src/app.py"],
+  "security_classification": "internal",
+  "features": {"api": true, "database": false, "ui": false, "ai": false},
+  "docs": {"output_dir": "docs", "strict": true, "update_policy": "review"}
+}

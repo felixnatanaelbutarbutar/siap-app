@@ -2,20 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import NetInfo from '@react-native-community/netinfo';
-import { getPendingAbsensi, markAbsensiSynced } from '../store/database';
+import { getPendingAbsensi, markAbsensiSynced, markAbsensiFailed } from '../store/database';
 import { api } from '../services/api';
+
+const ENDPOINT_MAP: Record<string, string> = {
+  MASUK: '/absensi/masuk',
+  KELUAR: '/absensi/keluar',
+  MULAI_ISTIRAHAT: '/absensi/mulai-istirahat',
+  SELESAI_ISTIRAHAT: '/absensi/selesai-istirahat',
+};
 
 export const NetworkManager = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    // Check pending count initially
     const pending = getPendingAbsensi();
     setPendingCount(pending.length);
 
-    // Listen to network changes
-    const unsubscribe = NetInfo.addEventListener(state => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && state.isInternetReachable) {
         syncPendingData();
       }
@@ -33,36 +38,51 @@ export const NetworkManager = () => {
     setIsSyncing(true);
     setPendingCount(pendingData.length);
 
-    // Proses sinkronisasi berurutan (FIFO)
     for (const item of pendingData) {
       try {
-        const formData = new FormData();
-        formData.append('jenis', item.jenis);
-        formData.append('lat', item.lat.toString());
-        formData.append('lng', item.lng.toString());
-        
-        // Asumsi waktu menggunakan waktu ketika device sedang offline
-        // (Seharusnya ditambah field `waktu_offline` agar backend tahu waktu aslinya)
-        formData.append('waktu_offline', item.waktu_lokal);
+        const endpoint = ENDPOINT_MAP[item.jenis];
+        if (!endpoint) {
+          markAbsensiFailed(item.id);
+          continue;
+        }
 
-        const filename = item.foto_uri.split('/').pop() || 'photo_offline.jpg';
-        formData.append('foto', {
-          uri: item.foto_uri,
-          name: filename,
-          type: 'image/jpeg',
-        } as any);
+        if (item.jenis === 'MASUK' || item.jenis === 'KELUAR') {
+          const formData = new FormData();
+          formData.append('lat', item.lat.toString());
+          formData.append('lng', item.lng.toString());
 
-        await api.post('/absensi', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+          const filename = item.foto_uri?.split('/').pop() || 'photo_offline.jpg';
+          const finalUri = item.foto_uri?.startsWith('file://')
+            ? item.foto_uri
+            : `file://${item.foto_uri}`;
 
-        // Sukses kirim -> ubah status di SQLite
+          formData.append('foto', {
+            uri: finalUri,
+            name: filename,
+            type: 'image/jpeg',
+          } as any);
+
+          await api.post(endpoint, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } else {
+          await api.post(endpoint, {
+            lat: Number(item.lat),
+            lng: Number(item.lng),
+          });
+        }
+
         markAbsensiSynced(item.id);
-        
-      } catch (error) {
+      } catch (error: any) {
         console.log(`Gagal sinkronisasi data id ${item.id}:`, error);
-        // Break loop agar urutan tetap terjaga
-        break; 
+        const status = error?.response?.status;
+        // Jika ditolak permanen oleh validasi server (4xx selain 408/429), tandai gagal agar antrean berikutnya tidak tersumbat
+        if (status && status >= 400 && status < 500 && status !== 408 && status !== 429) {
+          markAbsensiFailed(item.id);
+          continue;
+        }
+        // Masalah jaringan / server 5xx -> hentikan sementara dan coba lagi saat koneksi pulih
+        break;
       }
     }
 
@@ -76,7 +96,9 @@ export const NetworkManager = () => {
   return (
     <View style={styles.banner}>
       <Text style={styles.bannerText}>
-        {isSyncing ? `Menyelaraskan ${pendingCount} data tertunda...` : `Ada ${pendingCount} data belum tersinkron`}
+        {isSyncing
+          ? `Menyelaraskan ${pendingCount} data tertunda...`
+          : `Ada ${pendingCount} data belum tersinkron`}
       </Text>
     </View>
   );
@@ -84,7 +106,7 @@ export const NetworkManager = () => {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: '#f1c40f', // Kuning peringatan
+    backgroundColor: '#f1c40f',
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignItems: 'center',
@@ -94,5 +116,5 @@ const styles = StyleSheet.create({
     color: '#161d16',
     fontWeight: 'bold',
     fontSize: 12,
-  }
+  },
 });

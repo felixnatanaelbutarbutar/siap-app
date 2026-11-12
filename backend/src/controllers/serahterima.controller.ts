@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { logger } from '../utils/logger';
-import { uploadFile } from '../services/storage.service';
+import { uploadFile, downloadFile } from '../services/storage.service';
 import { generateAndUploadBAST, BASTData } from '../services/pdf.service';
 import { getIO } from '../lib/socket';
 import { 
@@ -152,19 +152,16 @@ export const konfirmasiSerahTerima = async (req: Request, res: Response): Promis
       return;
     }
 
-    // Untuk membuat BAST, kita perlu TTD Lama format base64. 
-    // Karena kita tidak simpan full base64 string di db (terlalu besar), kita harus download?
-    // Lebih mudah, kita minta frontend kirim TTD Lama dan TTD Baru saat mulai dan konfirmasi.
-    // Tapi karena desain kita tidak menyimpannya, kita mock base64 dari request sementara.
-    // Idealnya, frontend kirim lagi, atau backend download buffer dari S3 (via minio).
-    // Untuk kesederhanaan implementasi (karena ini mockup), kita asumsikan Frontend mengirim `ttd_baru` dan kita download `ttd_lama_url` 
-    // Untuk mempermudah, di TASK ini kita anggap generate BAST butuh sedikit manipulasi:
-    
-    // Namun kita bisa biarkan PDF tanpa TTD visual jika sulit, atau dummy buffer.
-    // Sesuai requirement: "Embed tanda tangan (dari base64) + nama + timestamp"
-    // Agar tidak repot, kita ambil TTD Lama base64 dari `req.body.ttd_lama` opsional, 
-    // Tapi jika tidak ada, ya kita gunakan TTD Baru saja atau handle error.
-    const ttd_lama = req.body.ttd_lama || ''; // Hack/workaround, atau idealnya fetch dari s3
+    // Ambil TTD Lama: gunakan req.body.ttd_lama jika disediakan, atau unduh langsung dari MinIO
+    let ttd_lama = typeof req.body.ttd_lama === 'string' ? req.body.ttd_lama : '';
+    if (!ttd_lama && serahTerima.ttd_lama_url) {
+      try {
+        const ttdLamaBuffer = await downloadFile(serahTerima.ttd_lama_url);
+        ttd_lama = `data:image/png;base64,${ttdLamaBuffer.toString('base64')}`;
+      } catch (downloadErr) {
+        logger.warn(`Gagal mengunduh ttd_lama_url untuk BAST ${id}:`, downloadErr);
+      }
+    }
 
     // Siapkan data BAST
     const bastData: BASTData = {
@@ -231,15 +228,31 @@ export const getRiwayatSerahTerima = async (req: Request, res: Response): Promis
 // ─── GET /serah-terima/:id/bast ──────────────────────────────────────────────
 export const getBastUrl = async (req: Request, res: Response): Promise<void> => {
   try {
+    const user = req.user!;
     const { id } = req.params;
 
     const st = await prisma.serahTerima.findUnique({
       where: { id },
-      select: { bast_pdf_url: true, status: true },
+      select: {
+        staff_lama_id: true,
+        staff_baru_id: true,
+        bast_pdf_url: true,
+        status: true,
+      },
     });
 
     if (!st) {
       res.status(404).json({ success: false, message: 'Data tidak ditemukan.' });
+      return;
+    }
+
+    const isAuthorized =
+      user.role === Role.ADMIN ||
+      st.staff_lama_id === user.id ||
+      st.staff_baru_id === user.id;
+
+    if (!isAuthorized) {
+      res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke dokumen BAST ini.' });
       return;
     }
 

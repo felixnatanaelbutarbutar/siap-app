@@ -18,25 +18,50 @@ export const exportAbsensiSchema = z.object({
   format: z.literal('csv').default('csv'),
 });
 
-// Master Staff Schema
-export const createStaffSchema = z.object({
-  nik: z.string().min(1),
-  nama: z.string().min(1),
-  password: z.string().min(6),
-  role: z.nativeEnum(Role),
-  divisi: z.nativeEnum(Divisi),
-  area_tugas_id: z.string().optional().nullable(),
-  aktif: z.boolean().default(true),
-});
+export const ROLE_DIVISI_MAP: Record<Role, Divisi> = {
+  ADMIN: Divisi.MANAJEMEN,
+  SATPAM: Divisi.KEAMANAN,
+  CS: Divisi.CUSTOMER_SERVICE,
+  UTILITY: Divisi.UTILITY,
+};
 
-export const updateStaffSchema = z.object({
-  nama: z.string().min(1).optional(),
-  password: z.string().min(6).optional(),
-  role: z.nativeEnum(Role).optional(),
-  divisi: z.nativeEnum(Divisi).optional(),
-  area_tugas_id: z.string().optional().nullable(),
-  aktif: z.union([z.boolean(), z.string().transform((v) => v === 'true')]).optional(),
-});
+// Master Staff Schema
+export const createStaffSchema = z
+  .object({
+    nik: z.string().min(1),
+    nama: z.string().min(1),
+    password: z.string().min(6),
+    role: z.nativeEnum(Role),
+    divisi: z.nativeEnum(Divisi),
+    area_tugas_id: z.string().optional().nullable(),
+    aktif: z.boolean().default(true),
+  })
+  .refine((data) => ROLE_DIVISI_MAP[data.role] === data.divisi, {
+    message: 'Kombinasi role dan divisi tidak sesuai.',
+    path: ['divisi'],
+  });
+
+export const updateStaffSchema = z
+  .object({
+    nama: z.string().min(1).optional(),
+    password: z.string().min(6).optional(),
+    role: z.nativeEnum(Role).optional(),
+    divisi: z.nativeEnum(Divisi).optional(),
+    area_tugas_id: z.string().optional().nullable(),
+    aktif: z.union([z.boolean(), z.string().transform((v) => v === 'true')]).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.role && data.divisi) {
+        return ROLE_DIVISI_MAP[data.role] === data.divisi;
+      }
+      return true;
+    },
+    {
+      message: 'Kombinasi role dan divisi tidak sesuai.',
+      path: ['divisi'],
+    }
+  );
 
 // Master Area Tugas Schema
 export const createAreaTugasSchema = z.object({

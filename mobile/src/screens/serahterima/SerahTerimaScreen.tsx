@@ -38,14 +38,19 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        penerima_id: penerimaId,
+        jenis: user?.role === 'SATPAM' ? 'PIKET' : 'PERALATAN',
+        staff_baru_id: penerimaId,
+        barang_list: items.map((item) => ({
+          nama: item.name,
+          kondisi: item.status,
+          catatan: item.catatan,
+        })),
         catatan: catatanShift,
-        items,
-        signature, // Base64
-        fotos, // URL lokal (seharusnya di-upload multipart dulu jika real)
+        foto_urls: fotos,
+        ttd_lama: signature,
       };
-      
-      const res = await api.post('/serah-terima', payload);
+
+      const res = await api.post('/serah-terima/mulai', payload);
       return res.data;
     },
     onSuccess: () => {

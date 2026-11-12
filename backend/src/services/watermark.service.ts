@@ -10,6 +10,14 @@ export interface WatermarkData {
   area_tugas: string;
 }
 
+const escapeXml = (str: string): string =>
+  str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
 /**
  * Menambahkan watermark ke gambar dan embed metadata EXIF (jika didukung)
  * Output di-resize secara proporsional dengan lebar maksimal 800px.
@@ -19,32 +27,36 @@ export const addWatermark = async (
   data: WatermarkData
 ): Promise<Buffer> => {
   try {
-    const text = `${data.nama} | ${data.divisi} | ${data.tanggal_jam} | ${data.lat}, ${data.lng} | ${data.area_tugas}`;
-    
-    // Tentukan lebar standar (800) untuk hasil gambar
+    const rawText = `${data.nama} | ${data.divisi} | ${data.tanggal_jam} | ${data.lat}, ${data.lng} | ${data.area_tugas}`;
+    const safeText = escapeXml(rawText);
+
     const targetWidth = 800;
 
-    // SVG untuk watermark visual (pojok kiri bawah)
-    // Tinggi bar watermark 30px dengan font 14px dan background hitam semi-transparan
+    const resizedPipeline = sharp(imageBuffer)
+      .rotate()
+      .resize(targetWidth, undefined, { withoutEnlargement: true });
+
+    const resizedBuffer = await resizedPipeline.toBuffer({ resolveWithObject: true });
+    const imgWidth = Math.max(1, resizedBuffer.info.width || targetWidth);
+    const imgHeight = Math.max(1, resizedBuffer.info.height || 400);
+    const barHeight = Math.min(40, Math.max(18, Math.floor(imgHeight * 0.25)));
+    const fontSize = imgWidth < 400 ? 10 : 14;
+    const textY = Math.floor(barHeight * 0.65);
+
     const svgOverlay = `
-      <svg width="${targetWidth}" height="40">
+      <svg width="${imgWidth}" height="${barHeight}">
         <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.6)" />
-        <text x="15" y="25" font-family="sans-serif" font-size="14" fill="white">${text}</text>
+        <text x="12" y="${textY}" font-family="sans-serif" font-size="${fontSize}" fill="white">${safeText}</text>
       </svg>
     `;
 
-    const processedBuffer = await sharp(imageBuffer)
-      .resize(targetWidth, undefined, { withoutEnlargement: true })
-      // Pertahankan orientasi EXIF asli agar foto tidak miring
-      .rotate() 
-      // Terapkan watermark visual
+    const processedBuffer = await sharp(resizedBuffer.data)
       .composite([
         {
           input: Buffer.from(svgOverlay),
           gravity: 'southwest',
         },
       ])
-      // Mempertahankan metadata EXIF jika ada (sharp > v0.33)
       .withMetadata()
       .jpeg({ quality: 80 })
       .toBuffer();

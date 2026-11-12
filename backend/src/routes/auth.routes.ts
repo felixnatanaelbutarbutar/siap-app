@@ -19,7 +19,7 @@ const loginRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   // Memory store (default) — cukup untuk 100 user, tidak butuh Redis
-  skip: (req) => process.env.NODE_ENV === 'test', // skip saat testing
+  skip: (_req) => process.env.NODE_ENV === 'test', // skip saat testing
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

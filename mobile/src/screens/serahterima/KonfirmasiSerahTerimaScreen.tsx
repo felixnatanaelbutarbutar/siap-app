@@ -18,41 +18,45 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
   const { data, isLoading } = useQuery({
     queryKey: ['serahTerima', serahTerimaId],
     queryFn: async () => {
-      // Endpoint mock / simulasi
-      // const res = await api.get(`/serah-terima/${serahTerimaId}`);
-      // return res.data.data;
-      
+      const res = await api.get('/serah-terima/riwayat');
+      const list = Array.isArray(res.data?.data) ? res.data.data : [];
+      const found = list.find((item: any) => item.id === serahTerimaId) || list[0];
+      if (!found) {
+        return {
+          id: serahTerimaId,
+          pengirim_nama: '-',
+          items: [],
+          catatan: '',
+        };
+      }
       return {
-        id: serahTerimaId,
-        pengirim_nama: 'Joko Widodo',
-        items: [
-          { name: 'Kunci Gerbang', status: 'BAIK', catatan: '' },
-          { name: 'Radio HT', status: 'RUSAK', catatan: 'Baterai bocor' }
-        ],
-        catatan: 'Hati-hati dengan Radio HT nomor 2.'
+        id: found.id,
+        pengirim_nama: found.staff_lama?.nama || '-',
+        items: Array.isArray(found.barang_list)
+          ? found.barang_list.map((b: any) => ({
+              name: b.nama,
+              status: b.kondisi,
+              catatan: b.catatan || '',
+            }))
+          : [],
+        catatan: found.catatan || '',
       };
     },
   });
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const payload = { signature };
-      // Panggil endpoint konfirmasi yang menghasilkan URL PDF BAST
-      // const res = await api.post(`/serah-terima/${serahTerimaId}/konfirmasi`, payload);
-      // return res.data.pdfUrl;
-      
-      // Simulasi sukses dan dapat PDF url (menggunakan sample PDF)
-      return new Promise<string>((resolve) => {
-        setTimeout(() => resolve('http://samples.leanpub.com/thereactnativebook-sample.pdf'), 1500);
-      });
+      const payload = { ttd_baru: signature };
+      const res = await api.post(`/serah-terima/${serahTerimaId}/konfirmasi`, payload);
+      return res.data?.data?.bast_pdf_url || '';
     },
     onSuccess: (url) => {
-      setPdfUrl(url);
+      setPdfUrl(url || null);
       queryClient.invalidateQueries({ queryKey: ['serahTerima'] });
       Alert.alert('Sukses', 'Serah terima dikonfirmasi! BAST telah dibuat.');
     },
-    onError: () => {
-      Alert.alert('Error', 'Gagal mengkonfirmasi serah terima.');
+    onError: (err: any) => {
+      Alert.alert('Error', err.response?.data?.message || 'Gagal mengkonfirmasi serah terima.');
     }
   });
 
@@ -90,10 +94,10 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
         <View style={styles.pdfContainer}>
           <Pdf
             source={{ uri: pdfUrl, cache: true }}
-            onLoadComplete={(numberOfPages, filePath) => {
+            onLoadComplete={(numberOfPages) => {
               console.log(`Number of pages: ${numberOfPages}`);
             }}
-            onPageChanged={(page, numberOfPages) => {
+            onPageChanged={(page) => {
               console.log(`Current page: ${page}`);
             }}
             onError={(error) => {

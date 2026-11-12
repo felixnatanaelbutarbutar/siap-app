@@ -149,6 +149,17 @@ async function main() {
     console.log(`  ✅ UTILITY: ${s.nama} (NIK: ${s.nik})`);
   }
 
+  // ─── 7. Pengaturan Sistem Default ─────────────────────────────────────────
+  await prisma.pengaturanSistem.upsert({
+    where: { id: 'singleton' },
+    update: {},
+    create: {
+      id: 'singleton',
+      toleransi_keterlambatan_menit: 15,
+    },
+  });
+  console.log('\n⚙️  PengaturanSistem singleton siap (toleransi 15 menit).');
+
   // ─── Ringkasan ────────────────────────────────────────────────────────────
   console.log('\n═══════════════════════════════════════════════');
   console.log('✅ Seeding selesai!');

@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../../components/ui/sheet';
 import { useNotificationStore } from '../../store/notificationStore';
 import { api } from '../../services/api';
-import { Eye, CheckCircle2, XCircle, FileText, Image } from 'lucide-react';
+import { Eye, CheckCircle2, XCircle } from 'lucide-react';
 
 export const Route = createFileRoute('/_authenticated/laporan')({
   component: LaporanPage,

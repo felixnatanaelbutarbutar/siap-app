@@ -2,7 +2,8 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
-import { Zap, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -56,7 +57,7 @@ function LoginPage() {
       {/* Left Panel */}
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-center px-16"
-        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, var(--bg-base) 50%, #0d1a0d 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #121212 52%, #0d1f12 100%)', color: '#ffffff' }}
       >
         {/* Decorative circles */}
         <div className="absolute" style={{
@@ -71,18 +72,25 @@ function LoginPage() {
         }} />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-              <Zap className="w-6 h-6" style={{ color: 'var(--accent-text)' }} />
-            </div>
-            <span className="text-2xl font-bold" style={{ color: 'var(--text-base)' }}>SIAP</span>
+          <div className="flex items-center gap-3.5 mb-12">
+            <BrandLogo variant="wordmark" tone="white" className="h-11 w-auto" />
+            <span
+              className="text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+              style={{
+                background: 'rgba(30,215,96,0.14)',
+                color: '#1ed760',
+                border: '1px solid rgba(30,215,96,0.3)',
+              }}
+            >
+              Command Center
+            </span>
           </div>
 
-          <h1 className="text-5xl font-bold leading-tight mb-4" style={{ color: 'var(--text-base)' }}>
+          <h1 className="text-5xl font-bold leading-tight mb-4" style={{ color: '#ffffff' }}>
             Sistem Informasi<br />
-            <span style={{ color: 'var(--accent)' }}>Absensi</span> &<br />Pelaporan
+            <span style={{ color: '#1ed760' }}>Absensi</span> &<br />Pelaporan
           </h1>
-          <p className="text-base mb-12" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+          <p className="text-base mb-12" style={{ color: '#b3b3b3', lineHeight: '1.6' }}>
             Platform manajemen kehadiran, pelaporan, dan operasional gedung yang terintegrasi secara real-time.
           </p>
 
@@ -93,8 +101,8 @@ function LoginPage() {
               { num: 'Real-time', label: 'Monitoring' },
             ].map((stat) => (
               <div key={stat.label}>
-                <p className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>{stat.num}</p>
-                <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{stat.label}</p>
+                <p className="text-2xl font-bold" style={{ color: '#1ed760' }}>{stat.num}</p>
+                <p className="text-sm" style={{ color: '#8a8a8a' }}>{stat.label}</p>
               </div>
             ))}
           </div>
@@ -106,10 +114,17 @@ function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-              <Zap className="w-5 h-5" style={{ color: 'var(--accent-text)' }} />
-            </div>
-            <span className="text-xl font-bold" style={{ color: 'var(--text-base)' }}>SIAP Admin</span>
+            <BrandLogo variant="wordmark" tone="auto" className="h-9 w-auto" />
+            <span
+              className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+              style={{
+                background: 'rgba(30,215,96,0.14)',
+                color: 'var(--accent)',
+                border: '1px solid var(--accent)30',
+              }}
+            >
+              Admin
+            </span>
           </div>
 
           <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-base)' }}>Selamat Datang</h2>

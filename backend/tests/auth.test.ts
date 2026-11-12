@@ -1,69 +1,124 @@
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import app from '../src/index';
 import { prisma } from '../src/lib/prisma';
-import bcrypt from 'bcryptjs';
 
-describe('Auth API Tests', () => {
-  const testStaff = {
-    nik: 'TEST-AUTH-001',
-    nama: 'Test User',
-    password: 'password123',
-    divisi: 'KEAMANAN' as const,
-    role: 'SATPAM' as const,
-    area_tugas: 'Pos 1',
-    aktif: true
-  };
-
-  let token: string;
+describe('Auth & RBAC API Tests', () => {
+  const testPassword = 'password123';
+  let activeStaffId = '';
+  let inactiveStaffId = '';
+  let activeToken = '';
+  let revokedJti = '';
 
   beforeAll(async () => {
-    // Buat data staff untuk test
-    await prisma.staff.deleteMany({ where: { nik: testStaff.nik } });
-    const hashedPassword = await bcrypt.hash(testStaff.password, 10);
-    await prisma.staff.create({
-      data: { ...testStaff, password: hashedPassword }
+    await prisma.staff.deleteMany({
+      where: { nik: { in: ['TEST-AUTH-001', 'TEST-AUTH-002'] } },
     });
+
+    const password_hash = await bcrypt.hash(testPassword, 10);
+
+    const activeStaff = await prisma.staff.create({
+      data: {
+        nik: 'TEST-AUTH-001',
+        nama: 'Test Satpam Auth',
+        password_hash,
+        divisi: 'KEAMANAN',
+        role: 'SATPAM',
+        aktif: true,
+      },
+    });
+    activeStaffId = activeStaff.id;
+
+    const inactiveStaff = await prisma.staff.create({
+      data: {
+        nik: 'TEST-AUTH-002',
+        nama: 'Test Satpam Nonaktif',
+        password_hash,
+        divisi: 'KEAMANAN',
+        role: 'SATPAM',
+        aktif: false,
+      },
+    });
+    inactiveStaffId = inactiveStaff.id;
   });
 
   afterAll(async () => {
-    // Bersihkan data
-    await prisma.staff.deleteMany({ where: { nik: testStaff.nik } });
+    if (revokedJti) {
+      await prisma.revokedToken.deleteMany({ where: { token_jti: revokedJti } });
+    }
+    await prisma.staff.deleteMany({
+      where: { id: { in: [activeStaffId, inactiveStaffId].filter(Boolean) } },
+    });
   });
 
-  it('Harus berhasil login dengan kredensial yang benar', async () => {
+  it('POST /auth/login berhasil dengan NIK dan password valid', async () => {
     const res = await request(app).post('/auth/login').send({
-      nik: testStaff.nik,
-      password: testStaff.password
+      nik: 'TEST-AUTH-001',
+      password: testPassword,
     });
-    
-    expect(res.statusCode).toEqual(200);
+
+    expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.token).toBeDefined();
-    token = res.body.data.token;
+    expect(res.body.data.user.nik).toBe('TEST-AUTH-001');
+    activeToken = res.body.data.token;
+    const decoded = jwt.decode(activeToken) as { jti: string } | null;
+    revokedJti = decoded?.jti || '';
   });
 
-  it('Harus gagal login dengan password salah', async () => {
+  it('POST /auth/login gagal 401 dengan password salah', async () => {
     const res = await request(app).post('/auth/login').send({
-      nik: testStaff.nik,
-      password: 'wrongpassword'
+      nik: 'TEST-AUTH-001',
+      password: 'wrongpassword',
     });
-    
-    expect(res.statusCode).toEqual(401);
+
+    expect(res.statusCode).toBe(401);
     expect(res.body.success).toBe(false);
   });
 
-  it('Harus berhasil logout dan mem-blacklist token', async () => {
-    const res = await request(app)
-      .post('/auth/logout')
-      .set('Authorization', `Bearer ${token}`);
-    
-    expect(res.statusCode).toEqual(200);
-    expect(res.body.success).toBe(true);
-
-    // Cek apakah token ada di revokedToken table
-    const isRevoked = await prisma.revokedToken.findUnique({
-      where: { token }
+  it('POST /auth/login ditolak 403 untuk akun nonaktif', async () => {
+    const res = await request(app).post('/auth/login').send({
+      nik: 'TEST-AUTH-002',
+      password: testPassword,
     });
-    expect(isRevoked).not.toBeNull();
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body.code).toBe('ACCOUNT_INACTIVE');
+  });
+
+  it('GET /auth/me mengembalikan profil user terautentikasi dan RBAC menolak /admin/staff untuk SATPAM', async () => {
+    const meRes = await request(app)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${activeToken}`);
+
+    expect(meRes.statusCode).toBe(200);
+    expect(meRes.body.data.nik).toBe('TEST-AUTH-001');
+
+    const adminRes = await request(app)
+      .get('/admin/staff')
+      .set('Authorization', `Bearer ${activeToken}`);
+
+    expect(adminRes.statusCode).toBe(403);
+  });
+
+  it('POST /auth/logout mem-blacklist jti dan token lama ditolak pada request berikutnya', async () => {
+    const logoutRes = await request(app)
+      .post('/auth/logout')
+      .set('Authorization', `Bearer ${activeToken}`);
+
+    expect(logoutRes.statusCode).toBe(200);
+    expect(logoutRes.body.success).toBe(true);
+
+    const revoked = await prisma.revokedToken.findUnique({
+      where: { token_jti: revokedJti },
+    });
+    expect(revoked).not.toBeNull();
+
+    const retryMe = await request(app)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${activeToken}`);
+    expect(retryMe.statusCode).toBe(401);
+    expect(retryMe.body.code).toBe('TOKEN_REVOKED');
   });
 });

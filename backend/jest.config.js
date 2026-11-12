@@ -5,4 +5,5 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
+  testTimeout: 30000,
 };

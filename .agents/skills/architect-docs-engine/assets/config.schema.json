@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:architect-docs-engine:config:1.0",
+  "title": "Architect Docs Engine target configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "name": {"type":"string","minLength":1,"maxLength":120},
+        "summary": {"type":"string","maxLength":2000},
+        "domain": {"type":"string","maxLength":120},
+        "documentation_language": {"enum":["en","id"]},
+        "lifecycle": {"enum":["greenfield","existing"]},
+        "target_users": {"type":"array","items":{"type":"string","minLength":1,"maxLength":120},"uniqueItems":true,"maxItems":50}
+      }
+    },
+    "tech_stack": {"type":"object","maxProperties":100,"additionalProperties":{"oneOf":[{"type":"string","maxLength":200},{"type":"array","items":{"type":"string","maxLength":200},"maxItems":20}]}},
+    "constraints": {"type":"array","items":{"type":"string","minLength":1,"maxLength":1000},"maxItems":100},
+    "requirements_sources": {"type":"array","items":{"type":"string","minLength":1,"maxLength":300,"pattern":"^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?![A-Za-z]:)(?!.*\\\\).+$"},"maxItems":100},
+    "security_classification": {"type":"string","enum":["public","internal","confidential","restricted","unresolved"]},
+    "features": {
+      "type":"object","additionalProperties":false,
+      "properties":{"api":{"type":"boolean"},"database":{"type":"boolean"},"ui":{"type":"boolean"},"ai":{"type":"boolean"}}
+    },
+    "docs": {
+      "type":"object","additionalProperties":false,
+      "properties":{
+        "output_dir":{"type":"string","minLength":1,"maxLength":160,"default":"docs","pattern":"^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"},
+        "strict":{"type":"boolean"},
+        "update_policy":{"enum":["review","managed-regions"],"default":"review"}
+      }
+    }
+  }
+}

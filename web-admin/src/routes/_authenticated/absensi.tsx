@@ -4,11 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '../../services/api';
+import { api, SOCKET_URL } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
-import { Download, Eye, X, MapPin } from 'lucide-react';
+import { Download, Eye, X, MapPin, ExternalLink } from 'lucide-react';
+import { ModernMap } from '../../components/ModernMap';
 
 export const Route = createFileRoute('/_authenticated/absensi')({
   component: AbsensiPage,
@@ -28,23 +30,23 @@ function AbsensiPage() {
   const [activeTab, setActiveTab] = useState<'HARIAN' | 'BULANAN'>('HARIAN');
   const [dateHarian, setDateHarian] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [divisiHarian, setDivisiHarian] = useState('SEMUA');
-  const [staffHarian, setStaffHarian] = useState('SEMUA');
   const [bulan, setBulan] = useState(new Date().getMonth() + 1);
   const [tahun, setTahun] = useState(new Date().getFullYear());
   const [divisiBulanan, setDivisiBulanan] = useState('SEMUA');
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const queryClient = useQueryClient();
 
+  const token = useAuthStore((s) => s.token);
+
   useEffect(() => {
-    const stored = localStorage.getItem('siap-admin-auth');
-    const token = stored ? JSON.parse(stored)?.state?.token : null;
-    const socket = io('http://localhost:3000', { auth: { token } });
+    if (!token) return;
+    const socket = io(SOCKET_URL, { auth: { token } });
     socket.on('absensi:new', () => queryClient.invalidateQueries({ queryKey: ['absensi-harian'] }));
     return () => { socket.disconnect(); };
-  }, [queryClient]);
+  }, [token, queryClient]);
 
   const { data: logs } = useQuery({
-    queryKey: ['absensi-harian', dateHarian, divisiHarian, staffHarian],
+    queryKey: ['absensi-harian', dateHarian, divisiHarian],
     queryFn: async () => {
       const params: any = { tanggal: dateHarian };
       if (divisiHarian !== 'SEMUA') params.divisi = divisiHarian;
@@ -52,21 +54,28 @@ function AbsensiPage() {
       const rawData = res.data.data;
       const grouped: Record<string, any> = rawData.reduce((acc: any, curr: any) => {
         if (!acc[curr.staff_id]) {
-          acc[curr.staff_id] = { id: curr.staff_id, nama: curr.staff.nama, divisi: curr.staff.divisi, masuk: '-', istirahat: '-', keluar: '-', total: '-', status: 'HADIR', lat: curr.lat, lng: curr.lng, foto_masuk: null, foto_keluar: null };
+          acc[curr.staff_id] = { id: curr.staff_id, nama: curr.staff.nama, divisi: curr.staff.divisi, masuk: '-', istirahat: '-', keluar: '-', masukMs: null, keluarMs: null, istirahatMulaiMs: null, istirahatSelesaiMs: null, total: '-', status: 'HADIR', lat: curr.lat, lng: curr.lng, foto_masuk: null, foto_keluar: null };
         }
-        const time = format(new Date(curr.waktu_server), 'HH:mm');
-        if (curr.jenis === 'MASUK') { acc[curr.staff_id].masuk = time; acc[curr.staff_id].foto_masuk = curr.foto_url; }
-        if (curr.jenis === 'MULAI_ISTIRAHAT') acc[curr.staff_id].istirahat = time;
-        if (curr.jenis === 'KELUAR') { acc[curr.staff_id].keluar = time; acc[curr.staff_id].foto_keluar = curr.foto_url; }
-        if (acc[curr.staff_id].masuk !== '-' && acc[curr.staff_id].keluar !== '-') {
-          const m = parseInt(acc[curr.staff_id].masuk.split(':')[0]);
-          const k = parseInt(acc[curr.staff_id].keluar.split(':')[0]);
-          acc[curr.staff_id].total = `${k - m} Jam`;
+        const dt = new Date(curr.waktu_server);
+        const time = format(dt, 'HH:mm');
+        if (curr.jenis === 'MASUK') { acc[curr.staff_id].masuk = time; acc[curr.staff_id].masukMs = dt.getTime(); acc[curr.staff_id].foto_masuk = curr.foto_url; }
+        if (curr.jenis === 'MULAI_ISTIRAHAT') { acc[curr.staff_id].istirahat = time; acc[curr.staff_id].istirahatMulaiMs = dt.getTime(); }
+        if (curr.jenis === 'SELESAI_ISTIRAHAT') { acc[curr.staff_id].istirahatSelesaiMs = dt.getTime(); }
+        if (curr.jenis === 'KELUAR') { acc[curr.staff_id].keluar = time; acc[curr.staff_id].keluarMs = dt.getTime(); acc[curr.staff_id].foto_keluar = curr.foto_url; }
+        if (acc[curr.staff_id].masukMs && acc[curr.staff_id].keluarMs) {
+          let totalMin = Math.round((acc[curr.staff_id].keluarMs - acc[curr.staff_id].masukMs) / 60000);
+          if (acc[curr.staff_id].istirahatMulaiMs && acc[curr.staff_id].istirahatSelesaiMs) {
+            const restMin = Math.round((acc[curr.staff_id].istirahatSelesaiMs - acc[curr.staff_id].istirahatMulaiMs) / 60000);
+            if (restMin > 0) totalMin -= restMin;
+          }
+          if (totalMin < 0) totalMin = 0;
+          const hrs = Math.floor(totalMin / 60);
+          const mins = totalMin % 60;
+          acc[curr.staff_id].total = mins > 0 ? `${hrs}j ${mins}m` : `${hrs} Jam`;
         }
         return acc;
       }, {});
-      let finalData = Object.values(grouped);
-      if (staffHarian !== 'SEMUA') finalData = finalData.filter((item: any) => item.nama === staffHarian);
+      const finalData = Object.values(grouped);
       return finalData;
     }
   });
@@ -78,12 +87,7 @@ function AbsensiPage() {
       if (divisiBulanan !== 'SEMUA') params.divisi = divisiBulanan;
       const res = await api.get('/admin/statistik/kehadiran', { params });
       const tableData = res.data.data || [];
-      const chartData = Array.from({ length: 30 }).map((_, i) => ({
-        tanggal: i + 1,
-        SATPAM: Math.floor(Math.random() * 5) + 15,
-        CS: Math.floor(Math.random() * 5) + 10,
-        UTILITY: Math.floor(Math.random() * 5) + 8,
-      }));
+      const chartData = res.data.chart || [];
       return { tableData, chartData };
     }
   });
@@ -209,7 +213,7 @@ function AbsensiPage() {
       {activeTab === 'BULANAN' && (
         <div className="space-y-4">
           <div className="flex flex-wrap gap-4 items-end justify-between p-5 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               {[
                 { label: 'Bulan', val: bulan, onChange: (v: number) => setBulan(v), options: Array.from({ length: 12 }).map((_, i) => ({ val: i + 1, label: format(new Date(2000, i), 'MMMM', { locale: id }) })) },
                 { label: 'Tahun', val: tahun, onChange: (v: number) => setTahun(v), options: [{ val: 2026, label: '2026' }, { val: 2025, label: '2025' }] },
@@ -221,6 +225,15 @@ function AbsensiPage() {
                   </select>
                 </div>
               ))}
+              <div>
+                <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Divisi</label>
+                <select value={divisiBulanan} onChange={e => setDivisiBulanan(e.target.value)} style={inputStyle}>
+                  <option value="SEMUA">Semua Divisi</option>
+                  <option value="KEAMANAN">Keamanan</option>
+                  <option value="CUSTOMER_SERVICE">Cleaning Service</option>
+                  <option value="UTILITY">Utility</option>
+                </select>
+              </div>
             </div>
             <button onClick={handleExportCSV}
               className="flex items-center gap-2 font-bold uppercase rounded-full px-5 py-2.5 transition-all"
@@ -290,9 +303,51 @@ function AbsensiPage() {
                 </div>
               ))}
             </div>
-            <div className="px-6 py-4 flex items-center gap-2" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
-              <MapPin className="w-4 h-4" style={{ color: 'var(--text-dim)' }} />
-              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{selectedRow.lat ? `${selectedRow.lat}, ${selectedRow.lng}` : 'Tidak tersedia'}</span>
+            <div className="px-6 py-4 space-y-3" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                  <span className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>
+                    {Number.isFinite(Number(selectedRow.lat)) && Number.isFinite(Number(selectedRow.lng))
+                      ? `${Number(selectedRow.lat).toFixed(6)}, ${Number(selectedRow.lng).toFixed(6)}`
+                      : 'Koordinat tidak tersedia'}
+                  </span>
+                </div>
+                {Number.isFinite(Number(selectedRow.lat)) && Number.isFinite(Number(selectedRow.lng)) && (
+                  <a
+                    href={`https://www.google.com/maps?q=${selectedRow.lat},${selectedRow.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold hover:underline"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Buka Google Maps <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+              {Number.isFinite(Number(selectedRow.lat)) && Number.isFinite(Number(selectedRow.lng)) && (
+                <div className="h-44 w-full rounded-lg overflow-hidden relative" style={{ border: '1px solid var(--border)' }}>
+                  <ModernMap
+                    center={[Number(selectedRow.lat), Number(selectedRow.lng)]}
+                    zoom={16}
+                    pitch={25}
+                    defaultStyle="standar"
+                    followCenter
+                    showControls={false}
+                    markers={[
+                      {
+                        id: String(selectedRow.id || 'absen-loc'),
+                        lat: Number(selectedRow.lat),
+                        lng: Number(selectedRow.lng),
+                        title: selectedRow.nama,
+                        subtitle: 'Lokasi Absensi',
+                        color: '#1ed760',
+                        variant: 'pin',
+                      },
+                    ]}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

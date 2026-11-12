@@ -4,11 +4,11 @@
   <br />
   <br />
 
-  <h1 align="center">⬛ SIAP (Sistem Absensi & Pelaporan)</h1>
+  <h1 align="center">SIAP (Sistem Absensi & Pelaporan)</h1>
   
   <p align="center">
-    <strong>Aplikasi Operasional Lintas Divisi (Satpam, CS, Utility) Kelas Premium</strong><br/>
-    <em>Dirancang dengan Arsitektur Monokrom yang Tegas, Kokoh, dan Tanpa Kompromi.</em>
+    <strong>Aplikasi Operasional Lintas Divisi (Satpam, CS, Utility) Terpadu</strong><br/>
+    <em>Web Admin Dark Command Center & Aplikasi Mobile Lapangan Light High-Contrast.</em>
   </p>
   
   <br />
@@ -16,11 +16,11 @@
 
 ---
 
-## 🏴 Tentang SIAP
+## 🛡️ Tentang SIAP
 
-**SIAP** adalah ekosistem aplikasi terpadu (Mobile & Web) yang dirancang khusus untuk memenuhi tingginya standar disiplin operasional di lapangan. Mengusung gaya desain *Nike-Style Brutalism*, aplikasi ini membuang segala ornamen visual yang tidak perlu, dan hanya memusatkan perhatian pada **Fungsi, Kecepatan, dan Keandalan Data**.
+**SIAP** adalah ekosistem aplikasi terpadu (Mobile & Web) yang dirancang khusus untuk memenuhi standar disiplin operasional di lapangan, mencakup absensi geo-fencing + watermark, laporan rutin per 3 jam (khusus SATPAM), laporan harian per divisi, serah terima shift bertanda tangan digital (BAST PDF), perizinan, dan pemantauan live tracking.
 
-Dilengkapi dengan sistem *Geo-fencing* akurat, *Socket.io Live Tracking*, dan *Offline-Sync*, SIAP memastikan setiap langkah patroli, laporan kerusakan, hingga perpindahan tongkat estafet (Serah Terima BAST) tercatat utuh.
+Lihat dokumentasi arsitektur lengkap di [docs/README.md](docs/README.md).
 
 ---
 
@@ -99,13 +99,10 @@ npm run android
 
 ---
 
-## 🛡️ Aturan Desain (Nike-Style/Brutalism)
+## 🎨 Sistem Desain Dual-Surface
 
-Seluruh antarmuka tunduk pada kode etik desain absolut:
-- **PALET**: Murni `#111111` (Hitam Pekat) dan `#ffffff` (Putih Bersih). Tidak ada abu-abu kompromi (kecuali batas minor).
-- **TEKS**: `UPPERCASE` (Huruf Kapital) untuk semua aksi, label, dan peringatan. Menggunakan _font_ tebal (Black/Bold).
-- **BENTUK**: Bersudut tajam. Dilarang keras menggunakan `border-radius`.
-- **EFEK**: Bayangan solid keras (`shadow-[4px_4px_0_0_#111111]`), menolak keras efek kabur/transparan halus.
+- **Web Admin (`web-admin/`)**: Dark Command Center (`#121212` obsidian canvas, `#1ed760` hijau neon aksen status aktif) menggunakan React 18, TanStack Router, TailwindCSS, dan Leaflet.
+- **Mobile App (`mobile/`)**: Light High-Contrast (`#f3fcef` latar terang lapangan, `#006e2f` hijau emerald aksen) menggunakan React Native 0.74 dan React Native Paper.
 
 ---
 

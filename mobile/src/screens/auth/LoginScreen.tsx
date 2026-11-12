@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Dimensions, Animated, Image } from 'react-native';
 import { TextInput, Text, ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const { width } = Dimensions.get('window');
 
@@ -13,7 +11,6 @@ export const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, isLoading, error } = useAuthStore();
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(40)).current;
@@ -27,7 +24,7 @@ export const LoginScreen = () => {
         Animated.timing(formOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]),
     ]).start();
-  }, []);
+  }, [formAnim, formOpacity, logoAnim]);
 
   const handleLogin = async () => {
     if (!nik || !password) return;
@@ -39,7 +36,11 @@ export const LoginScreen = () => {
       {/* HEADER SECTION (DYNAMIC GREEN) */}
       <Animated.View style={[styles.headerPanel, { opacity: logoAnim }]}>
         <View style={styles.headerContent}>
-          <Text style={styles.logoText}>SIAP.</Text>
+          <Image
+            source={require('../../assets/logo-white.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.subtitle}>SISTEM INFORMASI ABSENSI PEGAWAI</Text>
         </View>
         
@@ -111,6 +112,11 @@ export const LoginScreen = () => {
         </Animated.View>
 
         <View style={styles.footer}>
+          <Image
+            source={require('../../assets/emblem-emerald.png')}
+            style={styles.footerEmblem}
+            resizeMode="contain"
+          />
           <Text style={styles.footerText}>© 2026 SIAP PROFESSIONAL MOBILITY</Text>
         </View>
       </KeyboardAvoidingView>
@@ -134,12 +140,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     marginTop: -40, // push up slightly
   },
-  logoText: {
-    fontSize: 64,
-    fontWeight: '900',
-    color: '#ffffff', // on-primary
-    letterSpacing: -2,
-    lineHeight: 70,
+  logoImage: {
+    width: 210,
+    height: 64,
+    alignSelf: 'flex-start',
   },
   subtitle: {
     fontSize: 14,
@@ -246,7 +250,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   footer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  footerEmblem: {
+    width: 18,
+    height: 18,
   },
   footerText: {
     fontSize: 12,

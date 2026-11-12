@@ -22,7 +22,14 @@ import { Route as AuthenticatedJadwalRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedIzinCutiRouteImport } from './routes/_authenticated/izin-cuti'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAbsensiRouteImport } from './routes/_authenticated/absensi'
+import { Route as AuthenticatedStaffTambahRouteImport } from './routes/_authenticated/staff_.tambah'
+import { Route as AuthenticatedPengumumanBuatRouteImport } from './routes/_authenticated/pengumuman_.buat'
 import { Route as AuthenticatedJadwalStaffIdRouteImport } from './routes/_authenticated/jadwal_.$staffId'
+import { Route as AuthenticatedStaffStaffIdEditRouteImport } from './routes/_authenticated/staff_.$staffId.edit'
+import { Route as AuthenticatedPengaturanAreaTambahRouteImport } from './routes/_authenticated/pengaturan_.area.tambah'
+import { Route as AuthenticatedJadwalStaffIdTambahRouteImport } from './routes/_authenticated/jadwal_.$staffId_.tambah'
+import { Route as AuthenticatedPengaturanAreaAreaIdEditRouteImport } from './routes/_authenticated/pengaturan_.area.$areaId.edit'
+import { Route as AuthenticatedJadwalStaffIdJadwalIdEditRouteImport } from './routes/_authenticated/jadwal_.$staffId_.$jadwalId.edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -89,10 +96,52 @@ const AuthenticatedAbsensiRoute = AuthenticatedAbsensiRouteImport.update({
   path: '/absensi',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStaffTambahRoute =
+  AuthenticatedStaffTambahRouteImport.update({
+    id: '/staff_/tambah',
+    path: '/staff/tambah',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPengumumanBuatRoute =
+  AuthenticatedPengumumanBuatRouteImport.update({
+    id: '/pengumuman_/buat',
+    path: '/pengumuman/buat',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedJadwalStaffIdRoute =
   AuthenticatedJadwalStaffIdRouteImport.update({
     id: '/jadwal_/$staffId',
     path: '/jadwal/$staffId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStaffStaffIdEditRoute =
+  AuthenticatedStaffStaffIdEditRouteImport.update({
+    id: '/staff_/$staffId/edit',
+    path: '/staff/$staffId/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPengaturanAreaTambahRoute =
+  AuthenticatedPengaturanAreaTambahRouteImport.update({
+    id: '/pengaturan_/area/tambah',
+    path: '/pengaturan/area/tambah',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedJadwalStaffIdTambahRoute =
+  AuthenticatedJadwalStaffIdTambahRouteImport.update({
+    id: '/jadwal_/$staffId_/tambah',
+    path: '/jadwal/$staffId/tambah',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPengaturanAreaAreaIdEditRoute =
+  AuthenticatedPengaturanAreaAreaIdEditRouteImport.update({
+    id: '/pengaturan_/area/$areaId/edit',
+    path: '/pengaturan/area/$areaId/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedJadwalStaffIdJadwalIdEditRoute =
+  AuthenticatedJadwalStaffIdJadwalIdEditRouteImport.update({
+    id: '/jadwal_/$staffId_/$jadwalId/edit',
+    path: '/jadwal/$staffId/$jadwalId/edit',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -110,6 +159,13 @@ export interface FileRoutesByFullPath {
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
+  '/pengumuman/buat': typeof AuthenticatedPengumumanBuatRoute
+  '/staff/tambah': typeof AuthenticatedStaffTambahRoute
+  '/jadwal/$staffId/tambah': typeof AuthenticatedJadwalStaffIdTambahRoute
+  '/pengaturan/area/tambah': typeof AuthenticatedPengaturanAreaTambahRoute
+  '/staff/$staffId/edit': typeof AuthenticatedStaffStaffIdEditRoute
+  '/jadwal/$staffId/$jadwalId/edit': typeof AuthenticatedJadwalStaffIdJadwalIdEditRoute
+  '/pengaturan/area/$areaId/edit': typeof AuthenticatedPengaturanAreaAreaIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,6 +181,13 @@ export interface FileRoutesByTo {
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
+  '/pengumuman/buat': typeof AuthenticatedPengumumanBuatRoute
+  '/staff/tambah': typeof AuthenticatedStaffTambahRoute
+  '/jadwal/$staffId/tambah': typeof AuthenticatedJadwalStaffIdTambahRoute
+  '/pengaturan/area/tambah': typeof AuthenticatedPengaturanAreaTambahRoute
+  '/staff/$staffId/edit': typeof AuthenticatedStaffStaffIdEditRoute
+  '/jadwal/$staffId/$jadwalId/edit': typeof AuthenticatedJadwalStaffIdJadwalIdEditRoute
+  '/pengaturan/area/$areaId/edit': typeof AuthenticatedPengaturanAreaAreaIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,6 +205,13 @@ export interface FileRoutesById {
   '/_authenticated/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/jadwal_/$staffId': typeof AuthenticatedJadwalStaffIdRoute
+  '/_authenticated/pengumuman_/buat': typeof AuthenticatedPengumumanBuatRoute
+  '/_authenticated/staff_/tambah': typeof AuthenticatedStaffTambahRoute
+  '/_authenticated/jadwal_/$staffId_/tambah': typeof AuthenticatedJadwalStaffIdTambahRoute
+  '/_authenticated/pengaturan_/area/tambah': typeof AuthenticatedPengaturanAreaTambahRoute
+  '/_authenticated/staff_/$staffId/edit': typeof AuthenticatedStaffStaffIdEditRoute
+  '/_authenticated/jadwal_/$staffId_/$jadwalId/edit': typeof AuthenticatedJadwalStaffIdJadwalIdEditRoute
+  '/_authenticated/pengaturan_/area/$areaId/edit': typeof AuthenticatedPengaturanAreaAreaIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -159,6 +229,13 @@ export interface FileRouteTypes {
     | '/serah-terima'
     | '/staff'
     | '/jadwal/$staffId'
+    | '/pengumuman/buat'
+    | '/staff/tambah'
+    | '/jadwal/$staffId/tambah'
+    | '/pengaturan/area/tambah'
+    | '/staff/$staffId/edit'
+    | '/jadwal/$staffId/$jadwalId/edit'
+    | '/pengaturan/area/$areaId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -174,6 +251,13 @@ export interface FileRouteTypes {
     | '/serah-terima'
     | '/staff'
     | '/jadwal/$staffId'
+    | '/pengumuman/buat'
+    | '/staff/tambah'
+    | '/jadwal/$staffId/tambah'
+    | '/pengaturan/area/tambah'
+    | '/staff/$staffId/edit'
+    | '/jadwal/$staffId/$jadwalId/edit'
+    | '/pengaturan/area/$areaId/edit'
   id:
     | '__root__'
     | '/'
@@ -190,6 +274,13 @@ export interface FileRouteTypes {
     | '/_authenticated/serah-terima'
     | '/_authenticated/staff'
     | '/_authenticated/jadwal_/$staffId'
+    | '/_authenticated/pengumuman_/buat'
+    | '/_authenticated/staff_/tambah'
+    | '/_authenticated/jadwal_/$staffId_/tambah'
+    | '/_authenticated/pengaturan_/area/tambah'
+    | '/_authenticated/staff_/$staffId/edit'
+    | '/_authenticated/jadwal_/$staffId_/$jadwalId/edit'
+    | '/_authenticated/pengaturan_/area/$areaId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -291,11 +382,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAbsensiRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/staff_/tambah': {
+      id: '/_authenticated/staff_/tambah'
+      path: '/staff/tambah'
+      fullPath: '/staff/tambah'
+      preLoaderRoute: typeof AuthenticatedStaffTambahRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pengumuman_/buat': {
+      id: '/_authenticated/pengumuman_/buat'
+      path: '/pengumuman/buat'
+      fullPath: '/pengumuman/buat'
+      preLoaderRoute: typeof AuthenticatedPengumumanBuatRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/jadwal_/$staffId': {
       id: '/_authenticated/jadwal_/$staffId'
       path: '/jadwal/$staffId'
       fullPath: '/jadwal/$staffId'
       preLoaderRoute: typeof AuthenticatedJadwalStaffIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/staff_/$staffId/edit': {
+      id: '/_authenticated/staff_/$staffId/edit'
+      path: '/staff/$staffId/edit'
+      fullPath: '/staff/$staffId/edit'
+      preLoaderRoute: typeof AuthenticatedStaffStaffIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pengaturan_/area/tambah': {
+      id: '/_authenticated/pengaturan_/area/tambah'
+      path: '/pengaturan/area/tambah'
+      fullPath: '/pengaturan/area/tambah'
+      preLoaderRoute: typeof AuthenticatedPengaturanAreaTambahRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/jadwal_/$staffId_/tambah': {
+      id: '/_authenticated/jadwal_/$staffId_/tambah'
+      path: '/jadwal/$staffId/tambah'
+      fullPath: '/jadwal/$staffId/tambah'
+      preLoaderRoute: typeof AuthenticatedJadwalStaffIdTambahRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pengaturan_/area/$areaId/edit': {
+      id: '/_authenticated/pengaturan_/area/$areaId/edit'
+      path: '/pengaturan/area/$areaId/edit'
+      fullPath: '/pengaturan/area/$areaId/edit'
+      preLoaderRoute: typeof AuthenticatedPengaturanAreaAreaIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/jadwal_/$staffId_/$jadwalId/edit': {
+      id: '/_authenticated/jadwal_/$staffId_/$jadwalId/edit'
+      path: '/jadwal/$staffId/$jadwalId/edit'
+      fullPath: '/jadwal/$staffId/$jadwalId/edit'
+      preLoaderRoute: typeof AuthenticatedJadwalStaffIdJadwalIdEditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
   }
@@ -313,6 +453,13 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSerahTerimaRoute: typeof AuthenticatedSerahTerimaRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedJadwalStaffIdRoute: typeof AuthenticatedJadwalStaffIdRoute
+  AuthenticatedPengumumanBuatRoute: typeof AuthenticatedPengumumanBuatRoute
+  AuthenticatedStaffTambahRoute: typeof AuthenticatedStaffTambahRoute
+  AuthenticatedJadwalStaffIdTambahRoute: typeof AuthenticatedJadwalStaffIdTambahRoute
+  AuthenticatedPengaturanAreaTambahRoute: typeof AuthenticatedPengaturanAreaTambahRoute
+  AuthenticatedStaffStaffIdEditRoute: typeof AuthenticatedStaffStaffIdEditRoute
+  AuthenticatedJadwalStaffIdJadwalIdEditRoute: typeof AuthenticatedJadwalStaffIdJadwalIdEditRoute
+  AuthenticatedPengaturanAreaAreaIdEditRoute: typeof AuthenticatedPengaturanAreaAreaIdEditRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -327,6 +474,16 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSerahTerimaRoute: AuthenticatedSerahTerimaRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedJadwalStaffIdRoute: AuthenticatedJadwalStaffIdRoute,
+  AuthenticatedPengumumanBuatRoute: AuthenticatedPengumumanBuatRoute,
+  AuthenticatedStaffTambahRoute: AuthenticatedStaffTambahRoute,
+  AuthenticatedJadwalStaffIdTambahRoute: AuthenticatedJadwalStaffIdTambahRoute,
+  AuthenticatedPengaturanAreaTambahRoute:
+    AuthenticatedPengaturanAreaTambahRoute,
+  AuthenticatedStaffStaffIdEditRoute: AuthenticatedStaffStaffIdEditRoute,
+  AuthenticatedJadwalStaffIdJadwalIdEditRoute:
+    AuthenticatedJadwalStaffIdJadwalIdEditRoute,
+  AuthenticatedPengaturanAreaAreaIdEditRoute:
+    AuthenticatedPengaturanAreaAreaIdEditRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -13,6 +13,14 @@ export interface UserData {
   role: Role;
   divisi: Divisi;
   foto_profil?: string | null;
+  area_tugas_id?: string | null;
+  area_tugas?: {
+    id: string;
+    nama: string;
+    lat?: number;
+    lng?: number;
+    radius_meter?: number;
+  } | null;
 }
 
 interface AuthState {

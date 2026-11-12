@@ -1,0 +1,27 @@
+{
+  "suite_version": "1.0",
+  "directory": "docs",
+  "documents": [
+    {"file":"README.md","title":"Documentation hub","required_headings":["Overview","Status","Scope","Quick start","Architecture","Project map","Glossary","Document index"]},
+    {"file":"PRD.md","title":"Product requirements","required_headings":["Problem and evidence","Users and constraints","Scope","Functional requirements","Non-functional requirements","Open decisions"]},
+    {"file":"TECH_STACK.md","title":"Technology choices","required_headings":["Observed stack","Proposed choices","Alternatives and risks","Support and upgrade policy"]},
+    {"file":"DECISIONS.md","title":"Architecture decisions","required_headings":["Decision records","Proposed decisions","Revisit conditions"]},
+    {"file":"DATA_MODEL.md","title":"Data model","required_headings":["Data inventory","Entities and relationships","Lifecycle and retention","Not applicable or unresolved"]},
+    {"file":"VALIDATION_RULES.md","title":"Domain invariants","required_headings":["Input inventory","Validation rules","Errors and accessibility","Not applicable or unresolved"]},
+    {"file":"API_CONTRACT.md","title":"Interface contracts","required_headings":["Interface inventory","Contracts","Errors and compatibility","Not applicable or unresolved"]},
+    {"file":"UI.md","title":"Visual system","required_headings":["Current interface evidence","Design intent and constraints","Design tokens","Layout, components and iconography","Component and state rules","Visual review checklist","Not applicable or unresolved"]},
+    {"file":"UX.md","title":"User journeys and states","required_headings":["Users and tasks","Journey flows","Form placement and overlays","Interaction states","Accessibility and recovery"]},
+    {"file":"AGENTS.md","title":"Target-project agent guidance","required_headings":["Repository map","Working rules","Commands and verification","Definition of done"]},
+    {"file":"PROMPTS.md","title":"AI or developer prompts","required_headings":["Runtime AI inventory","Prompt and developer patterns","Trust and evaluation","Not applicable or unresolved"]},
+    {"file":"SECURITY.md","title":"Security design","required_headings":["Scope and evidence","Assets, actors and trust boundaries","Threat model","Identity and authorization","Bots, abuse and resource limits","Agentic AI and tool safeguards","Data, secrets and operations","Verification and incident response","Open risks and response"]},
+    {"file":"SEED.md","title":"Fixture and seed strategy","required_headings":["Fixture inventory","Safety and repeatability","Not applicable or unresolved"]},
+    {"file":"IMPLEMENTATION.md","title":"Engineering execution plan","required_headings":["Current state","Milestones","Verification and rollback","Open dependencies"]},
+    {"file":"TESTING.md","title":"Test strategy","required_headings":["Evidence and commands","Test cases","Coverage and nonfunctional checks","Not run"]},
+    {"file":"ACCEPTANCE.md","title":"Acceptance criteria","required_headings":["User or operator jobs","Acceptance cases","Sign-off and readiness"]},
+    {"file":"TRACEABILITY.md","title":"Requirements graph","required_headings":["Coverage graph","Non-applicable mappings","Unresolved mappings","Audit counts"]},
+    {"file":"OPERATIONS.md","title":"Deployment and runbooks","required_headings":["Observed topology","Configuration and startup","Deploy and recovery","Monitoring and incidents","Not applicable or unresolved"]},
+    {"file":"AUDIT.md","title":"Audit methodology","required_headings":["Audit states","Scoring rubric","Hard fails","Human review"]},
+    {"file":"_AUDIT_REPORT.md","title":"Current audit record","required_headings":["Audit status","Checks and evidence","Findings","Remediation"]},
+    {"file":"_CHANGELOG.md","title":"Documentation history","required_headings":["Unreleased","Version history"]}
+  ]
+}

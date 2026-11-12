@@ -1,0 +1,40 @@
+{
+  "project": {
+    "name": "SIAP (Sistem Absensi & Pelaporan)",
+    "summary": "Aplikasi operasional terpadu lintas divisi (SATPAM, Customer Service, Utility, dan Admin Manajemen) yang mencakup backend Express/Prisma/Socket.io, dashboard web admin React/Vite, dan aplikasi mobile lapangan React Native.",
+    "domain": "building-operations-attendance",
+    "documentation_language": "id",
+    "lifecycle": "existing",
+    "target_users": ["SATPAM", "CS", "UTILITY", "ADMIN"]
+  },
+  "tech_stack": {
+    "backend": ["Node.js", "Express 4.19", "TypeScript 5.5", "Prisma 5.16", "PostgreSQL 16", "Socket.io 4.7", "MinIO S3"],
+    "web_admin": ["React 18", "Vite 5.3", "TypeScript 5.2", "TanStack Router", "TanStack Query", "TailwindCSS", "Leaflet"],
+    "mobile": ["React Native 0.74", "TypeScript 5.0", "op-sqlite", "React Navigation 6", "React Native Paper", "Vision Camera", "Notifee"]
+  },
+  "constraints": [
+    "Jangan menulis rahasia (.env, private key, password produksi) ke dalam dokumentasi.",
+    "Semua klaim arsitektur dan status kesiapan harus dibedakan antara fakta kode (Observed), usulan (Proposed), dan temuan belum selesai (Unresolved).",
+    "Aplikasi menggunakan autentikasi JWT dengan daftar pencabutan token (RevokedToken) di PostgreSQL serta validasi GPS server-side."
+  ],
+  "requirements_sources": [
+    "README.md",
+    "ARCHITECTURE_SIAP.md",
+    "TASKS_SIAP.md",
+    "DESIGN.md",
+    "DESIGN_MOBILE.md"
+  ],
+  "security_classification": "internal",
+  "features": {
+    "api": true,
+    "database": true,
+    "ui": true,
+    "ai": false
+  },
+  "docs": {
+    "output_dir": "docs",
+    "strict": true,
+    "update_policy": "review"
+  }
+}
+

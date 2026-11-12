@@ -1,0 +1,950 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-11-12T14:52:24+00:00",
+  "scope": "bounded non-document files under project root; content stored only as safe-file hashes",
+  "files": [
+    {
+      "path": ".agents/skills/architect-docs-engine/SKILL.md",
+      "sha256": "e4bc3b7c6564c83cd0e46eabab914168486c19979b40eb79588d82fa2d920a90",
+      "size_bytes": 7708
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/assets/config.schema.json",
+      "sha256": "6fc803e8bbe732626b5275308c8a3f9370f59854e1c516d9b07617bc4f31ec13",
+      "size_bytes": 1992
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/assets/docs-manifest.json",
+      "sha256": "3b7d7b2d2fcdd938608298e8e886e8420e3665a4785434e816cecc4b2690ff18",
+      "size_bytes": 3901
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/assets/example-config.json",
+      "sha256": "b74612af17e755080748cbd4cd3c89a9194c372f2ce2c144e6d928c88611d447",
+      "size_bytes": 700
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/agentic-ai-extensions.md",
+      "sha256": "125f0b1512f7a705d1fe953c9987c2bc05fb06350c57546f2ec73e17f2f6a1db",
+      "size_bytes": 3352
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/audit-rubric.md",
+      "sha256": "f9ef0e2ca1039cbc67e9c3cea0e8884f3329ddebaac581b8fbbe9ef8277fccc2",
+      "size_bytes": 1499
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/design-and-accessibility.md",
+      "sha256": "5c11844cb2c7d0ee240d42685b2c3e99494b76c4e6b43b4d9222f9f0baa6f725",
+      "size_bytes": 5427
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/documentation-blueprints.md",
+      "sha256": "c2ae8c85062a7a78ea0e6ca07340911de397893d397a50cd8a902a56a5595dd1",
+      "size_bytes": 4962
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/evidence-and-assumptions.md",
+      "sha256": "a95c63901b87780f39d5a5bcead8b346bdf84c80670ec36eb8070c67e3ea7b0f",
+      "size_bytes": 1819
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/operating-modes.md",
+      "sha256": "88463be878cb86af41634d1bdd07005f698aa4050e73a7d4d3357c26e3107f73",
+      "size_bytes": 1879
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/safe-updates.md",
+      "sha256": "ccbfe973c00976bc64037898e38d3c65983730e10fae4085757f82fdf90c5f70",
+      "size_bytes": 1721
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/security-and-abuse-resistance.md",
+      "sha256": "8954da81d1ae69c3413685836fb27e0b3c60fcb723755b2ec97ff1b3817a141a",
+      "size_bytes": 8645
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/traceability-and-ids.md",
+      "sha256": "e81fe0233e18d7480e81fa912c8d2234eb51fef9e33de55b953070eb133b5c63",
+      "size_bytes": 1346
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/references/ux-interaction-patterns.md",
+      "sha256": "6de1865d52c628b62f99b5ad3832e4df794d557c4663df1893a6f8a06a606a3c",
+      "size_bytes": 4081
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/check_traceability.py",
+      "sha256": "98459f9cf21f8ebd341314bea204877e44f8cbeb98eb42554f32d897ac87e1a6",
+      "size_bytes": 6481
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/cli.py",
+      "sha256": "0971bc63031067678d976acc0fe4a6da2c24997cf5388fff42e62c284794a9c7",
+      "size_bytes": 3897
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/common.py",
+      "sha256": "4353693c71730b45fda3c5b8d1397ca0979004474f5391e4ee77af9e980cf265",
+      "size_bytes": 2297
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/install.py",
+      "sha256": "ed1a3fdeec960fcc8b2caf30563a87b3689ce408d788f800b23b9d29aa5b28ea",
+      "size_bytes": 5628
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/report_audit.py",
+      "sha256": "047311d4867bd852c57fdcb6d0bf309196235cc59df8bb716c92aca0690e3888",
+      "size_bytes": 8475
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/scan_workspace.py",
+      "sha256": "6afcd64b3fcfed326016949e8cd1ae72902e72d5cf7198d6aa06317d379a9280",
+      "size_bytes": 6492
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/snapshot_workspace.py",
+      "sha256": "9623d531050514e4ffb5b12e7d27e0ee28d1640d24b84fa843475c5fb2be603a",
+      "size_bytes": 4883
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/validate_config.py",
+      "sha256": "3433e59b4edd6fe267c8514d74959722633742399e7962210bbdb386b9a772e2",
+      "size_bytes": 8096
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/validate_docs.py",
+      "sha256": "858ee13489b2caf51c5d8941d7673e544206c3136bf6b8c2a7161fa2833c8dd7",
+      "size_bytes": 10272
+    },
+    {
+      "path": ".agents/skills/architect-docs-engine/scripts/validate_skill.py",
+      "sha256": "a5bb2cec9bffc966c6d46659fda1dbb1e97e64bc0e30534c8ced5cbefc0fc7be",
+      "size_bytes": 5926
+    },
+    {
+      "path": ".claude/launch.json",
+      "sha256": "0aaa34514d2902b052e48cc771a774d2089ce92a4d34da891b9d8d220c98d1fc",
+      "size_bytes": 242
+    },
+    {
+      "path": ".claude/settings.local.json",
+      "sha256": "7f2a6b1bf6d8325fafa031678e4aab7cc8adca357d3fc470f1e68194ae441558",
+      "size_bytes": 1447
+    },
+    {
+      "path": ".github/workflows/deploy.yml",
+      "sha256": "b54df837ab1db32cb3ed67bf06e4f0a207e4ddbe045f81592b9b247d24fa46d9",
+      "size_bytes": 1343
+    },
+    {
+      "path": "ARCHITECTURE_SIAP.md",
+      "sha256": "920d9f932458d8de586fb2939a01cda516959ae13ed6dd80a1d6f24e5885e244",
+      "size_bytes": 15172
+    },
+    {
+      "path": "DESIGN.md",
+      "sha256": "72e964a6cf551d0603f9854f2f42ee08e97ad4d9e17e037f50f6233508288295",
+      "size_bytes": 12955
+    },
+    {
+      "path": "DESIGN_MOBILE.md",
+      "sha256": "32e9f8e6bc5bc67858e58099b9a5585866555034502c8028135e224fd636f9b4",
+      "size_bytes": 7276
+    },
+    {
+      "path": "TASKS_SIAP.md",
+      "sha256": "b6d4e54dcf1f4ac4e49a221907e0bf1e358cca3856cfb22f4f57ad85e78a99ae",
+      "size_bytes": 28926
+    },
+    {
+      "path": "architect-docs.config.json",
+      "sha256": "5513c8e0ae0204ebe1b7ab1b20227c1eb2388c67f172b0ae1090163588ae32d9",
+      "size_bytes": 1662
+    },
+    {
+      "path": "backend/.eslintrc.json",
+      "sha256": "2e385e33b67bf42a50831a00eb9fa4ae1c11cb15345191c70c2b417e27c9ada8",
+      "size_bytes": 497
+    },
+    {
+      "path": "backend/Dockerfile",
+      "sha256": "320cff2135d7f082723cd7bdc5328e8637d2cc08e7ffaff8970cc4205f15b92c",
+      "size_bytes": 1275
+    },
+    {
+      "path": "backend/ecosystem.config.yml",
+      "sha256": "92ef867aef195bc4c253033bb9ad3cc552ee3e52f50d744f0e35a41696651b02",
+      "size_bytes": 385
+    },
+    {
+      "path": "backend/jest.config.js",
+      "sha256": "f54413845ad022b30c111f4b416f5a2ca785c861a6d27990d99d7b171f8401a9",
+      "size_bytes": 296
+    },
+    {
+      "path": "backend/package-lock.json",
+      "sha256": "5af3a9bd99f3fa8102fe743543844d42b0a9f0f23d04e80a95bbce7bd0d1ed01",
+      "size_bytes": 401357
+    },
+    {
+      "path": "backend/package.json",
+      "sha256": "1a4528f5968d2e0ea0d933121fa0dea96c0c156d41502d48c30f87ad558eca7b",
+      "size_bytes": 2219
+    },
+    {
+      "path": "backend/prisma/migrations/20260529050236_init_schema_v2/migration.sql",
+      "sha256": "cb195fdf67a0486fb4a7d0845c4c6326f6feb64671a4583314e99f747045011a",
+      "size_bytes": 7272
+    },
+    {
+      "path": "backend/prisma/migrations/20260605084326_add_foto_profil/migration.sql",
+      "sha256": "eec9ca506c14b6237ea86e3534994cbcf0a76e75d1c18eca2be16d3f732081ed",
+      "size_bytes": 69
+    },
+    {
+      "path": "backend/prisma/migrations/20260607_add_jadwal_and_pengaturan_sistem/migration.sql",
+      "sha256": "16c54e7ecdaa9c58e88257f17f76e553987f25945942aeef2abba524dc03e776",
+      "size_bytes": 1423
+    },
+    {
+      "path": "backend/prisma/migrations/migration_lock.toml",
+      "sha256": "693566b52c49db47a2b0901d12400aa3d710d13a49f4a2a154b80c0505ed737c",
+      "size_bytes": 126
+    },
+    {
+      "path": "backend/prisma/seed.ts",
+      "sha256": "4f7827b5750a8305b75269163ea18cb0790d0c4a71bdf418badf598edde98312",
+      "size_bytes": 7271
+    },
+    {
+      "path": "backend/src/controllers/absensi.controller.ts",
+      "sha256": "211f2f3e76ded05dbbbca524fc664382119bdbda21fee60f3ef9e7cf0da47d9b",
+      "size_bytes": 15544
+    },
+    {
+      "path": "backend/src/controllers/admin.controller.ts",
+      "sha256": "1b768b1836fb4076c6303e98ba9e787c2b99db6c22a53bc79d35c5eee7cc1404",
+      "size_bytes": 21981
+    },
+    {
+      "path": "backend/src/controllers/izin.controller.ts",
+      "sha256": "fc27f1b436023634b375a1d353ad84ff09f6b0d0bc58e1ba18020da12fef2207",
+      "size_bytes": 4893
+    },
+    {
+      "path": "backend/src/controllers/jadwal.controller.ts",
+      "sha256": "403a468677ae320fa192ee57563c938f05be72237a1325bd138c0913f72b5782",
+      "size_bytes": 10667
+    },
+    {
+      "path": "backend/src/controllers/laporan.controller.ts",
+      "sha256": "ff8316458761102c3de43f58b35e4d903bbacf829b60e5bea2358f2f2cb55936",
+      "size_bytes": 13756
+    },
+    {
+      "path": "backend/src/controllers/pengumuman.controller.ts",
+      "sha256": "013a130b2454c48e9b4f23fb9f6381240c7064efa86baf112e805a69cd9c0bf8",
+      "size_bytes": 2283
+    },
+    {
+      "path": "backend/src/controllers/serahterima.controller.ts",
+      "sha256": "49c1b9d5ccfab37a00c5d57b9ee39b8bf1b265b18d4f0b64685fbef9d7d72522",
+      "size_bytes": 12643
+    },
+    {
+      "path": "backend/src/index.ts",
+      "sha256": "ad8641991657af6df7976d687bf24deef23a2134218ff65cacd6ac6630ee0fee",
+      "size_bytes": 6470
+    },
+    {
+      "path": "backend/src/lib/prisma.ts",
+      "sha256": "c3ddcacf625bfbfd7257d57bd183f6ad7d9f9d37062edf66fb50b4e112986f5e",
+      "size_bytes": 433
+    },
+    {
+      "path": "backend/src/middleware/errorHandler.ts",
+      "sha256": "868d790e0453911266447aff47ea2ff495572af621d580238f7526d08a83b1e8",
+      "size_bytes": 1719
+    },
+    {
+      "path": "backend/src/middleware/role.middleware.ts",
+      "sha256": "1578e1c6216e9ff51961b0f5cc35b3f99343fc99fad9b2d969156dd0a29c1092",
+      "size_bytes": 3093
+    },
+    {
+      "path": "backend/src/middleware/upload.middleware.ts",
+      "sha256": "54cec78b3a64002343a38f2affe9202e4825647fa7ab9c9bede5c99b9a1b2055",
+      "size_bytes": 744
+    },
+    {
+      "path": "backend/src/routes/absensi.routes.ts",
+      "sha256": "0b67cbc5c3c609fb121995b3bb7dcdb9c240dd8ebfd1cea50d8ea59706daa7b2",
+      "size_bytes": 1633
+    },
+    {
+      "path": "backend/src/routes/admin.routes.ts",
+      "sha256": "effe686ecf0fe07170a89dda926970acfb85bfd824c957eec41db2fdebb99796",
+      "size_bytes": 4107
+    },
+    {
+      "path": "backend/src/routes/auth.routes.ts",
+      "sha256": "888240f5f84d6a947af1aea959ef894858793804e2f34c699f2d21a740942650",
+      "size_bytes": 1710
+    },
+    {
+      "path": "backend/src/routes/izin.routes.ts",
+      "sha256": "272b9174a607a2d3103ba29c8f1b77a3fabea7a373edb274e71da62072d013ab",
+      "size_bytes": 475
+    },
+    {
+      "path": "backend/src/routes/laporan.routes.ts",
+      "sha256": "d31d02e35827576928dc1b3797a920267a95a5653425fcf5deaccd8b2df550e3",
+      "size_bytes": 1272
+    },
+    {
+      "path": "backend/src/routes/pengumuman.routes.ts",
+      "sha256": "2cca8fe1bfe575ea7e01b3af0f4e2cdc2e7dc72b78c693a8d7cf4a45acabfee3",
+      "size_bytes": 605
+    },
+    {
+      "path": "backend/src/routes/serahterima.routes.ts",
+      "sha256": "dce486f07b54f488cc0f621184f6fc388cc5a5726fee023bdf8a858667915919",
+      "size_bytes": 1111
+    },
+    {
+      "path": "backend/src/schemas/absensi.schema.ts",
+      "sha256": "1b53d60ed9111e77c39b300c24e1117e89c9faa6b2fabdcc73cd1ce97cb81e23",
+      "size_bytes": 572
+    },
+    {
+      "path": "backend/src/schemas/admin.schema.ts",
+      "sha256": "75fde4d54ee288bc87e18adb6436858a49ad75bc36bdef002da445bea536f440",
+      "size_bytes": 2657
+    },
+    {
+      "path": "backend/src/schemas/auth.schema.ts",
+      "sha256": "80595370f7dd577065f0317b085709d7936515c7ee000d852fcf47f628e947eb",
+      "size_bytes": 818
+    },
+    {
+      "path": "backend/src/schemas/izin.schema.ts",
+      "sha256": "e1862e4207cb0e8e66d3cebad017e190b57e4645001c970369abea702358cc68",
+      "size_bytes": 1077
+    },
+    {
+      "path": "backend/src/schemas/jadwal.schema.ts",
+      "sha256": "0b1d7553f8b9c34cb80b7479d34c8fb098d92407d7e7ad7a8203151d5e3d7145",
+      "size_bytes": 1009
+    },
+    {
+      "path": "backend/src/schemas/laporan.schema.ts",
+      "sha256": "d61693a4d321abd5a4600bcea195b7eea94831dfd849133df9e2e0628e85b805",
+      "size_bytes": 2298
+    },
+    {
+      "path": "backend/src/schemas/pengumuman.schema.ts",
+      "sha256": "57a3933b42f9ba8ad838da10fa40d5406699bd012f16d149aaf64d1451069f48",
+      "size_bytes": 382
+    },
+    {
+      "path": "backend/src/schemas/serah-terima.schema.ts",
+      "sha256": "8856636322ad0796be7e7ce10db4afae28a20570ec9a41d257efe502aba4ff8a",
+      "size_bytes": 1138
+    },
+    {
+      "path": "backend/src/services/notification.service.ts",
+      "sha256": "91759369be20a851975e958c7885cba1c8af31b21f08073d2b985c0c2d1f725f",
+      "size_bytes": 3605
+    },
+    {
+      "path": "backend/src/services/pdf.service.ts",
+      "sha256": "e526e636208d2bd56be707e3dde24a597e6697226cd08dda7fe35268eaa0269d",
+      "size_bytes": 4856
+    },
+    {
+      "path": "backend/src/services/storage.service.ts",
+      "sha256": "3a09726bdd336b005d9765321b8a64ea4cc9cc43854876c2a567b85a752f7d25",
+      "size_bytes": 3419
+    },
+    {
+      "path": "backend/src/services/watermark.service.ts",
+      "sha256": "20d007f74da4ba8d350327be4a636dc5cc41ede9f5f935a7d028e70c6ac28d73",
+      "size_bytes": 2117
+    },
+    {
+      "path": "backend/src/utils/logger.ts",
+      "sha256": "3716be6920386927a3f45e523375baed57cf2322198b5050d28f378ef03d9c49",
+      "size_bytes": 630
+    },
+    {
+      "path": "backend/test-socket.js",
+      "sha256": "ed998f41adb72cc5ea2d4626cacbedf6514a4275999ff5fd5373f97f19d61b02",
+      "size_bytes": 2383
+    },
+    {
+      "path": "backend/tests/absensi.test.ts",
+      "sha256": "29de2d369ae96dd351d96c857c36ba8824c863760c6b6d7b3325703a3b6a6d4a",
+      "size_bytes": 5056
+    },
+    {
+      "path": "backend/tests/auth.test.ts",
+      "sha256": "c9e888850c0478bebeeca0d1a81af33f7928e2cd97c4574c28f13a435e800817",
+      "size_bytes": 3718
+    },
+    {
+      "path": "backend/tests/laporan.test.ts",
+      "sha256": "c1877623405860e69bd98ec9251b639021fdda8aacfb3defa210f0441af7374c",
+      "size_bytes": 5455
+    },
+    {
+      "path": "backend/tests/setup.ts",
+      "sha256": "fa4df78057926a158440320d623cb5b561b4297068d02cdf042e803a05e7f771",
+      "size_bytes": 2011
+    },
+    {
+      "path": "backend/tests/supertest.d.ts",
+      "sha256": "4ecde169469d6ba190ac5e122d761322ea56d300ec6ac3ee0b081fb1e0fd8a61",
+      "size_bytes": 1083
+    },
+    {
+      "path": "backend/tests/workflow-admin.test.ts",
+      "sha256": "14be0aefde4cebaf3d0f70f2df0c15fd2a815b208838fccc71b62426762af5d9",
+      "size_bytes": 9351
+    },
+    {
+      "path": "backend/tsconfig.json",
+      "sha256": "49bfd855f37c18061d057826445424502ba0abc81a0c82a18a96690d9add44f1",
+      "size_bytes": 746
+    },
+    {
+      "path": "backend/tsconfig.test.json",
+      "sha256": "61dc331cf02d4271d9aff90f27dbf8c5dc0c9ac3cc5c127bcc237d9618db5f3e",
+      "size_bytes": 417
+    },
+    {
+      "path": "infra/docker-compose.prod.yml",
+      "sha256": "31bae6f509cf506882f66eecdc564dcbbb4235a3de00a84e48b0e2d5db50baa4",
+      "size_bytes": 2565
+    },
+    {
+      "path": "infra/docker-compose.yml",
+      "sha256": "f6aa2c4c4920e0c72716e23c9fbb9f1d8972d160449cedb19759309789749567",
+      "size_bytes": 1529
+    },
+    {
+      "path": "mobile/.eslintrc.js",
+      "sha256": "2c0c786e30947d24d0aa2cfb9745811307863758d497b9bcaa317db8219707bc",
+      "size_bytes": 112
+    },
+    {
+      "path": "mobile/App.tsx",
+      "sha256": "084fc98048b4174f4a004c122d763680b28c3e55e147fe3680f92571e2502274",
+      "size_bytes": 2379
+    },
+    {
+      "path": "mobile/README.md",
+      "sha256": "beafe2cab072ab8947bffd8afc3680f3ab3201a3695f748bbe40a03c799607b2",
+      "size_bytes": 1116
+    },
+    {
+      "path": "mobile/babel.config.js",
+      "sha256": "d76a3a8625b204efa0f42c4bdd220f484211798f88a56f2e784bc082231cc292",
+      "size_bytes": 72
+    },
+    {
+      "path": "mobile/index.js",
+      "sha256": "edad3acdeaae6df882195ba5d10b4c96f7e2e37a6c965146a3e7a3d6d1431b4f",
+      "size_bytes": 126
+    },
+    {
+      "path": "mobile/ios/SiapMobile/Images.xcassets/AppIcon.appiconset/Contents.json",
+      "sha256": "8a18bd4a58344d5fd5ac8f51f2e1a4e3409b0c3e503ea4d0940399900aa9ffd8",
+      "size_bytes": 849
+    },
+    {
+      "path": "mobile/ios/SiapMobile/Images.xcassets/Contents.json",
+      "sha256": "991ae939fbd598450a066b66404e06c5ae9b7d37e9aa0026de9e318443ba46fb",
+      "size_bytes": 63
+    },
+    {
+      "path": "mobile/jest.config.js",
+      "sha256": "ff34c1c382123874acdb6a54d01ba979ce59363a398abef6e4c471857cfadadc",
+      "size_bytes": 48
+    },
+    {
+      "path": "mobile/metro.config.js",
+      "sha256": "da41aea71ede6fcab31fcf8446813d150c50bcb2ad4946ff713689ff617ca133",
+      "size_bytes": 285
+    },
+    {
+      "path": "mobile/package-lock.json",
+      "sha256": "7771b94d18c714818d37ad664675fd81014425b007dc1f4ecb7a9c47000a2b74",
+      "size_bytes": 559257
+    },
+    {
+      "path": "mobile/package.json",
+      "sha256": "903aab8cd1a79c7a039f02fbd60621bf8582c025d3e70d83aadb5f9bbc81d97c",
+      "size_bytes": 2435
+    },
+    {
+      "path": "mobile/src/components/CameraView.tsx",
+      "sha256": "fbcd0458970f2aabac8ee3e19e83abc52c7d30a3d59c1b1de8113511471c17c6",
+      "size_bytes": 6954
+    },
+    {
+      "path": "mobile/src/components/EmptyState.tsx",
+      "sha256": "3776100a2a4d6398523515248ce5c4e81a1f00dc5f9395671c837a0276e7ccb4",
+      "size_bytes": 1215
+    },
+    {
+      "path": "mobile/src/components/ErrorBoundary.tsx",
+      "sha256": "ff164b6690393f411a7a67dc99e272c380af5b9f1e389405798c3ddfd588cedc",
+      "size_bytes": 2301
+    },
+    {
+      "path": "mobile/src/components/NetworkManager.tsx",
+      "sha256": "46485f189ffca4bbb3952875505bc419133f8f3f120b4fff2f2c7d025a1a3a0f",
+      "size_bytes": 3540
+    },
+    {
+      "path": "mobile/src/components/Skeleton.tsx",
+      "sha256": "9c39938d3ad123f192e00f49c0f6d5a18ba6fefe0b3f1af0ed76292b7ddba6a2",
+      "size_bytes": 997
+    },
+    {
+      "path": "mobile/src/navigation/AppNavigator.tsx",
+      "sha256": "36ecf62006020a02309e876ec3d3edcee464b46ab86fb0edb3d5c23ce813bb79",
+      "size_bytes": 4596
+    },
+    {
+      "path": "mobile/src/navigation/AuthNavigator.tsx",
+      "sha256": "8bc39e4395df6e174a20142b1a0d2f79b67e55d6590dd241bae567281c56b9f7",
+      "size_bytes": 409
+    },
+    {
+      "path": "mobile/src/navigation/index.tsx",
+      "sha256": "b462fd42a479545b578e23a14263cbe8bac5652d7e15e12857cb648bbeba3b1e",
+      "size_bytes": 932
+    },
+    {
+      "path": "mobile/src/screens/auth/LoginScreen.tsx",
+      "sha256": "f5077c18e2eaf5872e75bc529a7bbd21bfce0daf152e5da0a54aa5c471cbaf60",
+      "size_bytes": 7339
+    },
+    {
+      "path": "mobile/src/screens/laporan/BuatLaporanScreen.tsx",
+      "sha256": "d9a04712f597b8ebb98e0aaaea1343ecd8a3a0828f6d312d8cd7f56d10e693cf",
+      "size_bytes": 9754
+    },
+    {
+      "path": "mobile/src/screens/laporan/DetailLaporanScreen.tsx",
+      "sha256": "adf21d7f587a41cac5684cb9b269ca8fd3440ad621a0bd52b9594f71a7aa0be7",
+      "size_bytes": 5136
+    },
+    {
+      "path": "mobile/src/screens/laporan/LaporanPerJamScreen.tsx",
+      "sha256": "80841112d7211adb49f1e245a7a745c8d88f79cb71a062f9ceed9703c0b28f90",
+      "size_bytes": 11426
+    },
+    {
+      "path": "mobile/src/screens/laporan/ListLaporanScreen.tsx",
+      "sha256": "8a0a4cfa847cdd7818d22c627b14de956647b675c0bc425fb7e82cd77561fcff",
+      "size_bytes": 4675
+    },
+    {
+      "path": "mobile/src/screens/main/AbsensiScreen.tsx",
+      "sha256": "4a4cae4ffc94c3965bdf2a99319ef710906bfd7ab319343edd7110564747767a",
+      "size_bytes": 13849
+    },
+    {
+      "path": "mobile/src/screens/main/BerandaScreen.tsx",
+      "sha256": "2fd104fdd7b2731b41aaacb42f36b59e5a5539c724518ad2df2e5af7486af4a0",
+      "size_bytes": 19478
+    },
+    {
+      "path": "mobile/src/screens/main/IzinCutiScreen.tsx",
+      "sha256": "511ac4aa6ba3e8c9ee6c9a0219a1ca225b0a900c44fd6cf13f6dff9c5e99d174",
+      "size_bytes": 18928
+    },
+    {
+      "path": "mobile/src/screens/profil/ProfilScreen.tsx",
+      "sha256": "7bf2cc6dfd8d250445085f5f3d391550620aa1a4d94045659a4bac2fea68de67",
+      "size_bytes": 7291
+    },
+    {
+      "path": "mobile/src/screens/serahterima/KonfirmasiSerahTerimaScreen.tsx",
+      "sha256": "9fd4acf5821fc7b3181e591375192655d4171a54c943cb309be9ab6807aef8f6",
+      "size_bytes": 8623
+    },
+    {
+      "path": "mobile/src/screens/serahterima/SerahTerimaScreen.tsx",
+      "sha256": "225f2a772cc5d9e7388f78ce10942c24fcf9fad21f0c3e8def354f68fab9a9e1",
+      "size_bytes": 11340
+    },
+    {
+      "path": "mobile/src/services/api.ts",
+      "sha256": "b8b0dc9d0c589c36c61d05ff9a3b9aebde943beee26e8648549dca0b7caf392c",
+      "size_bytes": 815
+    },
+    {
+      "path": "mobile/src/services/fcm.ts",
+      "sha256": "e722507698bf262c36bc55615475ac149daa388f4dd37b92108082943bbb24ca",
+      "size_bytes": 1903
+    },
+    {
+      "path": "mobile/src/services/queryClient.ts",
+      "sha256": "0d84c945f055349ca70e33f11ff25c28fdf5b98a4d3fc7f57f7d39e6c35703d4",
+      "size_bytes": 549
+    },
+    {
+      "path": "mobile/src/services/socket.ts",
+      "sha256": "c04b44d44e08c713bd8397d67b0a0701e027842b1c00bdc3ce04704fccba4929",
+      "size_bytes": 2204
+    },
+    {
+      "path": "mobile/src/store/auth.store.ts",
+      "sha256": "a78a0b360810c04eafb1d6492e0ad115423625163eafb4fde529ae651d3e129a",
+      "size_bytes": 3698
+    },
+    {
+      "path": "mobile/src/store/database.ts",
+      "sha256": "099f0830a889737eafcef1db85f5dc41d77f6cc69173f8557f223e8e0a6d4d27",
+      "size_bytes": 2036
+    },
+    {
+      "path": "mobile/src/utils/url.ts",
+      "sha256": "80c94c46640f00d775d6109222192e814b563135c5f13bfb18a5e2f2a028971e",
+      "size_bytes": 433
+    },
+    {
+      "path": "mobile/tsconfig.json",
+      "sha256": "e634b77bf1260cafa9317791085e804b418e9ad7490a7c29f2eee42b2c18f73f",
+      "size_bytes": 308
+    },
+    {
+      "path": "web-admin/README.md",
+      "sha256": "54af152b76fe914a4e2b5afe9cfe56951556f0b44d9acd5bbf7e20c4b5d446bb",
+      "size_bytes": 883
+    },
+    {
+      "path": "web-admin/components.json",
+      "sha256": "635ce52cf08e55352fe8dd020eefd4dfe2fbb2cbec38b99a710821e5e4d5edcd",
+      "size_bytes": 341
+    },
+    {
+      "path": "web-admin/index.html",
+      "sha256": "544cb52e159a091e1642713f703683c93658ecf09a42868415892fae3606c295",
+      "size_bytes": 376
+    },
+    {
+      "path": "web-admin/package-lock.json",
+      "sha256": "11d7141f3fcef6c7a00edce1aefcf5c106fd5df62d07bead1225033fb0695a58",
+      "size_bytes": 213768
+    },
+    {
+      "path": "web-admin/package.json",
+      "sha256": "27237b51bab5b41813609c2884f6f0f59d6e9286db7cfe502672dee46aed9ddd",
+      "size_bytes": 1539
+    },
+    {
+      "path": "web-admin/postcss.config.js",
+      "sha256": "190c877db466995bf1482f4a16abd06e04a89ede3119341e2a86ff96e1737b27",
+      "size_bytes": 80
+    },
+    {
+      "path": "web-admin/src/components/ConfirmModal.tsx",
+      "sha256": "3d9a140f60780aea2521622db410ae8e34709999611cef55377e74a735e78387",
+      "size_bytes": 2611
+    },
+    {
+      "path": "web-admin/src/components/NotFoundPage.tsx",
+      "sha256": "590088d1035f07edd84a98c9399a78e7851ac4eedd4e587af2425f3b256a30dd",
+      "size_bytes": 1079
+    },
+    {
+      "path": "web-admin/src/components/layout/AdminLayout.tsx",
+      "sha256": "6131520b44e439c344f7b962f9b67fd601acdcc5e08242c4b7c7ad1befc05412",
+      "size_bytes": 8808
+    },
+    {
+      "path": "web-admin/src/components/ui/sheet.tsx",
+      "sha256": "f5190b30b4190cb153e7a1fae72fc94b2effebaa5f507722c857e7c7c01ef34c",
+      "size_bytes": 4267
+    },
+    {
+      "path": "web-admin/src/components/ui/toast.tsx",
+      "sha256": "99f9f4a3e897f71d89b01c6772b2f5db51b888cecb2c8214fb2c2dbb2b3e6356",
+      "size_bytes": 4845
+    },
+    {
+      "path": "web-admin/src/components/ui/toaster.tsx",
+      "sha256": "0d12735a4d98d645d287cacdeb4b651b6f2af1991ab07a07aa23a8c2551106f1",
+      "size_bytes": 762
+    },
+    {
+      "path": "web-admin/src/hooks/use-toast.ts",
+      "sha256": "03e892344ad170438ccfc156b4ee7ff0be4e535a2939e038f64556ce03b934ed",
+      "size_bytes": 3948
+    },
+    {
+      "path": "web-admin/src/index.css",
+      "sha256": "49a813160abd6e5ce957d1b2fc4e39823be17d01001fef4030306530f9682766",
+      "size_bytes": 3706
+    },
+    {
+      "path": "web-admin/src/lib/utils.ts",
+      "sha256": "51bbf14cd1f84f49aab2e0dbee420137015d56b6677bb439e83a908cd292cce1",
+      "size_bytes": 166
+    },
+    {
+      "path": "web-admin/src/main.tsx",
+      "sha256": "cd536c075e39226f0ac029ad2b94a23ecb138662f187aad0fcd1c90dfe513d11",
+      "size_bytes": 866
+    },
+    {
+      "path": "web-admin/src/pages/admin/IzinCuti.tsx",
+      "sha256": "c2413fa715d56296533e14083dbf56abc0e962d7b93e44dc826464539ed0c2ae",
+      "size_bytes": 10205
+    },
+    {
+      "path": "web-admin/src/routeTree.gen.ts",
+      "sha256": "8a8117a7c68bd8801d3ca35873c2301b9ff88416061683eec6419b76a0718bab",
+      "size_bytes": 12506
+    },
+    {
+      "path": "web-admin/src/routes/__root.tsx",
+      "sha256": "5a6142a072ffe17250976d85cf802192a83f4582e87b9d02f71078d5c96a8998",
+      "size_bytes": 1364
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated.tsx",
+      "sha256": "1cf6f9e7be93f045cd262cac545430935f03b511321d58a13a6a56029a496db1",
+      "size_bytes": 495
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/absensi.tsx",
+      "sha256": "d5e6d346e098dcf8941e02d3a741371de7c6f48562ca0a843802482aa71cac56",
+      "size_bytes": 18000
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/dashboard.tsx",
+      "sha256": "d1e9eec9e4daaae09f970c5362450fe5714c3a367cbb13989fcd279da6183916",
+      "size_bytes": 15869
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/izin-cuti.tsx",
+      "sha256": "c34c4b6c8a284b4558b3c058b910a0e4f0b6a250940dbb174ca0ba35fb6dd944",
+      "size_bytes": 12458
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/jadwal.tsx",
+      "sha256": "1e31b2136417d09f6e8758813be054d27f289b707e3b8e825d904d30756a6bf3",
+      "size_bytes": 12415
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/jadwal_.$staffId.tsx",
+      "sha256": "81c86f827325562b1170e12de16ac7c54c92d39d2c1c28432462b9de4d68d256",
+      "size_bytes": 13109
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/kalender.tsx",
+      "sha256": "3c7c29e03f02450bef151051eda11534279d27a90381d7cd2a4e32703249a53f",
+      "size_bytes": 8930
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/laporan.tsx",
+      "sha256": "834af8323f853755b255a40a34a8883fd187708b352db0a79ba32db1eaaa6f30",
+      "size_bytes": 15724
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/pengaturan.tsx",
+      "sha256": "b1d1b041316f27ec3a1a927b15a6d203c52d049f98b1023cf7564c0a348eee2c",
+      "size_bytes": 13536
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/pengumuman.tsx",
+      "sha256": "5ce8ceeba739ce07e45b7ec13738182cfb449c96d92cb3a741ecae01a467736a",
+      "size_bytes": 9554
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/serah-terima.tsx",
+      "sha256": "17aec025aadd3a8ec439fae2d8951b7976585020eedc7bd71367104285215519",
+      "size_bytes": 10358
+    },
+    {
+      "path": "web-admin/src/routes/_authenticated/staff.tsx",
+      "sha256": "ea7a5df6a3fb63c0e7ac3ba75c6e957ca7ec57dece2003a77a0efee97d76cecd",
+      "size_bytes": 15377
+    },
+    {
+      "path": "web-admin/src/routes/index.tsx",
+      "sha256": "36b842e0550d157afc894db4afc4339cc979b4d00cc5f147547854b571fe4eb9",
+      "size_bytes": 364
+    },
+    {
+      "path": "web-admin/src/routes/login.tsx",
+      "sha256": "2fcb72ec37b5aeffd68044eaec7b7bb18cfd842f27af2f25759a433df3fd6264",
+      "size_bytes": 8737
+    },
+    {
+      "path": "web-admin/src/services/api.ts",
+      "sha256": "b960ae535f5292f7b714595ff655cd17f21295fe889a53cb21ea25d115d3fc20",
+      "size_bytes": 942
+    },
+    {
+      "path": "web-admin/src/store/authStore.ts",
+      "sha256": "6ca27e8fb971a2d61d917b8b4d053935697752c0bab19d8ff4e7163fa5a92991",
+      "size_bytes": 576
+    },
+    {
+      "path": "web-admin/src/store/notificationStore.ts",
+      "sha256": "4be74353b6d10d58c73eb45a98f070f61502a89bc46639d3d993c4d9acbd326d",
+      "size_bytes": 485
+    },
+    {
+      "path": "web-admin/tailwind.config.js",
+      "sha256": "d96c95e842d3c31c99c1a06db2899e62f2716b345f209297645a9c07082db276",
+      "size_bytes": 2142
+    },
+    {
+      "path": "web-admin/tsconfig.app.json",
+      "sha256": "589a83fe1143a981d3c42593bf277b739989752facc742f3402ce7d9a46a8cb0",
+      "size_bytes": 684
+    },
+    {
+      "path": "web-admin/tsconfig.json",
+      "sha256": "770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808",
+      "size_bytes": 119
+    },
+    {
+      "path": "web-admin/tsconfig.node.json",
+      "sha256": "90a22c920cbc14624fb4658b58f15c875abf3234224f3933f211849c3ada3242",
+      "size_bytes": 591
+    },
+    {
+      "path": "web-admin/vite.config.ts",
+      "sha256": "646f7235cb76e4bcf97a673ec8395cd1da6f1e35e0f980d8048eaa8b9160f98e",
+      "size_bytes": 370
+    }
+  ],
+  "unhashed_paths": [
+    ".agents/skills/architect-docs-engine/assets/templates/01-README.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/02-PRD.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/03-TECH_STACK.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/04-DECISIONS.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/05-DATA_MODEL.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/06-VALIDATION_RULES.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/07-API_CONTRACT.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/08-UI.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/09-UX.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/10-AGENTS.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/11-PROMPTS.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/12-SECURITY.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/13-SEED.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/14-IMPLEMENTATION.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/15-TESTING.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/16-ACCEPTANCE.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/17-TRACEABILITY.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/18-OPERATIONS.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/19-AUDIT.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/20-_AUDIT_REPORT.md.tmpl",
+    ".agents/skills/architect-docs-engine/assets/templates/21-_CHANGELOG.md.tmpl",
+    ".gitignore",
+    "README.md",
+    "backend/.env.example",
+    "backend/.gitignore",
+    "backend/logs/combined.log",
+    "backend/logs/error.log",
+    "backend/logs/http.log",
+    "backend/prisma/schema.prisma",
+    "backend/src/controllers/.gitkeep",
+    "backend/src/controllers/auth.controller.ts",
+    "backend/src/lib/socket.ts",
+    "backend/src/middleware/.gitkeep",
+    "backend/src/middleware/auth.middleware.ts",
+    "backend/src/prisma/.gitkeep",
+    "backend/src/routes/.gitkeep",
+    "backend/src/services/.gitkeep",
+    "infra/backup.sh",
+    "infra/nginx.conf",
+    "infra/nginx/conf.d/default.conf",
+    "infra/nginx/nginx.conf",
+    "mobile/.idea/.gitignore",
+    "mobile/.idea/caches/deviceStreaming.xml",
+    "mobile/.idea/deviceManager.xml",
+    "mobile/.idea/markdown.xml",
+    "mobile/.idea/misc.xml",
+    "mobile/.idea/mobile.iml",
+    "mobile/.idea/modules.xml",
+    "mobile/.idea/vcs.xml",
+    "mobile/.idea/workspace.xml",
+    "mobile/.watchmanconfig",
+    "mobile/Gemfile",
+    "mobile/android/.gradle/8.6/checksums/checksums.lock",
+    "mobile/android/.gradle/8.6/checksums/md5-checksums.bin",
+    "mobile/android/.gradle/8.6/checksums/sha1-checksums.bin",
+    "mobile/android/.gradle/8.6/dependencies-accessors/423f0288fa7dffe069445ffa4b72952b4629a15a/metadata.bin",
+    "mobile/android/.gradle/8.6/dependencies-accessors/gc.properties",
+    "mobile/android/.gradle/8.6/executionHistory/executionHistory.lock",
+    "mobile/android/.gradle/8.6/fileChanges/last-build.bin",
+    "mobile/android/.gradle/8.6/fileHashes/fileHashes.bin",
+    "mobile/android/.gradle/8.6/fileHashes/fileHashes.lock",
+    "mobile/android/.gradle/8.6/fileHashes/resourceHashesCache.bin",
+    "mobile/android/.gradle/8.6/gc.properties",
+    "mobile/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock",
+    "mobile/android/.gradle/buildOutputCleanup/cache.properties",
+    "mobile/android/.gradle/buildOutputCleanup/outputFiles.bin",
+    "mobile/android/.gradle/noVersion/buildLogic.lock",
+    "mobile/android/.gradle/vcs-1/gc.properties",
+    "mobile/android/app/build.gradle",
+    "mobile/android/app/proguard-rules.pro",
+    "mobile/android/app/src/debug/AndroidManifest.xml",
+    "mobile/android/app/src/main/AndroidManifest.xml",
+    "mobile/android/app/src/main/java/com/siapmobile/MainActivity.kt",
+    "mobile/android/app/src/main/java/com/siapmobile/MainApplication.kt",
+    "mobile/android/app/src/main/res/drawable/rn_edit_text_material.xml",
+    "mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+    "mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+    "mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+    "mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+    "mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+    "mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+    "mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+    "mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+    "mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+    "mobile/android/app/src/main/res/values/strings.xml",
+    "mobile/android/app/src/main/res/values/styles.xml",
+    "mobile/android/build-output.log",
+    "mobile/android/build.gradle",
+    "mobile/android/cmake-info.log",
+    "mobile/android/gradle.properties",
+    "mobile/android/gradle/wrapper/gradle-wrapper.jar",
+    "mobile/android/gradle/wrapper/gradle-wrapper.properties",
+    "mobile/android/gradlew",
+    "mobile/android/gradlew.bat",
+    "mobile/android/local.properties",
+    "mobile/android/settings.gradle",
+    "mobile/ios/.xcode.env",
+    "mobile/ios/Podfile",
+    "mobile/ios/SiapMobile.xcodeproj/project.pbxproj",
+    "mobile/ios/SiapMobile.xcodeproj/xcshareddata/xcschemes/SiapMobile.xcscheme",
+    "mobile/ios/SiapMobile/AppDelegate.h",
+    "mobile/ios/SiapMobile/AppDelegate.mm",
+    "mobile/ios/SiapMobile/Info.plist",
+    "mobile/ios/SiapMobile/LaunchScreen.storyboard",
+    "mobile/ios/SiapMobile/PrivacyInfo.xcprivacy",
+    "mobile/ios/SiapMobile/main.m",
+    "mobile/ios/SiapMobileTests/Info.plist",
+    "mobile/ios/SiapMobileTests/SiapMobileTests.m",
+    "start-all.bat",
+    "web-admin/.eslintrc.cjs",
+    "web-admin/vite.config.ts.timestamp-1780038802506-df57fb63103f1.mjs"
+  ],
+  "summary": "Snapshot contains 165 hashed source/config files and 112 un-hashed paths.",
+  "project_root": "C:\\my-project\\siap-app",
+  "destination": "C:\\my-project\\siap-app\\.architect-docs\\source-snapshot.json",
+  "would_write": true
+}
