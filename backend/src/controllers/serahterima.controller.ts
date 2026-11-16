@@ -212,8 +212,8 @@ export const getRiwayatSerahTerima = async (req: Request, res: Response): Promis
         ],
       },
       include: {
-        staff_lama: { select: { nama: true } },
-        staff_baru: { select: { nama: true } },
+        staff_lama: { select: { id: true, nama: true, nik: true, role: true } },
+        staff_baru: { select: { id: true, nama: true, nik: true, role: true } },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -221,6 +221,70 @@ export const getRiwayatSerahTerima = async (req: Request, res: Response): Promis
     res.status(200).json({ success: true, data: riwayat });
   } catch (error) {
     logger.error('Error getRiwayatSerahTerima:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── GET /serah-terima/staff-penerima ───────────────────────────────────────
+export const getStaffPenerima = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = req.user!;
+    const staffList = await prisma.staff.findMany({
+      where: {
+        aktif: true,
+        role: user.role as Role,
+        id: { not: user.id },
+      },
+      select: {
+        id: true,
+        nama: true,
+        nik: true,
+        role: true,
+        divisi: true,
+        foto_profil: true,
+      },
+      orderBy: { nama: 'asc' },
+    });
+
+    res.status(200).json({ success: true, data: staffList });
+  } catch (error) {
+    logger.error('Error getStaffPenerima:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat daftar staff penerima.' });
+  }
+};
+
+// ─── GET /serah-terima/:id ───────────────────────────────────────────────────
+export const getDetailSerahTerima = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = req.user!;
+    const { id } = req.params;
+
+    const st = await prisma.serahTerima.findUnique({
+      where: { id },
+      include: {
+        staff_lama: { select: { id: true, nama: true, nik: true, role: true, divisi: true } },
+        staff_baru: { select: { id: true, nama: true, nik: true, role: true, divisi: true } },
+      },
+    });
+
+    if (!st) {
+      res.status(404).json({ success: false, message: 'Data serah terima tidak ditemukan.' });
+      return;
+    }
+
+    const isAuthorized =
+      user.role === Role.ADMIN ||
+      st.staff_lama_id === user.id ||
+      st.staff_baru_id === user.id;
+
+    if (!isAuthorized) {
+      res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke data ini.' });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: st });
+  } catch (error) {
+    logger.error('Error getDetailSerahTerima:', error);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
 };

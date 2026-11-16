@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { uploadFile } from '../services/storage.service';
 import { sendToDevice } from '../services/notification.service';
 import { createIzinSchema, reviewIzinSchema } from '../schemas/izin.schema';
+import { getIO } from '../lib/socket';
 
 // ─── POST /izin (Mobile) ──────────────────────────────────────────────────────
 export const createIzin = async (req: Request, res: Response): Promise<void> => {
@@ -35,6 +36,15 @@ export const createIzin = async (req: Request, res: Response): Promise<void> => 
         foto_url,
       },
     });
+
+    try {
+      getIO().to('admin').emit('izin:new', {
+        id: izin.id,
+        staff_id: user.id,
+        nama: user.nama,
+        jenis: izin.jenis,
+      });
+    } catch {}
 
     res.status(201).json({ success: true, data: izin });
   } catch (error) {
@@ -118,6 +128,11 @@ export const reviewIzin = async (req: Request, res: Response): Promise<void> => 
         logger.error('Gagal kirim notif FCM izin:', fcmErr);
       }
     }
+
+    try {
+      getIO().to('admin').emit('izin:update', updatedIzin);
+      getIO().to(`staff:${izin.staff_id}`).emit('izin:update', updatedIzin);
+    } catch {}
 
     res.json({
       success: true,

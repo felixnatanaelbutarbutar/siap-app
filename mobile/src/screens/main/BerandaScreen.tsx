@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image, Dimensions, Modal, ActivityIndicator, Animated } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
@@ -8,6 +8,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { getAvatarUrl } from '../../utils/url';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 type RootStackParamList = {
   Absensi: undefined;
@@ -23,7 +25,8 @@ const { width } = Dimensions.get('window');
 export const BerandaScreen = () => {
   const user = useAuthStore((state) => state.user);
   const navigation = useNavigation<NavigationProp>();
-  const [showPengumuman, setShowPengumuman] = React.useState(false);
+  const [showPengumuman, setShowPengumuman] = useState(false);
+  const [showJadwalMingguan, setShowJadwalMingguan] = useState(false);
 
   // Entrance animation
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -44,8 +47,6 @@ export const BerandaScreen = () => {
         ]),
       ]),
     ]).start();
-
-    // (SOS animation removed — replaced by Izin/Cuti)
 
     // Blink notif dot
     const blinkLoop = Animated.loop(
@@ -77,11 +78,175 @@ export const BerandaScreen = () => {
     }
   });
 
+  const { data: absensiHariIni } = useQuery({
+    queryKey: ['absensi', 'hari-ini'],
+    queryFn: async () => {
+      const res = await api.get('/absensi/hari-ini');
+      return res.data.data || [];
+    }
+  });
+
+  const { data: laporanTerbaru } = useQuery({
+    queryKey: ['laporan', 'terbaru'],
+    queryFn: async () => {
+      const res = await api.get('/laporan');
+      return res.data.data || [];
+    }
+  });
+
+  const { data: jadwalMingguan, isLoading: loadingJadwalMingguan, refetch: refetchJadwalMingguan } = useQuery({
+    queryKey: ['jadwal-mingguan'],
+    queryFn: async () => {
+      const res = await api.get('/absensi/jadwal-mingguan');
+      return res.data.data || [];
+    },
+    enabled: showJadwalMingguan,
+  });
+
   const handleOpenPengumuman = () => {
     refetchPengumuman();
     setShowPengumuman(true);
   };
 
+  const handleOpenJadwalMingguan = () => {
+    refetchJadwalMingguan();
+    setShowJadwalMingguan(true);
+  };
+
+  // Status Kehadiran Realtime
+  const sudahMasuk = Array.isArray(absensiHariIni) && absensiHariIni.some((a: any) => a.jenis === 'MASUK');
+  const sudahKeluar = Array.isArray(absensiHariIni) && absensiHariIni.some((a: any) => a.jenis === 'KELUAR');
+  const countMulaiIstirahat = Array.isArray(absensiHariIni)
+    ? absensiHariIni.filter((a: any) => a.jenis === 'MULAI_ISTIRAHAT').length
+    : 0;
+  const countSelesaiIstirahat = Array.isArray(absensiHariIni)
+    ? absensiHariIni.filter((a: any) => a.jenis === 'SELESAI_ISTIRAHAT').length
+    : 0;
+  const sedangIstirahat = countMulaiIstirahat > countSelesaiIstirahat;
+
+  let statusBadgeLabel = 'Shift Hari Ini';
+  let statusBadgeColor = '#ba1a1a';
+  let statusBadgeBg = '#ffdad6';
+  let statusTitle = 'Belum Absen Masuk';
+
+  if (!jadwalHariIni) {
+    statusBadgeLabel = 'Libur';
+    statusBadgeColor = '#515f74';
+    statusBadgeBg = '#e8f0e4';
+    statusTitle = 'Tidak ada shift hari ini';
+  } else if (sudahKeluar) {
+    statusBadgeLabel = 'Shift Selesai';
+    statusBadgeColor = '#006e2f';
+    statusBadgeBg = '#cdeed5';
+    statusTitle = 'Tugas shift hari ini telah selesai';
+  } else if (sedangIstirahat) {
+    statusBadgeLabel = 'Sedang Istirahat';
+    statusBadgeColor = '#c77800';
+    statusBadgeBg = '#ffefd4';
+    statusTitle = 'Waktu istirahat aktif';
+  } else if (sudahMasuk) {
+    statusBadgeLabel = 'Shift Aktif';
+    statusBadgeColor = '#006e2f';
+    statusBadgeBg = '#cdeed5';
+    statusTitle = 'Sedang bertugas di area';
+  }
+
+  // Gabungkan aktivitas absensi & laporan harian
+  const combinedActivities = useMemo(() => {
+    const list: any[] = [];
+
+    if (Array.isArray(absensiHariIni)) {
+      absensiHariIni.forEach((item: any) => {
+        let title = 'Absensi';
+        let icon = 'fingerprint';
+        let iconBg = '#e8f0e4';
+        let iconColor = '#006e2f';
+        let badge = item.status_kehadiran === 'TERLAMBAT' ? 'Terlambat' : 'Tepat Waktu';
+        let badgeBg = item.status_kehadiran === 'TERLAMBAT' ? '#ffefd4' : '#e8f0e4';
+        let badgeColor = item.status_kehadiran === 'TERLAMBAT' ? '#c77800' : '#006e2f';
+
+        if (item.jenis === 'MASUK') {
+          title = 'Absen Masuk';
+          icon = 'login-variant';
+        } else if (item.jenis === 'KELUAR') {
+          title = 'Absen Pulang';
+          icon = 'logout-variant';
+          iconBg = '#ffdad6';
+          iconColor = '#ba1a1a';
+        } else if (item.jenis === 'MULAI_ISTIRAHAT') {
+          title = 'Mulai Istirahat';
+          icon = 'coffee-outline';
+          iconBg = '#ffefd4';
+          iconColor = '#c77800';
+          badge = 'Istirahat';
+          badgeBg = '#ffefd4';
+          badgeColor = '#c77800';
+        } else if (item.jenis === 'SELESAI_ISTIRAHAT') {
+          title = 'Selesai Istirahat';
+          icon = 'coffee';
+          badge = 'Kembali Kerja';
+        }
+
+        list.push({
+          id: `abs-${item.id}`,
+          timestamp: new Date(item.waktu_server).getTime(),
+          timeText: `Hari ini, ${format(new Date(item.waktu_server), 'HH:mm')}`,
+          title,
+          icon,
+          iconBg,
+          iconColor,
+          badge,
+          badgeBg,
+          badgeColor,
+        });
+      });
+    }
+
+    if (Array.isArray(laporanTerbaru)) {
+      laporanTerbaru.slice(0, 4).forEach((lap: any) => {
+        const d = new Date(lap.created_at);
+        const isToday = new Date().toDateString() === d.toDateString();
+        const timeText = isToday
+          ? `Hari ini, ${format(d, 'HH:mm')}`
+          : format(d, 'd MMM, HH:mm', { locale: id });
+
+        let badgeBg = '#e8f0e4';
+        let badgeColor = '#515f74';
+        if (lap.status === 'APPROVED') {
+          badgeBg = '#cdeed5';
+          badgeColor = '#006e2f';
+        } else if (lap.status === 'REJECTED') {
+          badgeBg = '#ffdad6';
+          badgeColor = '#ba1a1a';
+        }
+
+        list.push({
+          id: `lap-${lap.id}`,
+          timestamp: d.getTime(),
+          timeText,
+          title: `Laporan: ${lap.judul}`,
+          icon: 'clipboard-text-outline',
+          iconBg: '#dce5d9',
+          iconColor: '#515f74',
+          badge: lap.status,
+          badgeBg,
+          badgeColor,
+        });
+      });
+    }
+
+    list.sort((a, b) => b.timestamp - a.timestamp);
+    return list.slice(0, 5);
+  }, [absensiHariIni, laporanTerbaru]);
+
+  const laporanActionLabel =
+    user?.role === 'SATPAM'
+      ? 'Laporan Patroli'
+      : user?.role === 'CS'
+      ? 'Laporan Layanan'
+      : 'Laporan Fasilitas';
+
+  const isEligibleSerahTerima = user?.role === 'SATPAM' || user?.role === 'UTILITY';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -132,9 +297,9 @@ export const BerandaScreen = () => {
               <View style={styles.statusCardHeader}>
                 <Text style={styles.statusCardLabel}>STATUS HARI INI</Text>
                 {jadwalHariIni ? (
-                  <View style={styles.shiftBadge}>
-                    <Icon name="clock-outline" size={14} color="#ba1a1a" style={{ marginRight: 4 }} />
-                    <Text style={styles.shiftBadgeText}>
+                  <View style={[styles.shiftBadge, { backgroundColor: statusBadgeBg }]}>
+                    <Icon name="clock-outline" size={14} color={statusBadgeColor} style={{ marginRight: 4 }} />
+                    <Text style={[styles.shiftBadgeText, { color: statusBadgeColor }]}>
                       {jadwalHariIni.jam_masuk} - {jadwalHariIni.jam_keluar}
                     </Text>
                   </View>
@@ -146,16 +311,21 @@ export const BerandaScreen = () => {
                 )}
               </View>
 
-              <Text style={styles.statusTitle}>
-                {jadwalHariIni ? 'Belum Absen Masuk' : 'Tidak ada shift hari ini'}
-              </Text>
+              <Text style={styles.statusTitle}>{statusTitle}</Text>
 
               <View style={styles.locationBox}>
                 <Icon name="map-marker" size={24} color="#006e2f" style={styles.locationIcon} />
-                <View>
-                  <Text style={styles.locationTitle}>{user?.area_tugas?.nama || 'Pos Jaga Utama'}</Text>
-                  <Text style={styles.locationSubtitle}>Gedung Sudirman Tower</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locationTitle}>{user?.area_tugas?.nama || 'Area Penugasan Belum Diatur'}</Text>
+                  <Text style={styles.locationSubtitle}>
+                    {user?.area_tugas?.radius_meter ? `Radius Validasi: ${user.area_tugas.radius_meter}m` : 'SIAP Smart Security & Facility'}
+                  </Text>
                 </View>
+                {jadwalHariIni && (
+                  <TouchableOpacity onPress={handleOpenJadwalMingguan} style={styles.btnMiniJadwal}>
+                    <Text style={styles.btnMiniJadwalText}>Jadwal</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
@@ -175,32 +345,42 @@ export const BerandaScreen = () => {
               <Text style={styles.gridItemText}>Absensi</Text>
             </TouchableOpacity>
 
-            {/* Action 2: Laporan Patroli */}
+            {/* Action 2: Laporan */}
             <TouchableOpacity activeOpacity={0.75} style={[styles.gridItem, styles.gridItemSurface]} onPress={() => navigation.navigate('Laporan')}>
               <View style={[styles.iconCircle, { backgroundColor: '#dce5d9' }]}>
                 <Icon name="clipboard-text-outline" size={28} color="#515f74" />
               </View>
-              <Text style={styles.gridItemText}>Laporan Patroli</Text>
+              <Text style={styles.gridItemText}>{laporanActionLabel}</Text>
             </TouchableOpacity>
 
-            {/* Action 3: Serah Terima / Jadwal Izin */}
+            {/* Action 3: Serah Terima (SATPAM & UTILITY) / Jadwal Kerja (CS) */}
             <TouchableOpacity
               activeOpacity={0.75}
               style={[styles.gridItem, styles.gridItemWhite]}
-              onPress={() => user?.role === 'SATPAM' ? navigation.navigate('SerahTerimaModal') : navigation.navigate('IzinCuti')}
+              onPress={() => {
+                if (isEligibleSerahTerima) {
+                  navigation.navigate('SerahTerimaModal');
+                } else {
+                  handleOpenJadwalMingguan();
+                }
+              }}
             >
               <View style={[styles.iconCircle, { backgroundColor: '#e8f0e4' }]}>
-                <Icon name="calendar-month-outline" size={28} color="#6d7b6c" />
+                <Icon
+                  name={isEligibleSerahTerima ? 'swap-horizontal' : 'calendar-month-outline'}
+                  size={28}
+                  color="#006e2f"
+                />
               </View>
               <Text style={styles.gridItemText}>
-                {user?.role === 'SATPAM' ? 'Serah Terima' : 'Jadwal / Izin'}
+                {isEligibleSerahTerima ? 'Serah Terima' : 'Jadwal Kerja'}
               </Text>
             </TouchableOpacity>
 
             {/* Action 4: Izin / Cuti */}
             <TouchableOpacity
               activeOpacity={0.75}
-              style={[styles.gridItem, styles.gridItemIzin, { width: '48%' }]}
+              style={[styles.gridItem, styles.gridItemIzin]}
               onPress={() => navigation.navigate('IzinCuti')}
             >
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
@@ -215,42 +395,45 @@ export const BerandaScreen = () => {
         <Animated.View style={[styles.sectionContainer, { opacity: contentOpacity, transform: [{ translateY: contentAnim }] }]}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Aktivitas Terakhir</Text>
-            <TouchableOpacity activeOpacity={0.6}>
+            <TouchableOpacity activeOpacity={0.6} onPress={() => navigation.navigate('Laporan')}>
               <Text style={styles.linkText}>Lihat Semua</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.activityList}>
-            {/* Activity Item 1 */}
-            <View style={styles.activityItem}>
-              <View style={[styles.activityIconBox, { backgroundColor: '#e8f0e4' }]}>
-                <Icon name="login-variant" size={24} color="#6d7b6c" />
+            {combinedActivities.length > 0 ? (
+              combinedActivities.map((act: any, idx: number) => (
+                <React.Fragment key={act.id}>
+                  {idx > 0 && <View style={styles.divider} />}
+                  <View style={styles.activityItem}>
+                    <View style={[styles.activityIconBox, { backgroundColor: act.iconBg }]}>
+                      <Icon name={act.icon} size={22} color={act.iconColor} />
+                    </View>
+                    <View style={styles.activityBody}>
+                      <Text style={styles.activityTitle} numberOfLines={1}>{act.title}</Text>
+                      <Text style={styles.activityTime}>{act.timeText}</Text>
+                    </View>
+                    <View style={[styles.statusBadgeCustom, { backgroundColor: act.badgeBg }]}>
+                      <Text style={[styles.statusBadgeCustomText, { color: act.badgeColor }]}>{act.badge}</Text>
+                    </View>
+                  </View>
+                </React.Fragment>
+              ))
+            ) : (
+              <View style={styles.emptyActivityBox}>
+                <Icon name="history" size={40} color="#bccbb9" />
+                <Text style={styles.emptyActivityTitle}>Belum Ada Aktivitas Hari Ini</Text>
+                <Text style={styles.emptyActivitySubtitle}>
+                  Silakan lakukan absensi masuk untuk mencatat kehadiran dan memulai shift Anda.
+                </Text>
+                <TouchableOpacity
+                  style={styles.btnMulaiAbsen}
+                  onPress={() => navigation.navigate('Absensi')}
+                >
+                  <Text style={styles.btnMulaiAbsenText}>Buka Kamera Absen</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.activityBody}>
-                <Text style={styles.activityTitle}>Absen Pulang</Text>
-                <Text style={styles.activityTime}>Kemarin, 17:05</Text>
-              </View>
-              <View style={styles.statusBadgeGreen}>
-                <Text style={styles.statusBadgeGreenText}>Tepat Waktu</Text>
-              </View>
-            </View>
-            
-            <View style={styles.divider} />
-
-            {/* Activity Item 2 */}
-            <View style={styles.activityItem}>
-              <View style={[styles.activityIconBox, { backgroundColor: '#dce5d9' }]}>
-                <Icon name="clipboard-check-outline" size={24} color="#515f74" />
-              </View>
-              <View style={styles.activityBody}>
-                <Text style={styles.activityTitle}>Laporan Patroli Selesai</Text>
-                <Text style={styles.activityTime}>Kemarin, 15:30</Text>
-              </View>
-              <View style={styles.statusBadgeGray}>
-                <Text style={styles.statusBadgeGrayText}>Area Utara</Text>
-              </View>
-            </View>
-
+            )}
           </View>
         </Animated.View>
 
@@ -286,6 +469,49 @@ export const BerandaScreen = () => {
                 ))
               ) : (
                 <Text style={styles.emptyText}>Belum ada pengumuman.</Text>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* JADWAL KERJA MINGGUAN MODAL */}
+      <Modal visible={showJadwalMingguan} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Jadwal Kerja Mingguan</Text>
+                <Text style={styles.modalSubtitle}>Jadwal shift Anda dari Senin hingga Ahad</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowJadwalMingguan(false)}>
+                <Icon name="close" size={24} color="#161d16" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalBody}>
+              {loadingJadwalMingguan ? (
+                <ActivityIndicator size="large" color="#006e2f" style={{ marginTop: 40 }} />
+              ) : jadwalMingguan && jadwalMingguan.length > 0 ? (
+                jadwalMingguan.map((j: any) => (
+                  <View key={j.id} style={[styles.jadwalCard, !j.aktif && styles.jadwalCardInactive]}>
+                    <View style={styles.jadwalDayBadge}>
+                      <Text style={styles.jadwalDayText}>{j.hari}</Text>
+                    </View>
+                    <View style={styles.jadwalInfo}>
+                      <Text style={styles.jadwalHours}>
+                        {j.aktif ? `${j.jam_masuk} — ${j.jam_keluar}` : 'Libur / Tidak Aktif'}
+                      </Text>
+                      <Text style={styles.jadwalArea}>{user?.area_tugas?.nama || 'Area Tugas Utama'}</Text>
+                    </View>
+                    <View style={[styles.jadwalStatusDot, { backgroundColor: j.aktif ? '#006e2f' : '#ba1a1a' }]} />
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyBox}>
+                  <Icon name="calendar-alert" size={48} color="#bccbb9" />
+                  <Text style={styles.emptyText}>Belum ada jadwal mingguan yang dikonfigurasi admin.</Text>
+                </View>
               )}
             </ScrollView>
           </View>
@@ -662,5 +888,114 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
     color: '#6d7b6c',
-  }
+  },
+  btnMiniJadwal: {
+    backgroundColor: '#006e2f',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
+  },
+  btnMiniJadwalText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  statusBadgeCustom: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusBadgeCustomText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  emptyActivityBox: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  emptyActivityTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#161d16',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptyActivitySubtitle: {
+    fontSize: 12,
+    color: '#6d7b6c',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  btnMulaiAbsen: {
+    backgroundColor: '#006e2f',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
+  },
+  btnMulaiAbsenText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: '#6d7b6c',
+    marginTop: 2,
+  },
+  jadwalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#dce5d9',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  jadwalCardInactive: {
+    backgroundColor: '#f6f9f5',
+    borderColor: '#e8f0e4',
+    opacity: 0.7,
+  },
+  jadwalDayBadge: {
+    width: 68,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#e8f0e4',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  jadwalDayText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#006e2f',
+    letterSpacing: 0.5,
+  },
+  jadwalInfo: {
+    flex: 1,
+  },
+  jadwalHours: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#161d16',
+    marginBottom: 2,
+  },
+  jadwalArea: {
+    fontSize: 12,
+    color: '#6d7b6c',
+  },
+  jadwalStatusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: 8,
+  },
+  emptyBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
 });

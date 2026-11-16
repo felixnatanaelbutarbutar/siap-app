@@ -7,6 +7,7 @@ import { useRoute } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { getFileUrl } from '../../utils/url';
 
 export const DetailLaporanScreen = () => {
   const route = useRoute<any>();
@@ -68,7 +69,7 @@ export const DetailLaporanScreen = () => {
               {laporan.foto_urls.map((url: string, index: number) => (
                 <Image 
                   key={index}
-                  source={{ uri: `http://localhost:9000/siap-storage/${url}` }} 
+                  source={{ uri: getFileUrl(url) || undefined }} 
                   style={styles.fotoItem} 
                 />
               ))}

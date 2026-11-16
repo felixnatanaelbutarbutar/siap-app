@@ -18,6 +18,7 @@ export const LaporanPerJamScreen = () => {
   const [statusKeamanan, setStatusKeamanan] = useState(STATUS_KEAMANAN[0]);
   const [catatan, setCatatan] = useState('');
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -47,15 +48,15 @@ export const LaporanPerJamScreen = () => {
       formData.append('catatan', catatan);
       
       const filename = fotoUrl.split('/').pop() || 'photo_perjam.jpg';
+      const finalUri = fotoUrl.startsWith('file://') ? fotoUrl : `file://${fotoUrl}`;
       formData.append('foto', {
-        uri: fotoUrl,
+        uri: finalUri,
         name: filename,
         type: 'image/jpeg',
       } as any);
 
-      // (Kita asumsikan lat lng tidak dikirim ke endpoint per jam atau di-handle backend/kamera watermarked)
-      formData.append('lat', '0');
-      formData.append('lng', '0');
+      formData.append('lat', (coords?.lat ?? 0).toString());
+      formData.append('lng', (coords?.lng ?? 0).toString());
 
       const res = await api.post('/laporan/perjam', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -77,6 +78,7 @@ export const LaporanPerJamScreen = () => {
     setStatusKeamanan(STATUS_KEAMANAN[0]);
     setCatatan('');
     setFotoUrl(null);
+    setCoords(null);
     setSelectedHour(null);
   };
 
@@ -111,8 +113,9 @@ export const LaporanPerJamScreen = () => {
     setModalVisible(true);
   };
 
-  const handlePhotoTaken = (uri: string) => {
+  const handlePhotoTaken = (uri: string, lat: number, lng: number) => {
     setFotoUrl(uri);
+    setCoords({ lat, lng });
     setIsCameraOpen(false);
   };
 

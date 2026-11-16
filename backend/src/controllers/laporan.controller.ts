@@ -202,7 +202,7 @@ export const getAdminLaporan = async (req: Request, res: Response): Promise<void
     const laporan = await prisma.laporan.findMany({
       where,
       include: {
-        staff: { select: { nama: true, nik: true, role: true } },
+        staff: { select: { nama: true, nik: true, role: true, divisi: true } },
       },
       orderBy: { created_at: 'desc' },
       take: 200,

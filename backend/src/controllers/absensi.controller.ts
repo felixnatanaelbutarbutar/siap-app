@@ -470,3 +470,34 @@ export const getJadwalHariIni = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+export const getJadwalMingguan = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const staff_id = req.user?.id;
+    if (!staff_id) {
+      res.status(401).json({ success: false, message: 'Tidak terautentikasi' });
+      return;
+    }
+
+    const jadwalList = await prisma.jadwalKerja.findMany({
+      where: { staff_id },
+    });
+
+    const HARI_ORDER: Record<string, number> = {
+      SENIN: 1,
+      SELASA: 2,
+      RABU: 3,
+      KAMIS: 4,
+      JUMAT: 5,
+      SABTU: 6,
+      AHAD: 7,
+    };
+
+    const sorted = jadwalList.sort((a, b) => (HARI_ORDER[a.hari] || 99) - (HARI_ORDER[b.hari] || 99));
+
+    res.json({ success: true, data: sorted });
+  } catch (error) {
+    logger.error('Error getting jadwal mingguan:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};

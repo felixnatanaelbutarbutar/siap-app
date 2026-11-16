@@ -41,6 +41,11 @@ export default function App() {
       }
     };
 
+    if (AppState.currentState === 'active') {
+      socketService.connect();
+      socketService.startLiveTracking();
+    }
+
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {

@@ -23,14 +23,17 @@ export const ProfilScreen = () => {
         type: 'image/jpeg',
       } as any);
 
-      const res = await api.put('/admin/staff/foto', formData, {
+      const res = await api.put('/auth/profil/foto', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return res.data;
     },
-    onSuccess: (data) => {
-      if (data.foto_profil) {
-        updateFotoProfil(data.foto_profil);
+    onSuccess: (resData) => {
+      const fotoUrl = resData?.data?.foto_profil || resData?.foto_profil;
+      if (fotoUrl) {
+        updateFotoProfil(fotoUrl);
+        Alert.alert('SUKSES', 'Foto profil berhasil diperbarui.');
+      } else {
         Alert.alert('SUKSES', 'Foto profil berhasil diperbarui.');
       }
     },

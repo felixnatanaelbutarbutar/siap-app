@@ -1,9 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import SignatureScreen from 'react-native-signature-canvas';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
+import { getFileUrl } from '../../utils/url';
 import Pdf from 'react-native-pdf';
 import Share from 'react-native-share';
 
@@ -18,31 +19,61 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
   const { data, isLoading } = useQuery({
     queryKey: ['serahTerima', serahTerimaId],
     queryFn: async () => {
-      const res = await api.get('/serah-terima/riwayat');
-      const list = Array.isArray(res.data?.data) ? res.data.data : [];
-      const found = list.find((item: any) => item.id === serahTerimaId) || list[0];
-      if (!found) {
-        return {
-          id: serahTerimaId,
-          pengirim_nama: '-',
-          items: [],
-          catatan: '',
-        };
+      try {
+        const res = await api.get(`/serah-terima/${serahTerimaId}`);
+        const found = res.data?.data;
+        if (found) {
+          return {
+            id: found.id,
+            pengirim_nama: found.staff_lama?.nama || '-',
+            items: Array.isArray(found.barang_list)
+              ? found.barang_list.map((b: any) => ({
+                  name: b.nama,
+                  status: b.kondisi,
+                  catatan: b.catatan || '',
+                }))
+              : [],
+            catatan: found.catatan || '',
+            bast_pdf_url: found.bast_pdf_url || null,
+          };
+        }
+      } catch (e) {
+        // Fallback to searching in riwayat if direct single GET fails
+        const res = await api.get('/serah-terima/riwayat');
+        const list = Array.isArray(res.data?.data) ? res.data.data : [];
+        const found = list.find((item: any) => item.id === serahTerimaId) || list[0];
+        if (found) {
+          return {
+            id: found.id,
+            pengirim_nama: found.staff_lama?.nama || '-',
+            items: Array.isArray(found.barang_list)
+              ? found.barang_list.map((b: any) => ({
+                  name: b.nama,
+                  status: b.kondisi,
+                  catatan: b.catatan || '',
+                }))
+              : [],
+            catatan: found.catatan || '',
+            bast_pdf_url: found.bast_pdf_url || null,
+          };
+        }
       }
+
       return {
-        id: found.id,
-        pengirim_nama: found.staff_lama?.nama || '-',
-        items: Array.isArray(found.barang_list)
-          ? found.barang_list.map((b: any) => ({
-              name: b.nama,
-              status: b.kondisi,
-              catatan: b.catatan || '',
-            }))
-          : [],
-        catatan: found.catatan || '',
+        id: serahTerimaId,
+        pengirim_nama: '-',
+        items: [],
+        catatan: '',
+        bast_pdf_url: null,
       };
     },
   });
+
+  useEffect(() => {
+    if (data?.bast_pdf_url && !pdfUrl) {
+      setPdfUrl(getFileUrl(data.bast_pdf_url));
+    }
+  }, [data?.bast_pdf_url, pdfUrl]);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -51,7 +82,7 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
       return res.data?.data?.bast_pdf_url || '';
     },
     onSuccess: (url) => {
-      setPdfUrl(url || null);
+      setPdfUrl(url ? getFileUrl(url) : null);
       queryClient.invalidateQueries({ queryKey: ['serahTerima'] });
       Alert.alert('Sukses', 'Serah terima dikonfirmasi! BAST telah dibuat.');
     },

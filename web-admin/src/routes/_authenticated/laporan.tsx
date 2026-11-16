@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../../components/ui/sheet';
 import { useNotificationStore } from '../../store/notificationStore';
 import { api } from '../../services/api';
-import { Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { Eye, CheckCircle2, XCircle, Clock } from 'lucide-react';
 
 export const Route = createFileRoute('/_authenticated/laporan')({
   component: LaporanPage,
@@ -31,17 +31,31 @@ function LaporanPage() {
   const { data: laporanHarian } = useQuery({
     queryKey: ['laporan-harian', dateHarian, statusHarian],
     queryFn: async () => {
-      const res = await api.get('/admin/laporan');
+      const params: any = { tanggal: dateHarian };
+      if (statusHarian !== 'SEMUA') params.status = statusHarian;
+      const res = await api.get('/admin/laporan', { params });
       let data = res.data.data || [];
-      if (statusHarian !== 'SEMUA') data = data.filter((l: any) => l.status === statusHarian);
       return data.map((l: any) => ({
-        id: l.id, waktu: format(new Date(l.created_at), 'HH:mm'),
-        nama: l.pembuat?.nama || '-', divisi: l.pembuat?.divisi || '-',
-        kategori: l.kategori || '-', judul: l.judul || l.kategori,
-        status: l.status, deskripsi: l.deskripsi,
-        foto_urls: l.foto_urls || [], komentar_admin: l.komentar_admin,
+        id: l.id,
+        waktu: format(new Date(l.created_at), 'HH:mm'),
+        nama: l.staff?.nama || l.pembuat?.nama || '-',
+        divisi: l.divisi || l.staff?.divisi || '-',
+        kategori: l.kategori || '-',
+        judul: l.judul || l.kategori,
+        status: l.status,
+        deskripsi: l.deskripsi,
+        foto_urls: l.foto_urls || [],
+        komentar_admin: l.komentar_admin,
       }));
     }
+  });
+
+  const { data: laporanPerJamList, isLoading: loadingPerJam } = useQuery({
+    queryKey: ['admin-laporan-perjam', dateHarian],
+    queryFn: async () => {
+      const res = await api.get('/admin/laporan/perjam', { params: { tanggal: dateHarian } });
+      return res.data.data || [];
+    },
   });
 
   useEffect(() => {
@@ -79,8 +93,25 @@ function LaporanPage() {
   };
 
   const timelineHours = Array.from({ length: 24 }).map((_, i) => i);
-  const mockShiftStart = 8; const mockShiftEnd = 16;
-  const mockLaporanTerkirim = [8, 9, 10, 11, 14, 15];
+
+  const groupedPerJam = useMemo(() => {
+    if (!Array.isArray(laporanPerJamList)) return [];
+    const map = new Map<string, { staff: any; items: any[]; hours: Set<number> }>();
+    laporanPerJamList.forEach((item: any) => {
+      const staffId = item.staff_id;
+      if (!map.has(staffId)) {
+        map.set(staffId, {
+          staff: item.staff || { nama: 'Staff Satpam', nik: '-' },
+          items: [],
+          hours: new Set<number>(),
+        });
+      }
+      const entry = map.get(staffId)!;
+      entry.items.push(item);
+      entry.hours.add(Number(item.jam));
+    });
+    return Array.from(map.values());
+  }, [laporanPerJamList]);
 
   return (
     <div className="space-y-6 animate-fadeInUp">
@@ -152,29 +183,93 @@ function LaporanPage() {
 
       {activeTab === 'PER_JAM' && (
         <div className="space-y-4">
-          <div className="p-6 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <h3 className="font-bold text-sm mb-5" style={{ color: 'var(--text-base)' }}>Timeline Audit Laporan 24 Jam (Per 3 Jam)</h3>
-            <div className="flex overflow-x-auto pb-4 gap-2">
-              {timelineHours.map(hour => {
-                const isShift = hour >= mockShiftStart && hour <= mockShiftEnd;
-                const isReported = mockLaporanTerkirim.includes(hour);
-                let bg = 'var(--bg-input)'; let color = 'var(--text-dim)';
-                if (isShift && isReported) { bg = 'var(--accent)'; color = 'var(--accent-text)'; }
-                else if (isShift && !isReported) { bg = 'rgba(243,114,127,0.2)'; color = 'var(--error)'; }
-                return (
-                  <div key={hour} className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs" style={{ background: bg, color }}>
-                      {hour}
-                    </div>
-                    {isShift && !isReported && <span className="text-[9px] font-bold mt-1" style={{ color: 'var(--error)' }}>GAP</span>}
-                  </div>
-                );
-              })}
+          <div className="flex flex-wrap gap-4 items-end p-5 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div>
+              <label className="block text-xs font-bold uppercase mb-2" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Tanggal Audit</label>
+              <input type="date" value={dateHarian} onChange={e => setDateHarian(e.target.value)} style={inputStyle} />
+            </div>
+            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Total {groupedPerJam.length} staff Satpam bertugas • {laporanPerJamList?.length || 0} laporan terkirim
             </div>
           </div>
-          <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: 'rgba(243,114,127,0.1)', border: '1px solid rgba(243,114,127,0.2)' }}>
-            <span className="text-sm font-semibold" style={{ color: 'var(--error)' }}>⚠ Ditemukan 2 celah kosong pada shift ini.</span>
-          </div>
+
+          {loadingPerJam ? (
+            <div className="p-12 text-center text-sm" style={{ color: 'var(--text-dim)' }}>
+              Memuat data audit laporan per jam...
+            </div>
+          ) : groupedPerJam.length > 0 ? (
+            groupedPerJam.map((group, gIdx) => (
+              <div key={gIdx} className="p-6 rounded-xl space-y-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-base" style={{ color: 'var(--text-base)' }}>{group.staff.nama}</h3>
+                    <p className="text-xs" style={{ color: 'var(--text-dim)' }}>NIK: {group.staff.nik || '-'}</p>
+                  </div>
+                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'rgba(30,215,96,0.12)', color: 'var(--accent)' }}>
+                    {group.items.length} Laporan Masuk
+                  </span>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase mb-3" style={{ color: 'var(--text-dim)', letterSpacing: '1px' }}>Timeline 24 Jam</p>
+                  <div className="flex overflow-x-auto pb-2 gap-1.5">
+                    {timelineHours.map(hour => {
+                      const isReported = group.hours.has(hour);
+                      let bg = isReported ? 'var(--accent)' : 'var(--bg-input)';
+                      let color = isReported ? 'var(--accent-text)' : 'var(--text-dim)';
+                      return (
+                        <div key={hour} className="flex flex-col items-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs" style={{ background: bg, color }}>
+                            {hour}
+                          </div>
+                          <span className="text-[9px] mt-1" style={{ color: isReported ? 'var(--accent)' : 'var(--text-dim)' }}>
+                            {String(hour).padStart(2, '0')}:00
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+                  {group.items.map((item: any) => {
+                    const statusBadgeBg = item.status_keamanan === 'AMAN' ? 'rgba(30,215,96,0.12)' : 'rgba(243,114,127,0.12)';
+                    const statusBadgeColor = item.status_keamanan === 'AMAN' ? 'var(--accent)' : 'var(--error)';
+                    return (
+                      <div key={item.id} className="p-3 rounded-lg flex gap-3 items-start" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-bright)' }}>
+                        {item.foto_url ? (
+                          <a href={item.foto_url} target="_blank" rel="noreferrer" className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 block">
+                            <img src={item.foto_url} alt="Foto Per Jam" className="w-full h-full object-cover" />
+                          </a>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-surface)' }}>
+                            <Clock className="w-5 h-5 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="font-bold text-xs text-white">Jam {String(item.jam).padStart(2, '0')}:00</span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: statusBadgeBg, color: statusBadgeColor }}>
+                              {item.status_keamanan}
+                            </span>
+                          </div>
+                          <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
+                            {item.catatan || 'Kondisi terpantau aman.'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-12 text-center rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <Clock className="w-10 h-10 mx-auto mb-3 opacity-30" style={{ color: 'var(--text-dim)' }} />
+              <p className="font-bold text-sm" style={{ color: 'var(--text-base)' }}>Belum Ada Laporan Per 3 Jam</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Staff Satpam belum mengirimkan checklist rutin 3 jam pada tanggal {dateHarian}.</p>
+            </div>
+          )}
         </div>
       )}
 
