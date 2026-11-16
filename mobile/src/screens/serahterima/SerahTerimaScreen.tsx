@@ -4,21 +4,16 @@ import { Text, TextInput, Button } from 'react-native-paper';
 import SignatureScreen from 'react-native-signature-canvas';
 import { useAuthStore } from '../../store/auth.store';
 import { CameraView } from '../../components/CameraView';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 
 const INVENTORY_SATPAM = ['Kunci Gerbang', 'Radio HT', 'Senter', 'Rompi', 'Sepatu Dinas', 'Kendaraan Patroli'];
 const INVENTORY_UTILITY = ['Sapu', 'Alat Pel', 'Mesin Vacuum', 'Tangga', 'Toolkit', 'APD'];
 
-// Mock Data untuk Staff Pengganti
-const MOCK_STAFF = [
-  { id: 'STAFF_1', nama: 'Budi Santoso' },
-  { id: 'STAFF_2', nama: 'Agus Pratama' },
-  { id: 'STAFF_3', nama: 'Joko Widodo' },
-];
-
 export const SerahTerimaScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
+  const recipients = useQuery({queryKey:['serah-terima-penerima',user?.id],queryFn:async()=>(await api.get('/serah-terima/penerima')).data.data});
+  const staffOptions: {id:string;nama:string}[] = recipients.data || [];
   
   const title = user?.role === 'SATPAM' ? 'SERAH TERIMA PIKET' : 'SERAH TERIMA PERALATAN';
   const defaultItems = user?.role === 'SATPAM' ? INVENTORY_SATPAM : INVENTORY_UTILITY;
@@ -102,7 +97,7 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
         <Text style={styles.sectionLabel}>STAFF PENGGANTI (PENERIMA)</Text>
         <TouchableOpacity style={styles.dropdownBtn} onPress={() => setStaffModalVisible(true)} activeOpacity={0.8}>
           <Text style={styles.dropdownText}>
-            {penerimaId ? MOCK_STAFF.find(s => s.id === penerimaId)?.nama : 'PILIH STAFF...'}
+            {penerimaId ? staffOptions.find(s => s.id === penerimaId)?.nama : 'PILIH STAFF...'}
           </Text>
         </TouchableOpacity>
 
@@ -196,7 +191,10 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>PILIH STAFF PENERIMA</Text>
-            {MOCK_STAFF.map(s => (
+            {recipients.isPending && <Text>Memuat penerima…</Text>}
+              {recipients.isError && <Button onPress={() => recipients.refetch()}>Coba muat ulang</Button>}
+              {!recipients.isPending && !recipients.isError && !staffOptions.length && <Text>Belum ada staf aktif lain pada divisi ini.</Text>}
+              {staffOptions.map(s => (
               <TouchableOpacity 
                 key={s.id} 
                 style={styles.modalOption}
@@ -225,8 +223,8 @@ export const SerahTerimaScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3fcef' },
-  scrollContent: { padding: 16, paddingBottom: 200, flexGrow: 1 },
+  container: { flex: 1, backgroundColor: '#F3F7F4' },
+  scrollContent: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#161d16', marginBottom: 24, textAlign: 'center' },
   sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#3d4a3d', marginTop: 16, marginBottom: 8 },
   dropdownBtn: { backgroundColor: '#e8f0e4', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#dce5d9' },
@@ -234,30 +232,32 @@ const styles = StyleSheet.create({
   itemCard: { backgroundColor: '#e8f0e4', padding: 16, marginBottom: 16, borderRadius: 12, borderWidth: 1, borderColor: '#dce5d9' },
   itemName: { fontSize: 16, fontWeight: 'bold', color: '#161d16', marginBottom: 12 },
   statusRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  statusBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#f3fcef', borderWidth: 1, borderColor: '#bccbb9' },
-  statusBtnActive: { backgroundColor: '#006e2f', borderColor: '#006e2f' },
+  statusBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8, backgroundColor: '#F3F7F4', borderWidth: 1, borderColor: '#bccbb9' },
+  statusBtnActive: { backgroundColor: '#087F5B', borderColor: '#087F5B' },
   statusBtnText: { fontSize: 12, fontWeight: 'bold', color: '#3d4a3d' },
   statusBtnTextActive: { color: '#ffffff' },
-  inputCatatan: { backgroundColor: '#f3fcef', fontSize: 14, height: 40 },
+  inputCatatan: { backgroundColor: '#F3F7F4', fontSize: 14, height: 40 },
   photoContainer: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   photoThumbnail: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#dce5d9' },
   addPhotoBtn: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#e8f0e4', borderWidth: 1, borderColor: '#bccbb9', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
-  addPhotoText: { fontWeight: 'bold', color: '#006e2f', fontSize: 10 },
+  addPhotoText: { fontWeight: 'bold', color: '#087F5B', fontSize: 10 },
   textArea: { backgroundColor: '#e8f0e4' },
   signatureContainer: { height: 150, borderWidth: 1, borderRadius: 12, overflow: 'hidden', borderColor: '#dce5d9', backgroundColor: '#e8f0e4' },
   sigActionRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   sigClearBtn: { padding: 8 },
   sigClearText: { color: '#3d4a3d', fontWeight: 'bold', fontSize: 12 },
-  sigSaveBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#006e2f' },
+  sigSaveBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#087F5B' },
   sigSaveText: { color: '#ffffff', fontWeight: 'bold', fontSize: 12 },
-  submitBtn: { marginTop: 32, backgroundColor: '#006e2f', borderRadius: 30, paddingVertical: 8 },
+  submitBtn: { marginTop: 32, backgroundColor: '#087F5B', borderRadius: 30, paddingVertical: 8 },
   submitBtnLabel: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(22,29,22,0.6)', justifyContent: 'center', padding: 24 },
-  modalContent: { backgroundColor: '#f3fcef', padding: 24, borderRadius: 24 },
+  modalContent: { backgroundColor: '#F3F7F4', padding: 24, borderRadius: 24 },
   modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#161d16', marginBottom: 16 },
   modalOption: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#dce5d9' },
   modalOptionText: { fontSize: 16, color: '#161d16', fontWeight: '500' },
-  modalCloseBtn: { marginTop: 24, paddingVertical: 14, borderRadius: 30, backgroundColor: '#006e2f', alignItems: 'center' },
+  modalCloseBtn: { marginTop: 24, paddingVertical: 14, borderRadius: 30, backgroundColor: '#087F5B', alignItems: 'center' },
   modalCloseText: { color: '#ffffff', fontWeight: 'bold' }
 });
+
+

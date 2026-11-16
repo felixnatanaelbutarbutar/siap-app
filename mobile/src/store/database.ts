@@ -3,10 +3,10 @@ import { open } from '@op-engineering/op-sqlite';
 // Buka/buat database
 export const db = open({ name: 'siap_offline.sqlite' });
 
-export const initDatabase = () => {
+export const initDatabase = async () => {
   try {
     // Tabel absensi_offline untuk menyimpan absen yang gagal dikirim saat offline
-    db.execute(`
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS absensi_offline (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         jenis TEXT NOT NULL,
@@ -23,9 +23,10 @@ export const initDatabase = () => {
   }
 };
 
-export const insertAbsensiOffline = (jenis: string, lat: number, lng: number, foto_uri: string, waktu_lokal: string) => {
+export const insertAbsensiOffline = async (jenis: string, lat: number, lng: number, foto_uri: string, waktu_lokal: string) => {
   try {
-    db.execute(
+    await initDatabase();
+    await db.execute(
       'INSERT INTO absensi_offline (jenis, lat, lng, foto_uri, waktu_lokal) VALUES (?, ?, ?, ?, ?)',
       [jenis, lat, lng, foto_uri, waktu_lokal]
     );
@@ -34,10 +35,10 @@ export const insertAbsensiOffline = (jenis: string, lat: number, lng: number, fo
   }
 };
 
-export const getPendingAbsensi = () => {
+export const getPendingAbsensi = async () => {
   try {
-    // @ts-ignore
-    const { rows } = db.execute('SELECT * FROM absensi_offline WHERE status = "pending"');
+    await initDatabase();
+    const { rows } = await db.execute('SELECT * FROM absensi_offline WHERE status = "pending"');
     if (!rows) return [];
     
     // op-sqlite rows.item() interface
@@ -52,18 +53,20 @@ export const getPendingAbsensi = () => {
   }
 };
 
-export const markAbsensiSynced = (id: number) => {
+export const markAbsensiSynced = async (id: number) => {
   try {
-    db.execute('UPDATE absensi_offline SET status = "synced" WHERE id = ?', [id]);
+    await db.execute('UPDATE absensi_offline SET status = "synced" WHERE id = ?', [id]);
   } catch (error) {
     console.error('Update status synced gagal:', error);
   }
 };
 
-export const markAbsensiFailed = (id: number) => {
+export const markAbsensiFailed = async (id: number) => {
   try {
-    db.execute('UPDATE absensi_offline SET status = "failed" WHERE id = ?', [id]);
+    await db.execute('UPDATE absensi_offline SET status = "failed" WHERE id = ?', [id]);
   } catch (error) {
     console.error('Update status failed gagal:', error);
   }
 };
+
+

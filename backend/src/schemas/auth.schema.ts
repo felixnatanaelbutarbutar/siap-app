@@ -19,4 +19,8 @@ export const fcmTokenSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export const changePasswordSchema = z.object({
+  current_password: z.string().min(1),
+  new_password: z.string().min(8, 'Kata sandi baru minimal 8 karakter.').max(72, 'Kata sandi maksimal 72 karakter.'),
+}).refine(value => value.current_password !== value.new_password, { message: 'Gunakan kata sandi yang berbeda dari sebelumnya.' });
 export type FcmTokenInput = z.infer<typeof fcmTokenSchema>;

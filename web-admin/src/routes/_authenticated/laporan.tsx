@@ -36,7 +36,7 @@ function LaporanPage() {
       if (statusHarian !== 'SEMUA') data = data.filter((l: any) => l.status === statusHarian);
       return data.map((l: any) => ({
         id: l.id, waktu: format(new Date(l.created_at), 'HH:mm'),
-        nama: l.pembuat?.nama || '-', divisi: l.pembuat?.divisi || '-',
+        nama: l.staff?.nama || '-', divisi: l.divisi || '-',
         kategori: l.kategori || '-', judul: l.judul || l.kategori,
         status: l.status, deskripsi: l.deskripsi,
         foto_urls: l.foto_urls || [], komentar_admin: l.komentar_admin,

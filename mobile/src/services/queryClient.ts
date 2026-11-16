@@ -10,7 +10,7 @@ export const queryClient = new QueryClient({
       retry: 2,
     },
     mutations: {
-      retry: 3,
+      retry: 0, // Avoid duplicate writes when a response is lost.
     },
   },
 });
@@ -18,3 +18,4 @@ export const queryClient = new QueryClient({
 export const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
 });
+

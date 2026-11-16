@@ -119,7 +119,7 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
           <Text style={styles.sectionLabel}>DETAIL BARANG</Text>
           {data.items.map((item: any, index: number) => {
             const badgeBg = item.status === 'BAIK' ? '#cdeed5' : item.status === 'RUSAK' ? '#ffdad6' : '#ffefd4';
-            const badgeFg = item.status === 'BAIK' ? '#006e2f' : item.status === 'RUSAK' ? '#ba1a1a' : '#c77800';
+            const badgeFg = item.status === 'BAIK' ? '#087F5B' : item.status === 'RUSAK' ? '#ba1a1a' : '#c77800';
             return (
               <View key={index} style={styles.itemCard}>
                 <Text style={styles.itemName}>{item.name}</Text>
@@ -174,31 +174,32 @@ export const KonfirmasiSerahTerimaScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3fcef' },
+  container: { flex: 1, backgroundColor: '#F3F7F4' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 16, paddingBottom: 200, flexGrow: 1 },
+  scrollContent: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#161d16', textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#3d4a3d', textAlign: 'center', marginBottom: 24 },
   sectionLabel: { fontSize: 12, fontWeight: 'bold', color: '#3d4a3d', marginTop: 16, marginBottom: 8 },
   itemCard: { backgroundColor: '#e8f0e4', padding: 16, marginBottom: 12, borderRadius: 12, borderWidth: 1, borderColor: '#dce5d9' },
   itemName: { fontSize: 16, fontWeight: 'bold', color: '#161d16', marginBottom: 8 },
   badge: { alignSelf: 'flex-start', backgroundColor: '#cdeed5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  badgeText: { color: '#006e2f', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
+  badgeText: { color: '#087F5B', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
   itemCatatan: { marginTop: 8, fontSize: 12, color: '#3d4a3d' },
-  noteBox: { backgroundColor: '#e8f0e4', padding: 16, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#006e2f' },
+  noteBox: { backgroundColor: '#e8f0e4', padding: 16, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#087F5B' },
   noteText: { fontSize: 14, color: '#161d16' },
   signatureContainer: { height: 150, borderWidth: 1, borderRadius: 12, overflow: 'hidden', borderColor: '#dce5d9', backgroundColor: '#e8f0e4' },
   sigActionRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   sigClearBtn: { padding: 8 },
   sigClearText: { color: '#3d4a3d', fontWeight: 'bold', fontSize: 12 },
-  sigSaveBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#006e2f' },
+  sigSaveBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#087F5B' },
   sigSaveText: { color: '#ffffff', fontWeight: 'bold', fontSize: 12 },
-  submitBtn: { marginTop: 32, backgroundColor: '#006e2f', borderRadius: 30, paddingVertical: 8 },
+  submitBtn: { marginTop: 32, backgroundColor: '#087F5B', borderRadius: 30, paddingVertical: 8 },
   submitBtnLabel: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
 
   pdfContainer: { flex: 1 },
   pdf: { flex: 1, backgroundColor: '#e8f0e4' },
-  actionRow: { flexDirection: 'row', padding: 16, gap: 12, backgroundColor: '#f3fcef' },
-  btnShare: { flex: 1, backgroundColor: '#006e2f', borderRadius: 30 },
-  btnBack: { flex: 1, borderColor: '#006e2f', borderRadius: 30 },
+  actionRow: { flexDirection: 'row', padding: 16, gap: 12, backgroundColor: '#F3F7F4' },
+  btnShare: { flex: 1, backgroundColor: '#087F5B', borderRadius: 30 },
+  btnBack: { flex: 1, borderColor: '#087F5B', borderRadius: 30 },
 });
+

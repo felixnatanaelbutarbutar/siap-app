@@ -142,7 +142,7 @@ export const IzinCutiScreen = () => {
             <Icon
               name={tab === 'AJUKAN' ? 'plus-circle-outline' : 'history'}
               size={18}
-              color={activeTab === tab ? '#006e2f' : '#6d7b6c'}
+              color={activeTab === tab ? '#087F5B' : '#6d7b6c'}
               style={{ marginRight: 6 }}
             />
             <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
@@ -195,8 +195,8 @@ export const IzinCutiScreen = () => {
               onPress={handlePilihFoto}
               activeOpacity={0.8}
             >
-              <Icon name={fotoUri ? 'check-circle' : 'camera-plus'} size={24} color={fotoUri ? '#006e2f' : '#6d7b6c'} />
-              <Text style={[styles.uploadText, !!fotoUri && { color: '#006e2f' }]}>
+              <Icon name={fotoUri ? 'check-circle' : 'camera-plus'} size={24} color={fotoUri ? '#087F5B' : '#6d7b6c'} />
+              <Text style={[styles.uploadText, !!fotoUri && { color: '#087F5B' }]}>
                 {fotoUri ? 'FOTO TERPILIH — GANTI' : 'UNGGAH FOTO BUKTI'}
               </Text>
             </TouchableOpacity>
@@ -341,7 +341,7 @@ const TextInputField = ({
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#006e2f' },
+  safeArea: { flex: 1, backgroundColor: '#087F5B' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -382,17 +382,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     borderWidth: 1,
     borderColor: '#dce5d9',
   },
   tabItemActive: {
     backgroundColor: '#e8f0e4',
-    borderColor: '#006e2f',
+    borderColor: '#087F5B',
   },
   tabLabel: { fontSize: 13, fontWeight: '700', color: '#6d7b6c' },
-  tabLabelActive: { color: '#006e2f' },
-  container: { flex: 1, backgroundColor: '#f3fcef' },
+  tabLabelActive: { color: '#087F5B' },
+  container: { flex: 1, backgroundColor: '#F3F7F4' },
   formCard: {
     margin: 16,
     backgroundColor: '#ffffff',
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     borderWidth: 1.5,
     borderColor: '#bccbb9',
     justifyContent: 'center',
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   textInputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -457,14 +457,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 56,
     borderRadius: 14,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     borderWidth: 1.5,
     borderColor: '#bccbb9',
     borderStyle: 'dashed',
     marginBottom: 16,
   },
   uploadButtonDone: {
-    borderColor: '#006e2f',
+    borderColor: '#087F5B',
     borderStyle: 'solid',
     backgroundColor: '#e8f0e4',
   },
@@ -476,14 +476,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   submitButton: {
-    backgroundColor: '#006e2f',
+    backgroundColor: '#087F5B',
     borderRadius: 30,
     height: 56,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#006e2f',
+    shadowColor: '#087F5B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   emptySubtitle: { fontSize: 14, color: '#6d7b6c', textAlign: 'center' },
   ajukanBtn: {
     marginTop: 16,
-    backgroundColor: '#006e2f',
+    backgroundColor: '#087F5B',
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 28,
@@ -547,3 +547,4 @@ const styles = StyleSheet.create({
   komentarText: { fontSize: 13, color: '#856404' },
   riwayatCreated: { fontSize: 11, color: '#9baa97' },
 });
+

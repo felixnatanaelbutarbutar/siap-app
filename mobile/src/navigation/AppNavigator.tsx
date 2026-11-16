@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -23,10 +24,10 @@ const Stack = createNativeStackNavigator();
 // Laporan Stack untuk tab Laporan
 const LaporanStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ListLaporan" component={ListLaporanScreen} />
-      <Stack.Screen name="BuatLaporan" component={BuatLaporanScreen} />
-      <Stack.Screen name="DetailLaporan" component={DetailLaporanScreen} />
+    <Stack.Navigator screenOptions={{ headerShown: true, headerStyle: { backgroundColor: '#F3F7F4' }, headerTintColor: '#103E32', headerShadowVisible: false }}>
+      <Stack.Screen name="ListLaporan" component={ListLaporanScreen} options={{headerShown:false}} />
+      <Stack.Screen name="BuatLaporan" component={BuatLaporanScreen} options={{title:'Laporan baru'}} />
+      <Stack.Screen name="DetailLaporan" component={DetailLaporanScreen} options={{title:'Detail laporan'}} />
     </Stack.Navigator>
   );
 };
@@ -41,6 +42,7 @@ const HeaderBrandEmblem = () => (
 
 // Bottom Tabs Wrapper
 const MainTabs = () => {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   
   if (!user) return null;
@@ -54,15 +56,15 @@ const MainTabs = () => {
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopColor: '#e8f0e4',
-          height: 62,
-          paddingBottom: 8,
+          height: 64 + insets.bottom,
+          paddingBottom: Math.max(8, insets.bottom),
           paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
-        headerStyle: { backgroundColor: '#006e2f' },
-        headerTintColor: '#ffffff',
+        headerStyle: { backgroundColor: '#F3F7F4' },
+        headerTintColor: '#103E32',
         headerTitleStyle: { fontWeight: '800' },
-        headerRight: HeaderBrandEmblem,
+        headerShadowVisible: false,
       }}
     >
       <Tab.Screen 
@@ -85,7 +87,7 @@ const MainTabs = () => {
       <Tab.Screen 
         name="Laporan" 
         component={LaporanStack} 
-        options={{
+        options={{ headerShown: false,
           tabBarIcon: ({ color, size }) => <Icon name="file-document-edit" color={color} size={size} />
         }}
       />
@@ -117,9 +119,9 @@ export const AppNavigator = () => {
   const user = useAuthStore((state) => state.user);
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: true, headerStyle: { backgroundColor: '#F3F7F4' }, headerTintColor: '#103E32', headerShadowVisible: false }}>
       {/* Main Bottom Tabs */}
-      <Stack.Screen name="Main" component={MainTabs} />
+      <Stack.Screen name="Main" component={MainTabs} options={{headerShown:false}} />
 
       {/* Modals (Hanya SATPAM & UTILITY yang bisa akses fitur Serah Terima) */}
       {(user?.role === 'SATPAM' || user?.role === 'UTILITY') && (
@@ -155,3 +157,4 @@ const navStyles = StyleSheet.create({
     opacity: 0.92,
   },
 });
+

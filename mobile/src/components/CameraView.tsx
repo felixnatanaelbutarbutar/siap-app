@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, PermissionsAndroid, Platform, Image } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import Geolocation from 'react-native-geolocation-service';
 import MockLocationDetector from 'react-native-mock-location-detector';
@@ -7,6 +7,7 @@ import ImageMarker from 'react-native-image-marker';
 import { Text } from 'react-native-paper';
 import { format } from 'date-fns';
 import { useAuthStore } from '../store/auth.store';
+import { checkedImageUri } from '../utils/localImage';
 
 interface Props {
   jenis: 'MASUK' | 'KELUAR' | 'MULAI_ISTIRAHAT' | 'SELESAI_ISTIRAHAT' | null;
@@ -15,7 +16,9 @@ interface Props {
 }
 
 export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
-  const device = useCameraDevice('front');
+  const [facing, setFacing] = useState<'front' | 'back'>(jenis ? 'front' : 'back');
+  const device = useCameraDevice(facing);
+  const [preview, setPreview] = useState<{uri:string;lat:number;lng:number} | null>(null);
   const camera = useRef<Camera>(null);
   const user = useAuthStore(state => state.user);
 
@@ -98,7 +101,9 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
             });
 
             // 5. Kembalikan URL yang sudah dimanipulasi
-            onPhotoTaken(markedImagePath, lat, lng);
+            const markedImageUri = await checkedImageUri(markedImagePath);
+            setPreview({uri:markedImageUri,lat,lng});
+            setIsProcessing(false);
           } catch (markerError) {
             console.log('Watermark error:', markerError);
             Alert.alert('Error', 'Gagal menambahkan watermark pada foto.');
@@ -141,6 +146,14 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
     );
   }
 
+  if (preview) return <View style={styles.container}>
+    <Image source={{uri:preview.uri}} resizeMode="contain" style={StyleSheet.absoluteFill}/>
+    <View style={styles.overlayBottom}>
+      <TouchableOpacity style={[styles.cancelBtn,{backgroundColor:'#087F5B',borderRadius:16,paddingHorizontal:32,minHeight:52,justifyContent:'center'}]} onPress={()=>onPhotoTaken(preview.uri,preview.lat,preview.lng)}><Text style={{color:'white',fontWeight:'700'}}>Gunakan foto ini</Text></TouchableOpacity>
+      <TouchableOpacity style={[styles.cancelBtn,{minHeight:48}]} onPress={()=>setPreview(null)}><Text style={{color:'white'}}>Ambil ulang</Text></TouchableOpacity>
+    </View>
+  </View>;
+
   return (
     <View style={styles.container}>
       <Camera
@@ -152,10 +165,11 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
       />
 
       <View style={styles.overlayTop}>
-        <Text style={styles.overlayText}>Selfie Absensi - {jenis}</Text>
+        <Text style={styles.overlayText}>{jenis ? 'Selfie absensi' : 'Dokumentasi lapangan'}</Text>
       </View>
 
       <View style={styles.overlayBottom}>
+        {!jenis && <TouchableOpacity disabled={isProcessing} style={[styles.cancelBtn,{minHeight:48}]} onPress={()=>setFacing(value=>value==='back'?'front':'back')}><Text style={{color:'white'}}>Balik kamera</Text></TouchableOpacity>}
         <TouchableOpacity style={styles.captureBtn} onPress={handleCapture} disabled={isProcessing}>
           {isProcessing ? <ActivityIndicator color="#fff" /> : <View style={styles.captureInner} />}
         </TouchableOpacity>

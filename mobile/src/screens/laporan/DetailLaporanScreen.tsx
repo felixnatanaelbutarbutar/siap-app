@@ -1,131 +1,23 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, Image } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../services/api';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Image, Modal, TouchableOpacity, TextInput, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRoute } from '@react-navigation/native';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-export const DetailLaporanScreen = () => {
-  const route = useRoute<any>();
-  const { laporanId } = route.params;
-
-  const { data: laporan, isLoading } = useQuery({
-    queryKey: ['laporan', laporanId],
-    queryFn: async () => {
-      const res = await api.get(`/laporan/${laporanId}`);
-      return res.data.data;
-    }
-  });
-
-  if (isLoading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#161d16" />
-      </View>
-    );
-  }
-
-  if (!laporan) return null;
-
-  let statusColor = '#515f74';
-  let statusBg = '#e8f0e4';
-  if (laporan.status === 'APPROVED') { statusColor = '#006e2f'; statusBg = '#cdeed5'; }
-  if (laporan.status === 'REJECTED') { statusColor = '#ba1a1a'; statusBg = '#ffdad6'; }
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        <View style={styles.header}>
-          <Text style={styles.kategoriText}>{laporan.kategori}</Text>
-          <Text style={styles.judulText}>{laporan.judul}</Text>
-          <View style={styles.metaRow}>
-            <Text style={styles.dateText}>
-              {format(new Date(laporan.created_at), 'dd MMMM yyyy, HH:mm', { locale: id }).toUpperCase()}
-            </Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
-              <Text style={[styles.statusBadgeText, { color: statusColor }]}>{laporan.status}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.contentSection}>
-          <Text style={styles.sectionTitle}>DESKRIPSI</Text>
-          <Text style={styles.deskripsiText}>{laporan.deskripsi}</Text>
-        </View>
-
-        {laporan.foto_urls && laporan.foto_urls.length > 0 && (
-          <View style={styles.contentSection}>
-            <Text style={styles.sectionTitle}>LAMPIRAN FOTO</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.fotoContainer}>
-              {laporan.foto_urls.map((url: string, index: number) => (
-                <Image 
-                  key={index}
-                  source={{ uri: `http://localhost:9000/siap-storage/${url}` }} 
-                  style={styles.fotoItem} 
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {laporan.komentar_admin && (
-          <View style={styles.komentarSection}>
-            <View style={styles.komentarHeader}>
-              <Icon name="comment-text-outline" size={20} color="#161d16" />
-              <Text style={styles.komentarTitle}>KOMENTAR ADMIN</Text>
-            </View>
-            <Text style={styles.komentarText}>{laporan.komentar_admin}</Text>
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
+import { api } from '../../services/api';
+import { colors, ui, Action, EmptyState, StatusBadge } from '../../ui';
+export const DetailLaporanScreen=()=>{
+ const route=useRoute<any>();const laporanId=route.params?.laporanId;const client=useQueryClient();const [photo,setPhoto]=useState<string|null>(null);const [editing,setEditing]=useState(false);const [judul,setJudul]=useState('');const [deskripsi,setDeskripsi]=useState('');
+ const query=useQuery({queryKey:['laporan',laporanId],queryFn:async()=>(await api.get(`/laporan/${laporanId}`)).data.data,enabled:!!laporanId});
+ const update=useMutation({retry:0,mutationFn:async(data:any)=>(await api.put(`/laporan/${laporanId}`,data)).data.data,onSuccess:()=>{setEditing(false);client.invalidateQueries({queryKey:['laporan']});},onError:(e:any)=>Alert.alert('Belum tersimpan',e.response?.data?.message||'Periksa koneksi lalu coba lagi.')});
+ if(query.isPending)return <View style={[ui.page,{justifyContent:'center'}]}><ActivityIndicator color={colors.primary}/></View>;
+ if(query.isError||!query.data)return <View style={[ui.page,ui.body]}><EmptyState title="Laporan belum dapat dimuat" body="Periksa koneksi atau coba kembali beberapa saat lagi." onRetry={()=>query.refetch()}/></View>;
+ const r=query.data;const stamp=(date:string)=>new Date(date).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+ return <KeyboardAvoidingView style={ui.page} behavior={Platform.OS==='ios'?'padding':'height'}><ScrollView contentContainerStyle={ui.body} keyboardShouldPersistTaps="handled"><StatusBadge status={r.status}/><Text style={ui.title}>{r.judul}</Text><Text style={ui.muted}>{r.kategori.replace(/_/g,' ')} · {stamp(r.created_at)}</Text>
+ <View style={[ui.card,{gap:10}]}><Text style={ui.section}>Catatan lapangan</Text><Text style={ui.text}>{r.deskripsi}</Text></View>
+ {!!r.foto_urls?.length&&<View style={[ui.card,{gap:12}]}><Text style={ui.section}>Dokumentasi</Text><Text style={ui.muted}>Ketuk foto untuk melihat lebih dekat.</Text><ScrollView horizontal contentContainerStyle={{gap:12}}>{r.foto_urls.map((url:string)=><TouchableOpacity key={url} accessibilityLabel="Perbesar dokumentasi" onPress={()=>setPhoto(url)}><Image source={{uri:url}} style={{width:220,height:180,borderRadius:16,backgroundColor:colors.mint}}/></TouchableOpacity>)}</ScrollView></View>}
+ <View style={[ui.card,{gap:16}]}><Text style={ui.section}>Perjalanan laporan</Text><View style={ui.row}><Icon name="pencil-circle-outline" size={24} color={colors.primary}/><View><Text style={ui.text}>Catatan dibuat</Text><Text style={ui.muted}>{stamp(r.created_at)}</Text></View></View><View style={ui.row}><Icon name={r.status==='DRAFT'?'clock-outline':'check-circle-outline'} size={24} color={colors.primary}/><View style={{flex:1}}><Text style={ui.text}>{r.status==='DRAFT'?'Belum dikirim ke admin':r.status==='SUBMITTED'?'Menunggu tinjauan admin':'Sudah ditinjau admin'}</Text><Text style={ui.muted}>{r.status==='DRAFT'?'Lengkapi draft sebelum dikirim.':r.status==='SUBMITTED'?'Status akan berubah setelah admin melakukan review.':`Pembaruan terakhir ${stamp(r.updated_at)}`}</Text></View></View></View>
+ {!!r.komentar_admin&&<View style={[ui.card,{backgroundColor:'#FFF5DE',borderColor:'#EDDFBD'}]}><Text style={ui.section}>Catatan dari admin</Text><Text style={[ui.text,{marginTop:8}]}>{r.komentar_admin}</Text></View>}
+ {r.status==='DRAFT'&&<><Action label="Edit isi draft" icon="pencil-outline" secondary onPress={()=>{setJudul(r.judul);setDeskripsi(r.deskripsi);setEditing(true);}}/><Action label="Kirim ke admin" icon="send-outline" loading={update.isPending} onPress={()=>Alert.alert('Kirim laporan?','Setelah dikirim, isi laporan tidak dapat diedit.',[{text:'Periksa lagi',style:'cancel'},{text:'Kirim',onPress:()=>update.mutate({status:'SUBMITTED'})}])}/></>}
+ </ScrollView><Modal visible={!!photo} transparent onRequestClose={()=>setPhoto(null)}><View style={{flex:1,backgroundColor:'#10221F',padding:24}}><TouchableOpacity onPress={()=>setPhoto(null)} style={{padding:12,minHeight:48,alignSelf:'flex-end'}} accessibilityLabel="Tutup foto"><Icon name="close" color="white" size={28}/></TouchableOpacity>{photo&&<ScrollView contentContainerStyle={{flexGrow:1}} maximumZoomScale={3} minimumZoomScale={1}><Image source={{uri:photo}} resizeMode="contain" style={{flex:1,minHeight:420}}/></ScrollView>}</View></Modal>
+ <Modal visible={editing} animationType="slide" onRequestClose={()=>{if(!update.isPending)setEditing(false);}}><KeyboardAvoidingView style={ui.page} behavior={Platform.OS==='ios'?'padding':'height'}><ScrollView contentContainerStyle={ui.body} keyboardShouldPersistTaps="handled"><Text style={ui.title}>Rapikan draft</Text><TextInput value={judul} onChangeText={setJudul} style={ui.input} accessibilityLabel="Judul draft"/><TextInput value={deskripsi} onChangeText={setDeskripsi} multiline textAlignVertical="top" style={[ui.input,{minHeight:180}]} accessibilityLabel="Deskripsi draft"/><Action label="Simpan perubahan" loading={update.isPending} disabled={judul.trim().length<5||deskripsi.trim().length<10} onPress={()=>update.mutate({judul:judul.trim(),deskripsi:deskripsi.trim()})}/><Action label="Batal" secondary disabled={update.isPending} onPress={()=>setEditing(false)}/></ScrollView></KeyboardAvoidingView></Modal></KeyboardAvoidingView>;
 };
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f3fcef' },
-  container: { flex: 1, backgroundColor: '#f3fcef' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#dce5d9',
-  },
-  kategoriText: { fontSize: 12, fontWeight: '700', color: '#3d4a3d', letterSpacing: 1, marginBottom: 8 },
-  judulText: { fontSize: 24, fontWeight: '900', color: '#161d16', lineHeight: 30, marginBottom: 16 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dateText: { fontSize: 12, fontWeight: '700', color: '#3d4a3d' },
-  statusBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 },
-  statusBadgeText: { fontSize: 11, fontWeight: '900', letterSpacing: 1 },
-  contentSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    borderBottomWidth: 1,
-    borderBottomColor: '#dce5d9',
-  },
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#161d16', marginBottom: 16, letterSpacing: 1 },
-  deskripsiText: { fontSize: 16, color: '#161d16', lineHeight: 24 },
-  fotoContainer: { flexDirection: 'row', paddingTop: 8 },
-  fotoItem: { width: 160, height: 160, backgroundColor: '#e8f0e4', marginRight: 16, borderRadius: 12 },
-  komentarSection: {
-    margin: 24,
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: '#e8f0e4',
-    borderLeftWidth: 4,
-    borderLeftColor: '#006e2f',
-  },
-  komentarHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  komentarTitle: { fontSize: 14, fontWeight: '800', color: '#161d16', marginLeft: 8, letterSpacing: 1 },
-  komentarText: { fontSize: 14, color: '#161d16', lineHeight: 20 },
-});

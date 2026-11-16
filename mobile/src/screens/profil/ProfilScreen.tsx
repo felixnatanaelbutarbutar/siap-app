@@ -1,32 +1,42 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, Alert, SafeAreaView, TouchableOpacity, Image } from 'react-native';
-import { Text } from 'react-native-paper';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, Alert, SafeAreaView, TouchableOpacity, Image, Modal } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'react-native-image-picker';
 import { api } from '../../services/api';
 import { useMutation } from '@tanstack/react-query';
 import { getAvatarUrl } from '../../utils/url';
+import { ProfilePanel } from '../../components/ProfilePanel';
+import { checkedImageUri } from '../../utils/localImage';
 
 export const ProfilScreen = () => {
   const { user, logout, updateFotoProfil } = useAuthStore();
+  const [section, setSection] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (fotoUri: string) => {
+    mutationFn: async (asset: ImagePicker.Asset) => {
+      if (!asset.uri) throw new Error('Foto tidak dapat dibaca. Silakan pilih ulang.');
+      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+        throw new Error('Ukuran foto maksimal 5 MB. Silakan pilih foto yang lebih kecil.');
+      }
       const formData = new FormData();
-      const filename = fotoUri.split('/').pop() || 'profile.jpg';
-      const finalUri = fotoUri.startsWith('file://') ? fotoUri : `file://${fotoUri}`;
+      const finalUri = await checkedImageUri(asset.uri);
+      const mime = asset.type || 'image/jpeg';
+      const filename = asset.fileName || `profile.${mime === 'image/png' ? 'png' : 'jpg'}`;
 
       formData.append('foto', {
         uri: finalUri,
         name: filename,
-        type: 'image/jpeg',
+        type: mime,
       } as any);
 
-      const res = await api.put('/admin/staff/foto', formData, {
+      const res = await api.put('/auth/profil/foto', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
       });
-      return res.data;
+      if (!res.data.data?.foto_profil) throw new Error('Server belum mengembalikan foto profil. Coba lagi.');
+      return res.data.data;
     },
     onSuccess: (data) => {
       if (data.foto_profil) {
@@ -34,17 +44,22 @@ export const ProfilScreen = () => {
         Alert.alert('SUKSES', 'Foto profil berhasil diperbarui.');
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.log('Upload foto error:', error);
-      Alert.alert('GAGAL', 'Gagal mengunggah foto profil.');
+      Alert.alert('Gagal mengunggah foto', error.response?.data?.message || (error.message === 'Network Error' ? 'Periksa koneksi internet atau sambungan USB ke backend.' : error.message) || 'Silakan coba lagi.');
     }
   });
 
   const handlePilihFoto = () => {
-    ImagePicker.launchImageLibrary({ mediaType: 'photo', quality: 0.5 }, (response) => {
+    if (mutation.isPending) return;
+    ImagePicker.launchImageLibrary({ mediaType: 'photo', quality: 0.8, maxWidth: 1200, maxHeight: 1200, selectionLimit: 1 }, (response) => {
+      if (response.errorCode) {
+        Alert.alert('Tidak dapat membuka galeri', response.errorMessage || 'Periksa izin foto aplikasi lalu coba lagi.');
+        return;
+      }
       if (response.didCancel || !response.assets || response.assets.length === 0) return;
       const uri = response.assets[0].uri;
-      if (uri) mutation.mutate(uri);
+      if (uri) mutation.mutate(response.assets[0]);
     });
   };
 
@@ -73,7 +88,7 @@ export const ProfilScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView 
         style={styles.container} 
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
         bounces={false}
         showsVerticalScrollIndicator={false}
       >
@@ -82,7 +97,7 @@ export const ProfilScreen = () => {
         </View> */}
 
         <View style={styles.profileSection}>
-          <TouchableOpacity onPress={handlePilihFoto} style={styles.avatarContainer}>
+          <TouchableOpacity onPress={handlePilihFoto} style={styles.avatarContainer} disabled={mutation.isPending} accessibilityRole="button" accessibilityLabel="Ubah foto profil" accessibilityState={{ disabled: mutation.isPending, busy: mutation.isPending }}>
             {user?.foto_profil ? (
               <Image source={{ uri: getAvatarUrl(user.foto_profil) || undefined }} style={styles.avatarImage} />
             ) : (
@@ -91,9 +106,10 @@ export const ProfilScreen = () => {
               </View>
             )}
             <View style={styles.editBadge}>
-              <Icon name="camera-plus" size={16} color="#161d16" />
+              {mutation.isPending ? <ActivityIndicator size="small" color="#ffffff" /> : <Icon name="camera-plus" size={16} color="#ffffff" />}
             </View>
           </TouchableOpacity>
+          {mutation.isPending && <Text accessibilityLiveRegion="polite">Mengunggah foto...</Text>}
 
           <Text style={styles.userName}>{user?.nama}</Text>
           <Text style={styles.userRole}>{user?.role} • {user?.divisi}</Text>
@@ -101,10 +117,10 @@ export const ProfilScreen = () => {
         </View>
 
         <View style={styles.pdpDisclosureRow}>
-          <ActionRow icon="account-details-outline" label="Informasi Pribadi" onPress={() => {}} />
-          <ActionRow icon="lock-outline" label="Ubah Kata Sandi" onPress={() => {}} />
-          <ActionRow icon="help-circle-outline" label="Pusat Bantuan" onPress={() => {}} />
-          <ActionRow icon="information-outline" label="Tentang Aplikasi" onPress={() => {}} />
+          <ActionRow icon="account-details-outline" label="Informasi Pribadi" onPress={() => setSection('Informasi Pribadi')} />
+          <ActionRow icon="lock-outline" label="Ubah Kata Sandi" onPress={() => setSection('Ubah Kata Sandi')} />
+          <ActionRow icon="help-circle-outline" label="Pusat Bantuan" onPress={() => setSection('Pusat Bantuan')} />
+          <ActionRow icon="information-outline" label="Tentang Aplikasi" onPress={() => setSection('Tentang Aplikasi')} />
         </View>
 
         <View style={styles.logoutSection}>
@@ -122,18 +138,18 @@ export const ProfilScreen = () => {
           <Text style={styles.footerText}>SIAP SYSTEM V1.0.0</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    <Modal visible={!!section} animationType="slide" onRequestClose={() => setSection(null)}>{section && <ProfilePanel section={section} onClose={() => setSection(null)} />}</Modal></SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
   },
   container: {
     flex: 1,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
   },
   header: {
     paddingHorizontal: 24,
@@ -194,7 +210,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: '#161d16',
-    textTransform: 'uppercase',
+    
     marginBottom: 4,
   },
   userRole: {
@@ -240,7 +256,7 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   logoutButton: {
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     borderWidth: 2,
     borderColor: '#ba1a1a',
     borderRadius: 30, // Nike pill shape
@@ -271,3 +287,4 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 });
+

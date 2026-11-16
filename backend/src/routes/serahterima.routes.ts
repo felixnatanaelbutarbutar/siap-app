@@ -21,6 +21,16 @@ router.get('/:id/bast', getBastUrl);
 // Hanya SATPAM & UTILITY yang diizinkan melakukan/mengkonfirmasi serah terima
 const roleLapangan = requireRole('SATPAM', 'UTILITY');
 
+router.get('/penerima', roleLapangan, async (req, res) => {
+  try {
+    const { prisma } = await import('../lib/prisma');
+    const staff = await prisma.staff.findMany({ where:{aktif:true,role:req.user!.role as 'SATPAM'|'UTILITY',id:{not:req.user!.id}}, select:{id:true,nama:true,nik:true}, orderBy:{nama:'asc'} });
+    res.json({success:true,data:staff});
+  } catch {
+    res.status(500).json({success:false,message:'Daftar penerima belum dapat dimuat.'});
+  }
+});
+
 router.post('/mulai', roleLapangan, mulaiSerahTerima);
 router.post('/:id/konfirmasi', roleLapangan, konfirmasiSerahTerima);
 

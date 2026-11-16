@@ -1,39 +1,22 @@
 # SIAP Mobile
 
-Aplikasi mobile React Native 0.74 untuk satpam.
+React Native 0.74 Android app.
 
-> **Setup lengkap akan dilakukan di TASK-10** (Setup Navigasi & Struktur Layar)
+## Menjalankan di HP USB (Windows)
 
-## Struktur yang akan dibuat di TASK-10:
+1. Jalankan backend pada port 3000 dan MinIO pada port 9000.
+2. Pasang Android Studio / Android SDK dan JDK 17. Aktifkan USB debugging pada HP.
+3. Pastikan `adb devices` menampilkan satu perangkat dengan status `device`.
+4. Dari folder mobile, jalankan `npm ci --legacy-peer-deps` untuk instalasi awal.
+5. Jalankan `npm start` di satu terminal. Jika Metro sudah berjalan untuk proyek ini, gunakan terminal yang sudah ada.
+6. Di terminal lain, jalankan `npm run android`.
 
-```
-src/
-├── screens/
-│   ├── auth/LoginScreen.tsx
-│   ├── main/BerandaScreen.tsx
-│   ├── main/AbsensiScreen.tsx
-│   ├── laporan/ListLaporanScreen.tsx
-│   ├── laporan/BuatLaporanScreen.tsx
-│   ├── laporan/DetailLaporanScreen.tsx
-│   ├── laporan/LaporanPerJamScreen.tsx
-│   ├── serahterima/SerahTerimaScreen.tsx
-│   ├── serahterima/KonfirmasiSerahTerimaScreen.tsx
-│   └── profil/ProfilScreen.tsx
-├── stores/authStore.ts
-├── services/api.ts
-└── navigation/
-    ├── AuthStack.tsx
-    └── AppStack.tsx
-```
+Perintah android memilih Java bawaan Android Studio jika JAVA_HOME tidak valid,
+menemukan SDK pada lokasi standar Windows, dan meneruskan port 3000, 8081,
+serta 9000 melalui USB. API dan gambar lokal memakai localhost melalui forwarding ini.
+Jalankan ulang perintah tersebut setelah kabel USB dilepas atau HP dimulai ulang.
+Emulator juga dapat memakai forwarding yang sama; hubungkan satu perangkat saja.
 
-## Dependencies (akan diinstall di TASK-10):
-- React Navigation v6
-- Zustand
-- React Native Paper
-- react-native-vision-camera
-- react-native-geolocation-service
-- react-native-biometrics
-- react-native-encrypted-storage
-- op-sqlite + react-query
-- Notifee + Firebase Messaging
-- react-native-signature-canvas
+Jika JDK/SDK dipasang di lokasi khusus, atur JAVA_HOME (JDK 17) dan ANDROID_HOME
+sebelum menjalankan perintah. Jangan memasukkan lokasi SDK komputer lain ke local.properties.
+Build pertama dapat mengunduh Gradle, NDK, dan dependency Android.
