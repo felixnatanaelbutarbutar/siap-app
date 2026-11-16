@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { login, logout, updateFcmToken, getMe, uploadFotoProfil } from '../controllers/auth.controller';
+import { login, logout, updateFcmToken, getMe, uploadFotoProfil, changePassword } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { uploadImage } from '../middleware/upload.middleware';
 
@@ -32,5 +32,6 @@ router.post('/logout', authenticate, logout);
 router.post('/fcm-token', authenticate, updateFcmToken);
 router.get('/me', authenticate, getMe);
 router.put('/profil/foto', authenticate, uploadImage.single('foto'), uploadFotoProfil);
+router.put('/password', authenticate, rateLimit({windowMs:600000,max:5,message:{success:false,message:'Terlalu banyak percobaan. Coba kembali dalam 10 menit.'}}), changePassword);
 
 export default router;

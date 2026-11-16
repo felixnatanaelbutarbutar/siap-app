@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import { queryClient, asyncStoragePersister } from '../services/queryClient';
 
 export type Role = 'SATPAM' | 'CS' | 'UTILITY' | 'ADMIN';
 export type Divisi = 'KEAMANAN' | 'CUSTOMER_SERVICE' | 'UTILITY' | 'MANAJEMEN';
@@ -68,8 +69,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
+      try { await api.post('/auth/logout'); } catch { /* Local logout still works offline. */ }
       await EncryptedStorage.removeItem('token');
       await EncryptedStorage.removeItem('user');
+      delete api.defaults.headers.common['Authorization'];
+      queryClient.clear();
+      await asyncStoragePersister.removeClient();
       set({ user: null, token: null, isLoading: false, error: null });
     } catch (error) {
       console.error('Error removing auth data:', error);

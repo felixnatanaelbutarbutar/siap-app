@@ -13,10 +13,10 @@ import { CameraView } from '../../components/CameraView';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const JENIS_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
-  MASUK:            { icon: 'login-variant',   color: '#006e2f', bg: '#e8f0e4', label: 'Masuk' },
+  MASUK:            { icon: 'login-variant',   color: '#087F5B', bg: '#e8f0e4', label: 'Masuk' },
   KELUAR:           { icon: 'logout-variant',  color: '#ba1a1a', bg: '#ffdad6', label: 'Keluar' },
   MULAI_ISTIRAHAT:  { icon: 'coffee-outline',  color: '#c77800', bg: '#ffefd4', label: 'Mulai Istirahat' },
-  SELESAI_ISTIRAHAT:{ icon: 'coffee',          color: '#006e2f', bg: '#e8f0e4', label: 'Selesai Istirahat' },
+  SELESAI_ISTIRAHAT:{ icon: 'coffee',          color: '#087F5B', bg: '#e8f0e4', label: 'Selesai Istirahat' },
 };
 
 export const AbsensiScreen = () => {
@@ -80,11 +80,11 @@ export const AbsensiScreen = () => {
       Alert.alert('SUKSES', 'Absensi berhasil terkirim!');
       queryClient.invalidateQueries({ queryKey: ['absensi'] });
     },
-    onError: (error: any, variables) => {
+    onError: async (error: any, variables) => {
       console.log('Error absen API:', error);
       // Simpan ke antrean offline HANYA bila gagal koneksi jaringan (!error.response)
       if (!error?.response) {
-        insertAbsensiOffline(
+        await insertAbsensiOffline(
           variables.jenis,
           variables.lat,
           variables.lng,
@@ -154,13 +154,13 @@ export const AbsensiScreen = () => {
   const sedangIstirahat = absensiHariIni?.some((a: any) => a.jenis === 'MULAI_ISTIRAHAT') && !absensiHariIni?.some((a: any) => a.jenis === 'SELESAI_ISTIRAHAT');
 
   const statusBg = sudahKeluar ? '#e8f0e4' : sedangIstirahat ? '#ffefd4' : sudahMasuk ? '#e8f0e4' : '#e8f0e4';
-  const statusDot = sudahKeluar ? '#515f74' : sedangIstirahat ? '#c77800' : sudahMasuk ? '#007d48' : '#006e2f';
+  const statusDot = sudahKeluar ? '#515f74' : sedangIstirahat ? '#c77800' : sudahMasuk ? '#007d48' : '#087F5B';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
@@ -185,14 +185,14 @@ export const AbsensiScreen = () => {
           ) : sudahMasuk ? (
             <Text style={[styles.statusValue, { color: '#007d48' }]}>SHIFT AKTIF</Text>
           ) : (
-            <Text style={[styles.statusValue, { color: '#006e2f' }]}>BELUM ABSEN</Text>
+            <Text style={[styles.statusValue, { color: '#087F5B' }]}>BELUM ABSEN</Text>
           )}
         </View>
 
         {/* ACTIONS */}
         <View style={styles.actionContainer}>
           {!sudahMasuk && !sudahKeluar && (
-            <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#006e2f' }]} onPress={() => handleBukaKamera('MASUK')}>
+            <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#087F5B' }]} onPress={() => handleBukaKamera('MASUK')}>
               <Icon name="login-variant" size={20} color="#ffffff" style={{ marginRight: 10 }} />
               <Text style={styles.pillButtonText}>ABSEN MASUK</Text>
             </TouchableOpacity>
@@ -204,7 +204,7 @@ export const AbsensiScreen = () => {
                 <Icon name="coffee-outline" size={20} color="#161d16" style={{ marginRight: 10 }} />
                 <Text style={[styles.pillButtonText, { color: '#161d16' }]}>MULAI ISTIRAHAT</Text>
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#006e2f', marginTop: 16 }]} onPress={() => handleBukaKamera('KELUAR')}>
+              <TouchableOpacity activeOpacity={0.8} style={[styles.pillButton, { backgroundColor: '#087F5B', marginTop: 16 }]} onPress={() => handleBukaKamera('KELUAR')}>
                 <Icon name="logout-variant" size={20} color="#ffffff" style={{ marginRight: 10 }} />
                 <Text style={styles.pillButtonText}>ABSEN KELUAR</Text>
               </TouchableOpacity>
@@ -265,17 +265,17 @@ export const AbsensiScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
   },
   container: {
     flex: 1,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
   },
   header: {
     paddingHorizontal: 24,
@@ -395,3 +395,5 @@ const styles = StyleSheet.create({
     color: '#3d4a3d',
   },
 });
+
+

@@ -20,6 +20,7 @@ const roleLapangan = requireRole('SATPAM', 'UTILITY');
 
 router.get('/riwayat', getRiwayatSerahTerima);
 router.get('/staff-penerima', roleLapangan, getStaffPenerima);
+router.get('/penerima', roleLapangan, getStaffPenerima);
 router.get('/:id/bast', getBastUrl);
 router.get('/:id', getDetailSerahTerima);
 

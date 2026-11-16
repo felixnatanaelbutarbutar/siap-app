@@ -9,6 +9,7 @@ export const kategoriPerDivisi: Record<string, string[]> = {
 
 // ─── Laporan Harian (Generik) ────────────────────────────────────────────────
 export const createLaporanSchema = z.object({
+  status: z.enum(['DRAFT', 'SUBMITTED']).default('SUBMITTED'),
   kategori: z.nativeEnum(KategoriLaporan, { required_error: 'Kategori laporan wajib diisi.' }),
   judul: z.string({ required_error: 'Judul laporan wajib diisi.' }).min(5, 'Judul minimal 5 karakter.'),
   deskripsi: z.string({ required_error: 'Deskripsi laporan wajib diisi.' }).min(10, 'Deskripsi minimal 10 karakter.'),
@@ -19,6 +20,7 @@ export const getLaporanSchema = z.object({
 });
 
 export const updateLaporanSchema = z.object({
+  status: z.enum(['DRAFT', 'SUBMITTED']).optional(),
   judul: z.string().min(5).optional(),
   deskripsi: z.string().min(10).optional(),
 });

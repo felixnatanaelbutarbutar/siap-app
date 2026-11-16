@@ -24,3 +24,13 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// This legacy library hardcodes SDK 29, which cannot compile Java 9+ sources.
+subprojects { subproject ->
+    if (subproject.name == "react-native-mock-location-detector") {
+        subproject.afterEvaluate {
+            subproject.android.compileSdkVersion rootProject.ext.compileSdkVersion
+            subproject.android.buildToolsVersion rootProject.ext.buildToolsVersion
+        }
+    }
+}

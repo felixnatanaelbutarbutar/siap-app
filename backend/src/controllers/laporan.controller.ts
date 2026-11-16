@@ -82,10 +82,11 @@ export const createLaporan = async (req: Request, res: Response): Promise<void> 
         judul,
         deskripsi,
         foto_urls: fotoUrls,
-        status: StatusLaporan.SUBMITTED, // Langsung submitted, tapi bisa DRAFT sesuai UI
+        status: parsed.data.status,
       },
     });
 
+    if (laporan.status === StatusLaporan.SUBMITTED) {
     // Notify admin via Socket
     getIO().to('admin').emit('laporan:new', {
       staff_id: user.id,
@@ -101,6 +102,7 @@ export const createLaporan = async (req: Request, res: Response): Promise<void> 
       `Terdapat laporan ${kategori} baru dari ${staff!.nama} (Divisi: ${staff!.divisi}).`,
       { type: 'laporan_baru', laporan_id: laporan.id }
     );
+    }
 
     res.status(201).json({ success: true, message: 'Laporan berhasil dibuat.', data: laporan });
   } catch (error) {
@@ -141,6 +143,22 @@ export const getLaporanSaya = async (req: Request, res: Response): Promise<void>
   }
 };
 
+export const getDetailLaporan = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const laporan = await prisma.laporan.findFirst({
+      where: { id: req.params.id, staff_id: req.user!.id },
+    });
+    if (!laporan) {
+      res.status(404).json({ success: false, message: 'Laporan tidak ditemukan.' });
+      return;
+    }
+    res.status(200).json({ success: true, data: laporan });
+  } catch (error) {
+    logger.error('Error getDetailLaporan:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengambil detail laporan.' });
+  }
+};
+
 export const updateLaporan = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = req.user!;
@@ -170,6 +188,11 @@ export const updateLaporan = async (req: Request, res: Response): Promise<void> 
       where: { id },
       data: parsed.data,
     });
+
+    if (parsed.data.status === StatusLaporan.SUBMITTED) {
+      getIO().to('admin').emit('laporan:new', { staff_id: user.id, nama: user.nama, divisi: user.divisi, kategori: laporan.kategori });
+      await sendToRole(Role.ADMIN, 'Laporan Baru Masuk', `Laporan dari ${user.nama} menunggu review.`, { type: 'laporan_baru', laporan_id: laporan.id });
+    }
 
     res.status(200).json({ success: true, message: 'Laporan berhasil diperbarui.', data: laporan });
   } catch (error) {

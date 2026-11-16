@@ -12,6 +12,7 @@ import { NetworkManager } from './src/components/NetworkManager';
 
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import Toast from 'react-native-toast-message';
+import { useAuthStore } from './src/store/auth.store';
 
 const theme = {
   ...DefaultTheme,
@@ -26,9 +27,12 @@ const theme = {
 };
 
 export default function App() {
+  const token = useAuthStore(state => state.token);
+  useEffect(() => {
+    if (token) void requestUserPermission();
+  }, [token]);
   useEffect(() => {
     initDatabase();
-    requestUserPermission();
     const unsubscribeFCM = NotificationListener();
 
     // AppState Listener untuk Live Tracking Socket.io

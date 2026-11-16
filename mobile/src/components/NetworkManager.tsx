@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import NetInfo from '@react-native-community/netinfo';
 import { getPendingAbsensi, markAbsensiSynced, markAbsensiFailed } from '../store/database';
 import { api } from '../services/api';
+import { useAuthStore } from '../store/auth.store';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ENDPOINT_MAP: Record<string, string> = {
   MASUK: '/absensi/masuk',
@@ -13,27 +15,35 @@ const ENDPOINT_MAP: Record<string, string> = {
 };
 
 export const NetworkManager = () => {
+  const token = useAuthStore(s => s.token);
+  const client = useQueryClient();
+  const syncing = useRef(false);
+  const [offline, setOffline] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    const pending = getPendingAbsensi();
-    setPendingCount(pending.length);
+    getPendingAbsensi().then(pending => setPendingCount(pending.length));
 
     const unsubscribe = NetInfo.addEventListener((state) => {
-      if (state.isConnected && state.isInternetReachable) {
+      setOffline(state.isConnected === false);
+      if (token && state.isConnected && state.isInternetReachable !== false) {
         syncPendingData();
       }
     });
 
+    const timer = setInterval(() => { getPendingAbsensi().then(pending => setPendingCount(pending.length)); }, 5000);
     return () => {
+      clearInterval(timer);
       unsubscribe();
     };
-  }, []);
+  }, [token]);
 
   const syncPendingData = async () => {
-    const pendingData = getPendingAbsensi();
-    if (pendingData.length === 0) return;
+    if (!token || syncing.current) return;
+    syncing.current = true;
+    const pendingData = await getPendingAbsensi();
+    if (pendingData.length === 0) { syncing.current = false; return; }
 
     setIsSyncing(true);
     setPendingCount(pendingData.length);
@@ -42,7 +52,7 @@ export const NetworkManager = () => {
       try {
         const endpoint = ENDPOINT_MAP[item.jenis];
         if (!endpoint) {
-          markAbsensiFailed(item.id);
+          await markAbsensiFailed(item.id);
           continue;
         }
 
@@ -72,13 +82,13 @@ export const NetworkManager = () => {
           });
         }
 
-        markAbsensiSynced(item.id);
+        await markAbsensiSynced(item.id);
       } catch (error: any) {
         console.log(`Gagal sinkronisasi data id ${item.id}:`, error);
         const status = error?.response?.status;
         // Jika ditolak permanen oleh validasi server (4xx selain 408/429), tandai gagal agar antrean berikutnya tidak tersumbat
         if (status && status >= 400 && status < 500 && status !== 408 && status !== 429) {
-          markAbsensiFailed(item.id);
+          await markAbsensiFailed(item.id);
           continue;
         }
         // Masalah jaringan / server 5xx -> hentikan sementara dan coba lagi saat koneksi pulih
@@ -86,27 +96,30 @@ export const NetworkManager = () => {
       }
     }
 
-    const sisa = getPendingAbsensi();
+    const sisa = await getPendingAbsensi();
     setPendingCount(sisa.length);
     setIsSyncing(false);
+    syncing.current = false;
+    client.invalidateQueries({ queryKey: ['absensi'] });
   };
 
-  if (pendingCount === 0 && !isSyncing) return null;
+  if (!token || (pendingCount === 0 && !isSyncing && !offline)) return null;
 
   return (
     <View style={styles.banner}>
       <Text style={styles.bannerText}>
         {isSyncing
           ? `Menyelaraskan ${pendingCount} data tertunda...`
-          : `Ada ${pendingCount} data belum tersinkron`}
+          : pendingCount ? `${pendingCount} absensi tersimpan di HP, belum terkirim` : 'Sedang offline · data terakhir ditampilkan'}
       </Text>
+      {pendingCount > 0 && <TouchableOpacity disabled={isSyncing} onPress={syncPendingData} style={{minHeight:48,justifyContent:'center'}} accessibilityRole="button"><Text style={{color:'#745510',fontWeight:'700'}}>{isSyncing ? 'Mengirim…' : 'Coba kirim'}</Text></TouchableOpacity>}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: '#f1c40f',
+    backgroundColor: '#FFF2D2',
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignItems: 'center',
@@ -118,3 +131,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+

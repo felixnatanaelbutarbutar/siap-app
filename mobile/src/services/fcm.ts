@@ -1,62 +1,41 @@
-import messaging from '@react-native-firebase/messaging';
-import { Alert } from 'react-native';
+import { getApps } from '@react-native-firebase/app';
+import { getMessaging, requestPermission, AuthorizationStatus, getToken, onTokenRefresh, onMessage, onNotificationOpenedApp, getInitialNotification } from '@react-native-firebase/messaging';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { api } from './api';
 
+// Push notifications are optional in local builds without Firebase configuration.
+const configuredMessaging = () => {
+  const app = getApps().find(app => app.name === '[DEFAULT]');
+  return app ? getMessaging(app) : null;
+};
+const saveToken = async (token: string) => {
+  if (await EncryptedStorage.getItem('token')) await api.post('/auth/fcm-token', { fcm_token: token });
+};
 export const requestUserPermission = async () => {
+  const messaging = configuredMessaging();
+  if (!messaging) return;
   try {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      console.log('Authorization status:', authStatus);
-      getFCMToken();
+    if (Platform.OS === 'android' && Number(Platform.Version) >= 33) {
+      const permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+      if (permission !== PermissionsAndroid.RESULTS.GRANTED) return;
+    }
+    const status = await requestPermission(messaging);
+    if (status === AuthorizationStatus.AUTHORIZED || status === AuthorizationStatus.PROVISIONAL) {
+      await saveToken(await getToken(messaging));
     }
   } catch (error) {
-    console.warn('FCM Permission Error (mungkin google-services.json belum ada):', error);
+    console.log('Push notification registration failed:', error);
   }
 };
-
-const getFCMToken = async () => {
-  try {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-      console.log('FCM Token:', fcmToken);
-      // Kirim token ke backend
-      await api.post('/auth/fcm-token', { fcm_token: fcmToken });
-    }
-  } catch (error) {
-    console.log('Gagal mendapatkan FCM token', error);
-  }
-};
-
 export const NotificationListener = () => {
-  try {
-    messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log('Notifikasi di-tap dari background:', remoteMessage.notification);
-      // Navigasi ke layar spesifik (bisa via NavigationRef)
-    });
-
-    messaging()
-      .getInitialNotification()
-      .then(remoteMessage => {
-        if (remoteMessage) {
-          console.log('Aplikasi dibuka dari state KILLED via notifikasi:', remoteMessage.notification);
-        }
-      });
-
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      // Tampilkan Alert In-App (karena aplikasi sedang aktif/foreground)
-      Alert.alert(
-        remoteMessage.notification?.title || 'Notifikasi Baru',
-        remoteMessage.notification?.body || ''
-      );
-    });
-
-    return unsubscribe;
-  } catch (error) {
-    console.warn('FCM Listener Error:', error);
-    return () => {}; // Dummy unsubscribe function
-  }
+  const messaging = configuredMessaging();
+  if (!messaging) return () => {};
+  const opened = onNotificationOpenedApp(messaging, () => {});
+  const foreground = onMessage(messaging, async message => {
+    Alert.alert(message.notification?.title || 'Notifikasi Baru', message.notification?.body || '');
+  });
+  const refreshed = onTokenRefresh(messaging, token => saveToken(token).catch(error => console.log('FCM token refresh failed:', error)));
+  getInitialNotification(messaging).catch(error => console.log('Initial notification failed:', error));
+  return () => { opened(); foreground(); refreshed(); };
 };

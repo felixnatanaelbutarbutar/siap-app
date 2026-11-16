@@ -3,12 +3,28 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../lib/prisma';
-import { loginSchema, fcmTokenSchema } from '../schemas/auth.schema';
+import { loginSchema, fcmTokenSchema, changePasswordSchema } from '../schemas/auth.schema';
 import { logger } from '../utils/logger';
 import { JwtPayload } from '../middleware/auth.middleware';
 import { uploadFile } from '../services/storage.service';
 
 // ─── POST /auth/login ─────────────────────────────────────────────────────────
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+  const parsed = changePasswordSchema.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ success:false, message:parsed.error.errors[0].message }); return; }
+  try {
+    const staff = await prisma.staff.findUnique({ where:{id:req.user!.id} });
+    if (!staff || !await bcrypt.compare(parsed.data.current_password, staff.password_hash)) {
+      res.status(403).json({success:false,message:'Kata sandi saat ini tidak sesuai.'}); return;
+    }
+    await prisma.staff.update({where:{id:staff.id},data:{password_hash:await bcrypt.hash(parsed.data.new_password,12)}});
+    res.json({success:true,message:'Kata sandi berhasil diperbarui.'});
+  } catch (error) {
+    logger.error('Error changePassword:', error);
+    res.status(500).json({success:false,message:'Kata sandi belum berhasil diperbarui.'});
+  }
+};
+
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     // Validasi input

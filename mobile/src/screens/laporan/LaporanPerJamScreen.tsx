@@ -229,7 +229,7 @@ export const LaporanPerJamScreen = () => {
             />
 
             <View style={styles.actionRow}>
-              <Button mode="outlined" onPress={() => { setModalVisible(false); resetForm(); }} style={[styles.btn, { borderColor: '#006e2f' }]} labelStyle={{ color: '#006e2f' }}>
+              <Button mode="outlined" onPress={() => { setModalVisible(false); resetForm(); }} style={[styles.btn, { borderColor: '#087F5B' }]} labelStyle={{ color: '#087F5B' }}>
                 BATAL
               </Button>
               <Button 
@@ -237,7 +237,7 @@ export const LaporanPerJamScreen = () => {
                 onPress={() => mutation.mutate()} 
                 loading={mutation.isPending} 
                 disabled={!fotoUrl || mutation.isPending}
-                style={[styles.btn, { backgroundColor: '#006e2f' }]}
+                style={[styles.btn, { backgroundColor: '#087F5B' }]}
               >
                 KIRIM
               </Button>
@@ -261,7 +261,7 @@ export const LaporanPerJamScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
   },
   center: {
     flex: 1,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   timelineContent: {
     paddingHorizontal: 24,
-    paddingBottom: 200,
+    paddingBottom: 32,
     flexGrow: 1,
   },
   timelineRow: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#f3fcef',
+    backgroundColor: '#F3F7F4',
     padding: 24,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     borderColor: '#bccbb9',
   },
   statusItemActive: {
-    backgroundColor: '#006e2f',
-    borderColor: '#006e2f',
+    backgroundColor: '#087F5B',
+    borderColor: '#087F5B',
   },
   statusItemText: {
     fontSize: 12,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   },
   addFotoText: {
     fontWeight: 'bold',
-    color: '#006e2f',
+    color: '#087F5B',
   },
   fotoPreview: {
     width: '100%',
@@ -389,3 +389,4 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   }
 });
+

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { 
   createLaporan, 
   getLaporanSaya, 
+  getDetailLaporan,
   updateLaporan, 
   createLaporanPerJam, 
   getLaporanPerJamSaya 
@@ -28,5 +29,8 @@ const khususSatpam = requireRole('SATPAM');
 
 router.post('/perjam', khususSatpam, uploadImage.single('foto'), createLaporanPerJam);
 router.get('/perjam', khususSatpam, getLaporanPerJamSaya);
+
+// Place the dynamic route after /perjam; staff may only read their own reports.
+router.get('/:id', roleLapangan, getDetailLaporan);
 
 export default router;

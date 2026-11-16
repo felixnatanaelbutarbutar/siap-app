@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image, Dimensions, Modal, ActivityIndicator, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image, Dimensions, Modal, ActivityIndicator, Animated, RefreshControl } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -62,6 +62,8 @@ export const BerandaScreen = () => {
     };
   }, [contentAnim, contentOpacity, headerAnim, notifBlink]);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   const { data: pengumumanData, isLoading: loadingPengumuman, refetch: refetchPengumuman } = useQuery({
     queryKey: ['pengumuman'],
     queryFn: async () => {
@@ -70,7 +72,7 @@ export const BerandaScreen = () => {
     }
   });
 
-  const { data: jadwalHariIni } = useQuery({
+  const { data: jadwalHariIni, refetch: refetchJadwalHariIni } = useQuery({
     queryKey: ['jadwal-hari-ini'],
     queryFn: async () => {
       const res = await api.get('/absensi/jadwal-hari-ini');
@@ -78,7 +80,7 @@ export const BerandaScreen = () => {
     }
   });
 
-  const { data: absensiHariIni } = useQuery({
+  const { data: absensiHariIni, refetch: refetchAbsensi } = useQuery({
     queryKey: ['absensi', 'hari-ini'],
     queryFn: async () => {
       const res = await api.get('/absensi/hari-ini');
@@ -86,7 +88,7 @@ export const BerandaScreen = () => {
     }
   });
 
-  const { data: laporanTerbaru } = useQuery({
+  const { data: laporanTerbaru, refetch: refetchLaporan } = useQuery({
     queryKey: ['laporan', 'terbaru'],
     queryFn: async () => {
       const res = await api.get('/laporan');
@@ -102,6 +104,20 @@ export const BerandaScreen = () => {
     },
     enabled: showJadwalMingguan,
   });
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refetchAbsensi(),
+        refetchJadwalHariIni(),
+        refetchPengumuman(),
+        refetchLaporan(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleOpenPengumuman = () => {
     refetchPengumuman();
@@ -253,8 +269,16 @@ export const BerandaScreen = () => {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
-        bounces={false}
+        bounces={true}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#006e2f"
+            colors={['#006e2f']}
+          />
+        }
       >
         {/* GREEN HEADER BACKDROP */}
         <Animated.View style={[styles.greenHeaderWrapper, { opacity: headerAnim }]}>

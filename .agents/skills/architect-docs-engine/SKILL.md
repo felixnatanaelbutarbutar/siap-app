@@ -18,7 +18,7 @@ Use this skill for a coordinated project-documentation task. Do not activate it 
 
 Codex discovers repository skills under `.agents/skills/`; in Codex CLI or IDE, users can invoke this one with `$architect-docs-engine`. Antigravity can activate it from the user's request or through `/architect-docs-engine` where that surface supports manual skill invocation. Other hosts' discovery paths are unverified.
 
-## Inputs and evidence
+## Input and Advince
 
 Accept a user-supplied brief, a target source workspace, or both. Configuration is optional; see [the config example](assets/example-config.json) and [schema](assets/config.schema.json). First distinguish this reusable skill repository from the target project. Do not generate application docs here unless explicitly asked.
 

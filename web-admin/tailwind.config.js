@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+import tailwindcssAnimate from "tailwindcss-animate";
+
+/** @type {import('tailwindcss').Config} */export default {
   darkMode: ["class"],
   content: [
     './pages/**/*.{ts,tsx}',
@@ -21,7 +22,7 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
+        background: "hsl(var(--background))",  
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -73,5 +74,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 }
