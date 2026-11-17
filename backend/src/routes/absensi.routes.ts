@@ -1,3 +1,4 @@
+import { requireDevice } from './device.routes';
 import { Router } from 'express';
 import { 
   absenMasuk, 
@@ -21,10 +22,10 @@ router.use(authenticate);
 // ─── Endpoint untuk Role Lapangan (SATPAM, CS, UTILITY) ────────────────────────
 const roleLapangan = requireRole('SATPAM', 'CS', 'UTILITY');
 
-router.post('/masuk', roleLapangan, uploadImage.single('foto'), absenMasuk);
-router.post('/keluar', roleLapangan, uploadImage.single('foto'), absenKeluar);
-router.post('/mulai-istirahat', roleLapangan, mulaiIstirahat);
-router.post('/selesai-istirahat', roleLapangan, selesaiIstirahat);
+router.post('/masuk', roleLapangan, uploadImage.single('foto'), requireDevice, absenMasuk);
+router.post('/keluar', roleLapangan, uploadImage.single('foto'), requireDevice, absenKeluar);
+router.post('/mulai-istirahat', roleLapangan, requireDevice, mulaiIstirahat);
+router.post('/selesai-istirahat', roleLapangan, requireDevice, selesaiIstirahat);
 
 router.get('/hari-ini', roleLapangan, getAbsensiHariIni);
 router.get('/jadwal-hari-ini', roleLapangan, getJadwalHariIni);

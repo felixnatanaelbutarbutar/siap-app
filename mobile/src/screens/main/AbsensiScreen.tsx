@@ -1,15 +1,18 @@
+import {saveOfflineEvidence} from '../../services/offlineEvidence';
+import { attendanceProof } from '../../services/device';
+import { DeviceRegistration } from '../../components/DeviceRegistration';
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Alert, Modal, ScrollView, SafeAreaView, TouchableOpacity, Animated } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import { api } from '../../services/api';
-import { insertAbsensiOffline } from '../../store/database';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import notifee, { TriggerType, IntervalTrigger, TimeUnit } from '@notifee/react-native';
 
 import { CameraView } from '../../components/CameraView';
+import { validateWorkArea, GeofenceError } from '../../utils/geofence';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const JENIS_CONFIG: Record<string, { icon: string; color: string; bg: string; label: string }> = {
@@ -41,7 +44,10 @@ export const AbsensiScreen = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (payload: { jenis: string, lat: number, lng: number, foto_uri: string }) => {
+    mutationFn: async (payload: { jenis: string, lat: number, lng: number, foto_uri: string, capturedAt?: number }) => {
+      const proof=await attendanceProof(payload.jenis,payload.foto_uri,payload.capturedAt);
+      payload={...payload,lat:proof.lat,lng:proof.lng};
+      validateWorkArea(payload.lat, payload.lng, useAuthStore.getState().user?.area_tugas);
       const endpointMap: Record<string, string> = {
         'MASUK': '/absensi/masuk',
         'KELUAR': '/absensi/keluar',
@@ -65,56 +71,25 @@ export const AbsensiScreen = () => {
         } as any);
 
         const res = await api.post(endpoint, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: { 'Content-Type': 'multipart/form-data', 'X-Device-Proof': proof.header },
         });
         return res.data;
       } else {
         const res = await api.post(endpoint, {
           lat: payload.lat,
           lng: payload.lng,
-        });
+        }, {headers:{'X-Device-Proof':proof.header}});
         return res.data;
       }
     },
-    onSuccess: () => {
+    onSuccess: async (_data, variables) => {
       Alert.alert('SUKSES', 'Absensi berhasil terkirim!');
       queryClient.invalidateQueries({ queryKey: ['absensi'] });
-    },
-    onError: async (error: any, variables) => {
-      console.log('Error absen API:', error);
-      // Simpan ke antrean offline HANYA bila gagal koneksi jaringan (!error.response)
-      if (!error?.response) {
-        await insertAbsensiOffline(
-          variables.jenis,
-          variables.lat,
-          variables.lng,
-          variables.foto_uri || '',
-          new Date().toISOString()
-        );
-        Alert.alert('OFFLINE', 'Koneksi terputus. Absen disimpan lokal dan akan dikirim saat online.');
-        return;
-      }
-
-      const serverMsg =
-        error.response?.data?.message || 'Gagal mengirim absensi. Silakan periksa kembali dan coba lagi.';
-      Alert.alert('GAGAL ABSEN', serverMsg);
-    }
-  });
-
-  const handleBukaKamera = (jenis: 'MASUK' | 'KELUAR' | 'MULAI_ISTIRAHAT' | 'SELESAI_ISTIRAHAT') => {
-    setJenisAbsenTerpilih(jenis);
-    setIsCameraOpen(true);
-  };
-
-  const handleSelesaiFoto = async (foto_uri: string, lat: number, lng: number) => {
-    setIsCameraOpen(false);
-    if (jenisAbsenTerpilih) {
-      mutation.mutate({ jenis: jenisAbsenTerpilih, lat, lng, foto_uri });
-      
       if (user?.role === 'SATPAM') {
-        if (jenisAbsenTerpilih === 'MASUK') {
+        if (variables.jenis === 'MASUK') {
           try {
             await notifee.requestPermission();
+            await notifee.createChannel({ id: 'default', name: 'Pengingat tugas' });
             const trigger: IntervalTrigger = {
               type: TriggerType.INTERVAL,
               interval: 3,
@@ -133,11 +108,45 @@ export const AbsensiScreen = () => {
           } catch (e) {
             console.log('Notifee Error:', e);
           }
-        } else if (jenisAbsenTerpilih === 'KELUAR') {
-          await notifee.cancelNotification('satpam_hourly_reminder');
+        } else if (variables.jenis === 'KELUAR') {
+          try { await notifee.cancelNotification('satpam_hourly_reminder'); } catch (e) { console.log('Gagal menghentikan pengingat:', e); }
           console.log('Notifee: Reminder per 3 jam dibatalkan');
         }
       }
+    },
+    onError: async (error: any, variables) => {
+      if (error instanceof GeofenceError) { Alert.alert(error.title, error.message); return; }
+      const radiusMessage = error.response?.data?.message || '';
+      if (error.response && /radius|di luar area|jangkauan/i.test(radiusMessage)) {
+        Alert.alert('Gagal Absen - Di Luar Jangkauan', radiusMessage); return;
+      }
+      console.log('Error absen API:', error);
+      if (!error?.response) {
+        if(error.isAxiosError && user?.id) {
+          try {await saveOfflineEvidence(user.id,variables);Alert.alert('Menunggu Verifikasi','Bukti disimpan di HP. Setelah terkirim, admin perlu memverifikasi absensi ini. Periksa riwayat sebelum mengulang.');}
+          catch(e:any){Alert.alert('Belum Tersimpan',e.message||'Gagal menyimpan bukti offline.');}
+        } else Alert.alert('Absensi Belum Terkonfirmasi', error.message || 'Koneksi terputus. Periksa riwayat sebelum mencoba lagi.');
+        queryClient.invalidateQueries({queryKey:['absensi']});
+        return;
+      }
+
+      const serverMsg =
+        error.response?.data?.message || 'Gagal mengirim absensi. Silakan periksa kembali dan coba lagi.';
+      Alert.alert('GAGAL ABSEN', serverMsg);
+    }
+  });
+
+  const handleBukaKamera = (jenis: 'MASUK' | 'KELUAR' | 'MULAI_ISTIRAHAT' | 'SELESAI_ISTIRAHAT') => {
+    setJenisAbsenTerpilih(jenis);
+    setIsCameraOpen(true);
+  };
+
+  const handleSelesaiFoto = async (foto_uri: string, lat: number, lng: number, capturedAt?: number) => {
+    try { validateWorkArea(lat, lng, useAuthStore.getState().user?.area_tugas); }
+    catch (error) { if (error instanceof GeofenceError) Alert.alert(error.title, error.message); return; }
+    setIsCameraOpen(false);
+    if (jenisAbsenTerpilih) {
+      mutation.mutate({ jenis: jenisAbsenTerpilih, lat, lng, foto_uri, capturedAt });
     }
   };
 
@@ -166,6 +175,7 @@ export const AbsensiScreen = () => {
       >
         <Animated.View style={{ opacity: pageAnim }}>
 
+        <DeviceRegistration />
         {/* HEADER */}
         <View style={styles.header}>
           <Text style={styles.pageTitle}>ABSENSI HARI INI</Text>
@@ -395,5 +405,3 @@ const styles = StyleSheet.create({
     color: '#3d4a3d',
   },
 });
-
-

@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSerahTerimaRouteImport } from './routes/_authenticated/serah-terima'
+import { Route as AuthenticatedRekapRouteImport } from './routes/_authenticated/rekap'
 import { Route as AuthenticatedPengumumanRouteImport } from './routes/_authenticated/pengumuman'
 import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
 import { Route as AuthenticatedLaporanRouteImport } from './routes/_authenticated/laporan'
@@ -56,6 +57,11 @@ const AuthenticatedSerahTerimaRoute =
     path: '/serah-terima',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRekapRoute = AuthenticatedRekapRouteImport.update({
+  id: '/rekap',
+  path: '/rekap',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPengumumanRoute = AuthenticatedPengumumanRouteImport.update({
   id: '/pengumuman',
   path: '/pengumuman',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/laporan': typeof AuthenticatedLaporanRoute
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/pengumuman': typeof AuthenticatedPengumumanRoute
+  '/rekap': typeof AuthenticatedRekapRoute
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/laporan': typeof AuthenticatedLaporanRoute
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/pengumuman': typeof AuthenticatedPengumumanRoute
+  '/rekap': typeof AuthenticatedRekapRoute
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/_authenticated/laporan': typeof AuthenticatedLaporanRoute
   '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
   '/_authenticated/pengumuman': typeof AuthenticatedPengumumanRoute
+  '/_authenticated/rekap': typeof AuthenticatedRekapRoute
   '/_authenticated/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/jadwal_/$staffId': typeof AuthenticatedJadwalStaffIdRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/laporan'
     | '/pengaturan'
     | '/pengumuman'
+    | '/rekap'
     | '/serah-terima'
     | '/staff'
     | '/jadwal/$staffId'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/laporan'
     | '/pengaturan'
     | '/pengumuman'
+    | '/rekap'
     | '/serah-terima'
     | '/staff'
     | '/jadwal/$staffId'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/laporan'
     | '/_authenticated/pengaturan'
     | '/_authenticated/pengumuman'
+    | '/_authenticated/rekap'
     | '/_authenticated/serah-terima'
     | '/_authenticated/staff'
     | '/_authenticated/jadwal_/$staffId'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       path: '/serah-terima'
       fullPath: '/serah-terima'
       preLoaderRoute: typeof AuthenticatedSerahTerimaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/rekap': {
+      id: '/_authenticated/rekap'
+      path: '/rekap'
+      fullPath: '/rekap'
+      preLoaderRoute: typeof AuthenticatedRekapRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pengumuman': {
@@ -450,6 +469,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLaporanRoute: typeof AuthenticatedLaporanRoute
   AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
   AuthenticatedPengumumanRoute: typeof AuthenticatedPengumumanRoute
+  AuthenticatedRekapRoute: typeof AuthenticatedRekapRoute
   AuthenticatedSerahTerimaRoute: typeof AuthenticatedSerahTerimaRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedJadwalStaffIdRoute: typeof AuthenticatedJadwalStaffIdRoute
@@ -471,6 +491,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLaporanRoute: AuthenticatedLaporanRoute,
   AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
   AuthenticatedPengumumanRoute: AuthenticatedPengumumanRoute,
+  AuthenticatedRekapRoute: AuthenticatedRekapRoute,
   AuthenticatedSerahTerimaRoute: AuthenticatedSerahTerimaRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedJadwalStaffIdRoute: AuthenticatedJadwalStaffIdRoute,

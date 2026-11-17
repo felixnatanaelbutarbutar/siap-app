@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import app from '../src/index';
 import { prisma } from '../src/lib/prisma';
 import { mockStorageObjects } from './setup';
+import { uploadFile, StorageUploadError } from '../src/services/storage.service';
 
 describe('Absensi & GPS API Tests', () => {
   const testPassword = 'password123';
@@ -64,6 +65,20 @@ describe('Absensi & GPS API Tests', () => {
     await prisma.absensi.deleteMany({ where: { staff_id: staffId } });
     await prisma.staff.deleteMany({ where: { id: staffId } });
     await prisma.areaTugas.deleteMany({ where: { id: areaId } });
+  });
+
+  it('mengembalikan 503 tanpa menyimpan absensi ketika penyimpanan foto gagal', async () => {
+    jest.mocked(uploadFile).mockRejectedValueOnce(new StorageUploadError());
+    const res = await request(app)
+      .post('/absensi/masuk')
+      .set('Authorization', `Bearer ${token}`)
+      .field('lat', '-6.2')
+      .field('lng', '106.816666')
+      .attach('foto', jpegBuffer, 'attendance.jpg');
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body.code).toBe('STORAGE_UNAVAILABLE');
+    expect(await prisma.absensi.count({ where: { staff_id: staffId } })).toBe(0);
   });
 
   it('POST /absensi/masuk ditolak jika foto tidak disertakan', async () => {

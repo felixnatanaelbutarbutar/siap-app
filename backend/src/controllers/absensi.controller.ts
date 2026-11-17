@@ -1,7 +1,8 @@
+import { currentShift, localDate, addDays } from '../services/workforce.service';
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { koordinatSchema, getRiwayatSchema, getAdminAbsensiSchema } from '../schemas/absensi.schema';
-import { uploadFile } from '../services/storage.service';
+import { uploadFile, StorageUploadError } from '../services/storage.service';
 import { addWatermark, WatermarkData } from '../services/watermark.service';
 import { getDistance } from 'geolib';
 import { getIO } from '../lib/socket';
@@ -30,20 +31,14 @@ const validateGps = (lat: number, lng: number, akurasi: number | undefined, area
 /**
  * Cek apakah staff sedang aktif shift (sudah masuk tapi belum keluar)
  */
-const checkShiftAktif = async (staffId: string) => {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
+const checkShiftAktif = async (staffId: string, shiftId?: string) => {
+  const startOfDay = new Date(localDate()+'T00:00:00+07:00');
+  const endOfDay = new Date(+new Date(addDays(localDate(),1)+'T00:00:00+07:00')-1);
 
   const absensiHariIni = await prisma.absensi.findMany({
     where: {
       staff_id: staffId,
-      waktu_server: {
-        gte: startOfDay,
-        lte: endOfDay,
-      },
+      ...(shiftId ? { shift_id: shiftId } : { waktu_server: { gte: startOfDay, lte: endOfDay } }),
     },
     orderBy: { waktu_server: 'asc' },
   });
@@ -91,7 +86,7 @@ export const absenMasuk = async (req: Request, res: Response): Promise<void> => 
     }
 
     // Business Logic: Cek apakah sudah absen masuk hari ini
-    const { sudahMasuk } = await checkShiftAktif(user.id);
+    const { sudahMasuk } = await checkShiftAktif(user.id, res.locals.attendance?.shift_id);
     if (sudahMasuk) {
       res.status(400).json({ success: false, message: 'Anda sudah absen masuk hari ini.' });
       return;
@@ -118,6 +113,7 @@ export const absenMasuk = async (req: Request, res: Response): Promise<void> => 
     const absensi = await prisma.absensi.create({
       data: {
         staff_id: staff.id,
+        ...res.locals.attendance,
         jenis: JenisAbsensi.MASUK,
         foto_url: fotoUrl,
         lat,
@@ -143,6 +139,8 @@ export const absenMasuk = async (req: Request, res: Response): Promise<void> => 
     });
   } catch (error) {
     logger.error('Error absenMasuk:', error);
+    if ((error as any)?.code === 'P2002') { res.status(409).json({message:'Absensi sudah tercatat. Muat ulang riwayat.'}); return; }
+    if (error instanceof StorageUploadError) { res.status(503).json({success:false,message:error.message,code:error.code}); return; }
     res.status(500).json({ success: false, message: 'Terjadi kesalahan internal.' });
   }
 };
@@ -180,7 +178,7 @@ export const absenKeluar = async (req: Request, res: Response): Promise<void> =>
       }
     }
 
-    const { sudahMasuk, sudahKeluar } = await checkShiftAktif(user.id);
+    const { sudahMasuk, sudahKeluar } = await checkShiftAktif(user.id, res.locals.attendance?.shift_id);
     if (!sudahMasuk) {
       res.status(400).json({ success: false, message: 'Anda belum absen masuk hari ini.' });
       return;
@@ -234,6 +232,8 @@ export const absenKeluar = async (req: Request, res: Response): Promise<void> =>
     });
   } catch (error) {
     logger.error('Error absenKeluar:', error);
+    if ((error as any)?.code === 'P2002') { res.status(409).json({message:'Absensi sudah tercatat. Muat ulang riwayat.'}); return; }
+    if (error instanceof StorageUploadError) { res.status(503).json({success:false,message:error.message,code:error.code}); return; }
     res.status(500).json({ success: false, message: 'Terjadi kesalahan internal.' });
   }
 };
@@ -249,7 +249,7 @@ export const mulaiIstirahat = async (req: Request, res: Response): Promise<void>
     }
     const { lat, lng } = parsed.data;
 
-    const { sudahMasuk, sudahKeluar, absensiHariIni } = await checkShiftAktif(user.id);
+    const { sudahMasuk, sudahKeluar, absensiHariIni } = await checkShiftAktif(user.id, res.locals.attendance?.shift_id);
     if (!sudahMasuk || sudahKeluar) {
       res.status(400).json({ success: false, message: 'Tidak dapat istirahat saat tidak dalam shift.' });
       return;
@@ -267,6 +267,7 @@ export const mulaiIstirahat = async (req: Request, res: Response): Promise<void>
     const absensi = await prisma.absensi.create({
       data: {
         staff_id: user.id,
+        ...res.locals.attendance,
         jenis: JenisAbsensi.MULAI_ISTIRAHAT,
         lat,
         lng,
@@ -301,7 +302,7 @@ export const selesaiIstirahat = async (req: Request, res: Response): Promise<voi
     }
     const { lat, lng } = parsed.data;
 
-    const { sudahMasuk, sudahKeluar, absensiHariIni } = await checkShiftAktif(user.id);
+    const { sudahMasuk, sudahKeluar, absensiHariIni } = await checkShiftAktif(user.id, res.locals.attendance?.shift_id);
     if (!sudahMasuk || sudahKeluar) {
       res.status(400).json({ success: false, message: 'Shift tidak aktif.' });
       return;
@@ -319,6 +320,7 @@ export const selesaiIstirahat = async (req: Request, res: Response): Promise<voi
     const absensi = await prisma.absensi.create({
       data: {
         staff_id: user.id,
+        ...res.locals.attendance,
         jenis: JenisAbsensi.SELESAI_ISTIRAHAT,
         lat,
         lng,
@@ -346,7 +348,8 @@ export const selesaiIstirahat = async (req: Request, res: Response): Promise<voi
 export const getAbsensiHariIni = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = req.user!;
-    const { absensiHariIni } = await checkShiftAktif(user.id);
+    const shift = await currentShift(user.id, 'KELUAR');
+    const { absensiHariIni } = await checkShiftAktif(user.id, shift?.id);
 
     res.status(200).json({
       success: true,

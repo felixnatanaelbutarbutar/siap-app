@@ -73,6 +73,7 @@ enum StatusIzin {
   PENDING
   APPROVED
   REJECTED
+  CANCELLED
 }
 
 enum HariKerja {
@@ -160,6 +161,10 @@ model Absensi {
   akurasi_gps  Float?
   waktu_server DateTime     @default(now())
   catatan      String?
+  shift_id     String?
+  device_id    String?
+  evidence     Json?
+  @@unique([shift_id, jenis])
 
   staff Staff @relation(fields: [staff_id], references: [id])
 
@@ -261,6 +266,9 @@ model IzinCuti {
   foto_url        String?     // opsional untuk surat sakit / bukti
   status          StatusIzin  @default(PENDING)
   komentar_admin  String?
+  work_dates      Json?
+  reviewed_by     String?
+  reviewed_at     DateTime?
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
 
@@ -271,6 +279,99 @@ model IzinCuti {
   @@index([status])
   @@index([tanggal_mulai, tanggal_selesai])
   @@map("izin_cuti")
+}
+
+model RegisteredDevice {
+  id String @id @default(cuid())
+  staff_id String
+  public_key String @unique @db.Text
+  label String
+  status String @default("PENDING")
+  reason String
+  reviewed_by String?
+  reviewed_at DateTime?
+  created_at DateTime @default(now())
+  last_used_at DateTime?
+  @@index([staff_id, status])
+  @@map("registered_devices")
+}
+
+model DeviceChallenge {
+  id String @id @default(cuid())
+  staff_id String
+  device_id String
+  action String
+  nonce String @unique
+  expires_at DateTime
+  used_at DateTime?
+  @@index([expires_at])
+  @@map("device_challenges")
+}
+
+model ShiftInstance {
+  id String @id @default(cuid())
+  staff_id String
+  date String
+  start_at DateTime
+  end_at DateTime
+  tolerance Int
+  source String @default("SCHEDULE")
+  area Json?
+  created_at DateTime @default(now())
+  @@unique([staff_id, date])
+  @@index([date])
+  @@map("shift_instances")
+}
+
+model ScheduleVersion {
+  id String @id @default(cuid())
+  staff_id String
+  effective_date String
+  schedule Json
+  actor_id String
+  created_at DateTime @default(now())
+  @@unique([staff_id, effective_date])
+  @@map("schedule_versions")
+}
+
+model WorkforceAudit {
+  id String @id @default(cuid())
+  actor_id String
+  subject_id String
+  action String
+  reason String
+  detail Json
+  created_at DateTime @default(now())
+  @@index([subject_id, created_at])
+  @@map("workforce_audits")
+}
+
+model LeaveLedger {
+  id String @id @default(cuid())
+  staff_id String
+  year Int
+  days Int
+  kind String
+  leave_id String?
+  actor_id String
+  reason String
+  created_at DateTime @default(now())
+  @@index([staff_id, year])
+  @@unique([leave_id, year, kind])
+  @@map("leave_ledger")
+}
+
+model AttendanceArchive {
+  id String @id @default(cuid())
+  month String
+  revision Int
+  status String @default("FINAL")
+  rows Json
+  actor_id String
+  reason String
+  created_at DateTime @default(now())
+  @@unique([month, revision])
+  @@map("attendance_archives")
 }
 
 // ─── Jadwal Kerja ────────────────────────────────────────────────────────────

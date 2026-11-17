@@ -51,6 +51,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
     { label: 'Absensi', icon: MapPin, to: '/absensi' },
+    { label: 'Rekap & Verifikasi', icon: ClipboardCheck, to: '/rekap' },
     { label: 'Laporan', icon: FileText, to: '/laporan', badge: pendingReports },
     { label: 'Serah Terima', icon: ClipboardCheck, to: '/serah-terima' },
     { label: 'Izin & Cuti', icon: CalendarClock, to: '/izin-cuti' },
@@ -179,7 +180,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 md:ml-60 flex flex-col min-w-0">
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-4 md:p-7 xl:p-8 overflow-auto">
           {children}
         </div>
       </main>

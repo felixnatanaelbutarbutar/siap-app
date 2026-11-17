@@ -1,31 +1,45 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { io } from 'socket.io-client';
-import { api, SOCKET_URL } from '../../services/api';
-import { useAuthStore } from '../../store/authStore';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { ShieldCheck, Sparkles, Wrench, AlertTriangle, Activity, Radio } from 'lucide-react';
-import { ModernMap, type MapCircleItem, type MapMarkerItem } from '../../components/ModernMap';
+import { DashboardAnalytics } from "../../components/DashboardAnalytics";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { io } from "socket.io-client";
+import { api, SOCKET_URL } from "../../services/api";
+import { useAuthStore } from "../../store/authStore";
+import { format } from "date-fns";
+import {
+  ShieldCheck,
+  Sparkles,
+  Wrench,
+  AlertTriangle,
+  Activity,
+  Radio,
+} from "lucide-react";
+import {
+  ModernMap,
+  type MapCircleItem,
+  type MapMarkerItem,
+} from "../../components/ModernMap";
 
-export const Route = createFileRoute('/_authenticated/dashboard')({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
 const ROLE_COLORS: Record<string, string> = {
-  SATPAM: '#1ed760',
-  CS: '#539df5',
-  UTILITY: '#ffa42b',
-  INACTIVE: '#6d6d6d',
+  SATPAM: "#1ed760",
+  CS: "#539df5",
+  UTILITY: "#ffa42b",
+  INACTIVE: "#6d6d6d",
 };
 
 // Dark card container
-const DarkCard = ({ children, className = '', style = {} }: any) => (
+const DarkCard = ({ children, className = "", style = {} }: any) => (
   <div
     className={`rounded-xl overflow-hidden ${className}`}
-    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', ...style }}
+    style={{
+      background: "var(--bg-surface)",
+      border: "1px solid var(--border)",
+      ...style,
+    }}
   >
     {children}
   </div>
@@ -38,13 +52,19 @@ function DashboardPage() {
   const [activities, setActivities] = useState<any[]>([]);
 
   const { data: areaList } = useQuery({
-    queryKey: ['area-tugas'],
-    queryFn: async () => { const { data } = await api.get('/admin/area-tugas'); return data.data || []; },
+    queryKey: ["area-tugas"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/area-tugas");
+      return data.data || [];
+    },
   });
 
   const { data: initialLocations } = useQuery({
-    queryKey: ['dashboard-live-tracking'],
-    queryFn: async () => { const { data } = await api.get('/admin/dashboard/live-tracking'); return data.data || []; },
+    queryKey: ["dashboard-live-tracking"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/dashboard/live-tracking");
+      return data.data || [];
+    },
     refetchInterval: 60000,
   });
 
@@ -53,47 +73,45 @@ function DashboardPage() {
       setLiveLocations(
         initialLocations.map((loc: any) => ({
           ...loc,
-          lastUpdate: loc.updated_at ? new Date(loc.updated_at).getTime() : Date.now(),
-        }))
+          lastUpdate: loc.updated_at
+            ? new Date(loc.updated_at).getTime()
+            : Date.now(),
+        })),
       );
     }
   }, [initialLocations]);
 
-  const { data: summary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['dashboard-summary'],
-    queryFn: async () => { const { data } = await api.get('/admin/dashboard/summary'); return data.data; },
-    refetchInterval: 60000,
-  });
-
-  const { data: chartData, isLoading: chartLoading } = useQuery({
-    queryKey: ['dashboard-chart'],
-    queryFn: async () => { const { data } = await api.get('/admin/dashboard/chart'); return data.data; },
-  });
-
   const { data: recentActivities } = useQuery({
-    queryKey: ['dashboard-activities'],
-    queryFn: async () => { const { data } = await api.get('/admin/dashboard/activities'); return data.data || []; },
+    queryKey: ["dashboard-activities"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/dashboard/activities");
+      return data.data || [];
+    },
     refetchInterval: 30000,
   });
 
-  useEffect(() => { if (recentActivities) setActivities(recentActivities); }, [recentActivities]);
+  useEffect(() => {
+    if (recentActivities) setActivities(recentActivities);
+  }, [recentActivities]);
 
   useEffect(() => {
     if (!token) return;
 
     const s = io(SOCKET_URL, { auth: { token } });
 
-    s.on('location:snapshot', (snapshot: any[]) => {
+    s.on("location:snapshot", (snapshot: any[]) => {
       if (!Array.isArray(snapshot)) return;
       setLiveLocations(
         snapshot.map((loc) => ({
           ...loc,
-          lastUpdate: loc.updated_at ? new Date(loc.updated_at).getTime() : Date.now(),
-        }))
+          lastUpdate: loc.updated_at
+            ? new Date(loc.updated_at).getTime()
+            : Date.now(),
+        })),
       );
     });
 
-    s.on('location:updated', (data: any) => {
+    s.on("location:updated", (data: any) => {
       if (!data?.staff_id) return;
       setLiveLocations((prev) => {
         const idx = prev.findIndex((l) => l.staff_id === data.staff_id);
@@ -107,41 +125,44 @@ function DashboardPage() {
       });
     });
 
-    s.on('absensi:new', (data: any) => {
+    s.on("absensi:new", (data: any) => {
       const act = {
         id: `ws-abs-${Date.now()}`,
         nama: data.nama,
         role: data.divisi,
         waktu: data.waktu || new Date().toISOString(),
-        aksi: `Melakukan absensi ${String(data.jenis || '').replace('_', ' ')}`,
+        aksi: `Melakukan absensi ${String(data.jenis || "").replace("_", " ")}`,
       };
       setActivities((prev) => [act, ...prev].slice(0, 10));
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-live-tracking'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["workforce", "analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-live-tracking"] });
     });
 
-    s.on('laporan:new', (data: any) => {
+    s.on("laporan:new", (data: any) => {
       const act = {
         id: `ws-lap-${Date.now()}`,
         nama: data.nama,
         role: data.divisi,
         waktu: new Date().toISOString(),
-        aksi: `Mengirim laporan: ${data.kategori || 'Baru'}`,
+        aksi: `Mengirim laporan: ${data.kategori || "Baru"}`,
       };
       setActivities((prev) => [act, ...prev].slice(0, 10));
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["workforce", "analytics"] });
     });
 
-    s.on('serah_terima:new', (data: any) => {
+    s.on("serah_terima:new", (data: any) => {
       const act = {
         id: `ws-st-${Date.now()}`,
         nama: data.nama,
         role: data.divisi,
         waktu: new Date().toISOString(),
-        aksi: `Memulai serah terima ${data.jenis || ''}`,
+        aksi: `Memulai serah terima ${data.jenis || ""}`,
       };
       setActivities((prev) => [act, ...prev].slice(0, 10));
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["workforce", "analytics"] });
     });
 
     return () => {
@@ -151,10 +172,12 @@ function DashboardPage() {
 
   const mapData = useMemo(() => {
     const validLive = liveLocations.filter(
-      (loc) => Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lng))
+      (loc) =>
+        Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lng)),
     );
     const validAreas = (areaList || []).filter(
-      (a: any) => Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lng))
+      (a: any) =>
+        Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lng)),
     );
 
     const center: [number, number] =
@@ -168,9 +191,12 @@ function DashboardPage() {
       id: String(area.id),
       lat: Number(area.lat),
       lng: Number(area.lng),
-      radiusMeters: Math.min(Number(area.radius_meter ?? area.radius ?? 200), 2500),
+      radiusMeters: Math.min(
+        Number(area.radius_meter ?? area.radius ?? 200),
+        2500,
+      ),
       label: area.nama,
-      color: '#1ed760',
+      color: "#1ed760",
     }));
 
     const markers: MapMarkerItem[] = [
@@ -180,119 +206,68 @@ function DashboardPage() {
         lng: Number(area.lng),
         title: area.nama,
         subtitle: `Area Tugas • Radius ${area.radius_meter ?? area.radius}m`,
-        color: '#1ed760',
-        variant: 'area' as const,
+        color: "#1ed760",
+        variant: "area" as const,
       })),
       ...validLive.map((loc) => {
         const isInactive = Date.now() - loc.lastUpdate > 300000;
-        const color = isInactive ? ROLE_COLORS.INACTIVE : (ROLE_COLORS[loc.role] || ROLE_COLORS.INACTIVE);
+        const color = isInactive
+          ? ROLE_COLORS.INACTIVE
+          : ROLE_COLORS[loc.role] || ROLE_COLORS.INACTIVE;
         return {
           id: `staff-${loc.staff_id || loc.id}`,
           lat: Number(loc.lat),
           lng: Number(loc.lng),
           title: loc.nama,
-          subtitle: `${loc.role} • ${loc.status_absensi || 'Aktif'}`,
+          subtitle: `${loc.role} • ${loc.status_absensi || "Aktif"}`,
           color,
-          variant: 'staff' as const,
+          variant: "staff" as const,
           pulse: !isInactive,
         };
       }),
     ];
 
-    return { center, circles, markers, hasDynamicCenter: validLive.length > 0 || validAreas.length > 0 };
+    return {
+      center,
+      circles,
+      markers,
+      hasDynamicCenter: validLive.length > 0 || validAreas.length > 0,
+    };
   }, [liveLocations, areaList]);
 
-  const StatCard = ({ title, icon: Icon, color, hadir, tidakHadir, istirahat }: any) => (
-    <DarkCard className="p-5 hover:scale-[1.01] transition-transform cursor-default">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
-          <Icon className="w-4 h-4" style={{ color }} />
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', letterSpacing: '1.2px' }}>{title}</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { val: hadir ?? 0, label: 'Hadir', c: 'var(--accent)' },
-          { val: tidakHadir ?? 0, label: 'Absen', c: 'var(--error)' },
-          { val: istirahat ?? 0, label: 'Istirahat', c: 'var(--warning)' },
-        ].map(({ val, label, c }) => (
-          <div key={label} className="text-center py-3 rounded-lg" style={{ background: 'var(--bg-input)' }}>
-            <p className="text-xl font-bold" style={{ color: c }}>{val}</p>
-            <p className="text-[10px] font-semibold uppercase mt-0.5" style={{ color: 'var(--text-dim)', letterSpacing: '0.8px' }}>{label}</p>
-          </div>
-        ))}
-      </div>
-    </DarkCard>
-  );
-
   return (
-    <div className="space-y-6 animate-fadeInUp">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-base)' }}>Dashboard</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-            {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: id })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase"
-          style={{ background: 'rgba(30,215,96,0.1)', border: '1px solid rgba(30,215,96,0.2)', color: 'var(--accent)', letterSpacing: '1.2px' }}>
-          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
-          Live
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {summaryLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <DarkCard key={i} className="p-5 animate-pulse">
-              <div className="h-4 rounded w-1/2 mb-5" style={{ background: 'var(--bg-input)' }} />
-              <div className="grid grid-cols-3 gap-2">
-                {[0, 1, 2].map(j => <div key={j} className="h-14 rounded-lg" style={{ background: 'var(--bg-input)' }} />)}
-              </div>
-            </DarkCard>
-          ))
-        ) : (
-          <>
-            <StatCard title="Keamanan" icon={ShieldCheck} color="var(--accent)" {...summary?.keamanan} />
-            <StatCard title="Cleaning Service" icon={Sparkles} color="var(--info)" {...summary?.cs} />
-            <StatCard title="Utility" icon={Wrench} color="var(--warning)" {...summary?.utility} />
-            <DarkCard className="p-5">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(243,114,127,0.15)', border: '1px solid rgba(243,114,127,0.3)' }}>
-                  <AlertTriangle className="w-4 h-4" style={{ color: 'var(--error)' }} />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)', letterSpacing: '1.2px' }}>Perlu Tindakan</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { val: summary?.pending?.laporan ?? 0, label: 'Laporan', c: 'var(--warning)' },
-                  { val: summary?.pending?.barangRusak ?? 0, label: 'Barang Rusak', c: 'var(--error)' },
-                ].map(({ val, label, c }) => (
-                  <div key={label} className="text-center py-3 rounded-lg" style={{ background: 'var(--bg-input)' }}>
-                    <p className="text-xl font-bold" style={{ color: c }}>{val}</p>
-                    <p className="text-[10px] font-semibold uppercase mt-0.5" style={{ color: 'var(--text-dim)', letterSpacing: '0.8px' }}>{label}</p>
-                  </div>
-                ))}
-              </div>
-            </DarkCard>
-          </>
-        )}
-      </div>
+    <div className="workspace-page space-y-6 animate-fadeInUp">
+      <DashboardAnalytics />
 
       {/* Map & Activity */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <DarkCard className="xl:col-span-2">
-          <div className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-            <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)', boxShadow: '0 0 8px rgba(30,215,96,0.6)' }} />
-            <span className="text-sm font-bold" style={{ color: 'var(--text-base)' }}>Live Tracking</span>
-            <span className="ml-auto text-xs" style={{ color: 'var(--text-dim)' }}>{liveLocations.length} aktif</span>
+          <div
+            className="flex items-center gap-3 px-5 py-3.5"
+            style={{ borderBottom: "1px solid var(--border)" }}
+          >
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: "var(--accent)",
+                boxShadow: "0 0 8px rgba(30,215,96,0.6)",
+              }}
+            />
+            <span
+              className="text-sm font-bold"
+              style={{ color: "var(--text-base)" }}
+            >
+              Live Tracking
+            </span>
+            <span
+              className="ml-auto text-xs"
+              style={{ color: "var(--text-dim)" }}
+            >
+              {liveLocations.length} aktif
+            </span>
           </div>
           <div className="h-[380px] relative z-0">
-            {typeof window !== 'undefined' && (
+            {typeof window !== "undefined" && (
               <ModernMap
                 center={mapData.center}
                 zoom={15.2}
@@ -308,13 +283,13 @@ function DashboardPage() {
                 <div
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-md"
                   style={{
-                    background: 'rgba(24, 24, 24, 0.88)',
-                    color: '#e5e5e5',
-                    border: '1px solid rgba(255,255,255,0.14)',
-                    backdropFilter: 'blur(8px)',
+                    background: "rgba(24, 24, 24, 0.88)",
+                    color: "#e5e5e5",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    backdropFilter: "blur(8px)",
                   }}
                 >
-                  <Radio className="w-3.5 h-3.5" style={{ color: '#1ed760' }} />
+                  <Radio className="w-3.5 h-3.5" style={{ color: "#1ed760" }} />
                   Belum ada staff live tracking
                 </div>
               </div>
@@ -322,64 +297,79 @@ function DashboardPage() {
           </div>
         </DarkCard>
 
-        <DarkCard className="flex flex-col" style={{ height: '440px' }}>
-          <div className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-            <Activity className="w-4 h-4" style={{ color: 'var(--accent)' }} />
-            <span className="text-sm font-bold" style={{ color: 'var(--text-base)' }}>Aktivitas Terbaru</span>
+        <DarkCard className="flex flex-col" style={{ height: "440px" }}>
+          <div
+            className="flex items-center gap-3 px-5 py-3.5"
+            style={{ borderBottom: "1px solid var(--border)" }}
+          >
+            <Activity className="w-4 h-4" style={{ color: "var(--accent)" }} />
+            <span
+              className="text-sm font-bold"
+              style={{ color: "var(--text-base)" }}
+            >
+              Aktivitas Terbaru
+            </span>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-0.5">
             {activities.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <Activity className="w-8 h-8 mb-2" style={{ color: '#2a2a2a' }} />
-                <p className="text-xs" style={{ color: 'var(--text-dim)' }}>Belum ada aktivitas</p>
+                <Activity
+                  className="w-8 h-8 mb-2"
+                  style={{ color: "#2a2a2a" }}
+                />
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                  Belum ada aktivitas
+                </p>
               </div>
             ) : (
               activities.map((act: any, i: number) => (
-                <div key={act.id || i} className="flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors"
-                  style={{ cursor: 'default' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-input)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                <div
+                  key={act.id || i}
+                  className="flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors"
+                  style={{ cursor: "default" }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "var(--bg-input)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold"
-                    style={{ background: 'var(--bg-input)', color: 'var(--accent)', border: '1px solid #2a2a2a' }}>
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold"
+                    style={{
+                      background: "var(--bg-input)",
+                      color: "var(--accent)",
+                      border: "1px solid #2a2a2a",
+                    }}
+                  >
                     {act.nama?.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--text-base)' }}>{act.nama}</p>
-                    <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{act.aksi}</p>
+                    <p
+                      className="text-sm font-medium truncate"
+                      style={{ color: "var(--text-base)" }}
+                    >
+                      {act.nama}
+                    </p>
+                    <p
+                      className="text-xs truncate"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {act.aksi}
+                    </p>
                   </div>
-                  <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--text-dim)' }}>{format(new Date(act.waktu), 'HH:mm')}</span>
+                  <span
+                    className="text-[11px] flex-shrink-0"
+                    style={{ color: "var(--text-dim)" }}
+                  >
+                    {format(new Date(act.waktu), "HH:mm")}
+                  </span>
                 </div>
               ))
             )}
           </div>
         </DarkCard>
       </div>
-
-      {/* Chart */}
-      <DarkCard className="p-6">
-        <h3 className="text-sm font-bold mb-6" style={{ color: 'var(--text-base)' }}>Statistik Kehadiran 7 Hari Terakhir</h3>
-        {chartLoading ? (
-          <div className="h-[250px] flex items-center justify-center">
-            <p className="text-sm animate-pulse" style={{ color: 'var(--text-dim)' }}>Memuat data...</p>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={chartData || []}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-dim)' }} stroke="none" axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: 'var(--text-dim)' }} stroke="none" axisLine={false} tickLine={false} />
-              <Tooltip
-                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                contentStyle={{ background: 'var(--bg-input)', border: '1px solid var(--border-bright)', borderRadius: 8, boxShadow: 'var(--shadow-base) 0px 8px 24px', color: 'var(--text-base)' }}
-              />
-              <Bar dataKey="Keamanan" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="CS" fill="var(--info)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Utility" fill="var(--warning)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </DarkCard>
     </div>
   );
 }

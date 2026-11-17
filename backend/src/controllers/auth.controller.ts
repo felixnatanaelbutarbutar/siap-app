@@ -44,7 +44,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Cari staff berdasarkan NIK
     const staff = await prisma.staff.findUnique({
       where: { nik },
-      include: { area_tugas: { select: { id: true, nama: true } } },
+      include: { area_tugas: { select: { id: true, nama: true, lat: true, lng: true, radius_meter: true } } },
     });
 
     if (!staff) {

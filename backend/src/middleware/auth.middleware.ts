@@ -97,6 +97,13 @@ export const authenticate = async (
       }
     }
 
+    const staff = await prisma.staff.findUnique({ where: { id: decoded.id } });
+    if (!staff?.aktif) {
+      res.status(403).json({message:'Akun tidak aktif. Hubungi admin.',code:'ACCOUNT_DISABLED'});
+      return;
+    }
+    decoded.role = staff.role;
+    decoded.divisi = staff.divisi;
     // Simpan user payload ke request
     req.user = decoded;
     next();

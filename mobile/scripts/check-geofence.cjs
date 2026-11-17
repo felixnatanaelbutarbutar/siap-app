@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
+const exportsObject={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/geofence.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:exportsObject});
+const {hitungJarakMeter,validateWorkArea,GeofenceError}=exportsObject;
+const area={nama:'Pos Utama',lat:0,lng:0,radius_meter:100};
+assert.equal(hitungJarakMeter(0,0,0,0),0);assert.ok(Math.abs(hitungJarakMeter(0,0,0,1)-111194.927)<1);
+assert.equal(validateWorkArea(0,0,area),0);
+assert.ok(validateWorkArea(0,99/6371000*180/Math.PI,area)<100);
+assert.throws(()=>validateWorkArea(0,100.1/6371000*180/Math.PI,area),e=>e instanceof GeofenceError&&e.title==='Di Luar Radius Penugasan'&&e.message.includes('Pos Utama')&&e.message.includes('100 meter'));
+for(const bad of [null,{nama:'Belum lengkap'},{...area,radius_meter:-1}])assert.throws(()=>validateWorkArea(0,0,bad));
+assert.throws(()=>validateWorkArea(NaN,0,area));assert.ok(Number.isFinite(hitungJarakMeter(0,0,0,180)));
+assert.doesNotMatch(fs.readFileSync('src/screens/auth/LoginScreen.tsx','utf8'),/styles.footer|footerEmblem|footerText|PROFESSIONAL MOBILITY/);
+console.log('PASS: jarak, dalam/luar radius, batas presisi, koordinat invalid, area kosong, footer login.');

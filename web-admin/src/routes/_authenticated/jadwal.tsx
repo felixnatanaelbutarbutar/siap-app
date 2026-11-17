@@ -64,7 +64,7 @@ function JadwalPage() {
     <div className="space-y-6 animate-fadeInUp">
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-base)' }}>Jadwal Kerja</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Kelola jadwal shift per-staff dan pantau keterlambatan</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Kelola jadwal shift per-staff dan pantau keterlambatan. Perubahan jadwal berlaku mulai hari berikutnya.</p>
       </div>
 
       <div className="flex gap-1 p-1 rounded-full w-fit" style={{ background: 'var(--bg-input)' }}>
@@ -202,7 +202,7 @@ function JadwalPage() {
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
                       {r.total_terlambat > 0 && (
-                        <button onClick={() => alert(JSON.stringify(r.detail_terlambat, null, 2))} className="text-xs font-bold uppercase hover:underline" style={{ color: 'var(--info)', background: 'none', border: 'none', cursor: 'pointer' }}>Detail</button>
+                        <button onClick={() => window.location.assign(`/rekap?tab=attendance&status=TERLAMBAT&q=${encodeURIComponent(r.nama)}&from=${filterTahun}-${String(filterBulan).padStart(2,'0')}-01&to=${filterTahun}-${String(filterBulan).padStart(2,'0')}-${new Date(Number(filterTahun),Number(filterBulan),0).getDate()}`)} className="text-xs font-bold uppercase hover:underline" style={{ color: 'var(--info)', background: 'none', border: 'none', cursor: 'pointer' }}>Detail</button>
                       )}
                     </td>
                   </tr>

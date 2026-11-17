@@ -1,3 +1,7 @@
+import analyticsRoutes from './routes/analytics.routes';
+import offlineAttendanceRoutes from './routes/offline-attendance.routes';
+import deviceRoutes from './routes/device.routes';
+import workforceRoutes from './routes/workforce.routes';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
@@ -48,6 +52,10 @@ app.get('/health', (_req, res) => {
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
+app.use('/devices', deviceRoutes);
+app.use('/offline-attendance', offlineAttendanceRoutes);
+app.use('/admin/workforce', workforceRoutes);
+app.use('/admin/analytics', analyticsRoutes);
 app.use('/absensi', absensiRoutes);
 app.use('/admin', adminRoutes);
 app.use('/laporan', laporanRoutes);

@@ -1,3 +1,4 @@
+import { audit, attendanceRows, seedScheduleHistory, saveScheduleVersion, addDays, localDate } from '../services/workforce.service';
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { createJadwalSchema, updateJadwalSchema, updatePengaturanSchema } from '../schemas/jadwal.schema';
@@ -59,8 +60,11 @@ export const createJadwal = async (req: Request, res: Response) => {
       return;
     }
 
-    const newJadwal = await prisma.jadwalKerja.create({
-      data: { staff_id, hari, jam_masuk, jam_keluar }
+    const newJadwal = await prisma.$transaction(async tx => {
+      await seedScheduleHistory(tx, staff_id);
+      const row = await tx.jadwalKerja.create({data:{staff_id,hari,jam_masuk,jam_keluar}});
+      await saveScheduleVersion(tx,staff_id,req.user!.id,addDays(localDate(),1));
+      return row;
     });
 
     res.status(201).json({ success: true, data: newJadwal, message: 'Jadwal berhasil dibuat' });
@@ -85,9 +89,11 @@ export const updateJadwal = async (req: Request, res: Response) => {
       return;
     }
 
-    const updatedJadwal = await prisma.jadwalKerja.update({
-      where: { id },
-      data: parsed.data
+    const updatedJadwal = await prisma.$transaction(async tx => {
+      await seedScheduleHistory(tx, existing.staff_id);
+      const row=await tx.jadwalKerja.update({where:{id},data:parsed.data});
+      await saveScheduleVersion(tx,existing.staff_id,req.user!.id,addDays(localDate(),1));
+      return row;
     });
 
     res.json({ success: true, data: updatedJadwal, message: 'Jadwal berhasil diperbarui' });
@@ -105,7 +111,11 @@ export const deleteJadwal = async (req: Request, res: Response) => {
       res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan.' });
       return;
     }
-    await prisma.jadwalKerja.delete({ where: { id } });
+    await prisma.$transaction(async tx=>{
+      await seedScheduleHistory(tx,existing.staff_id);
+      await tx.jadwalKerja.delete({where:{id}});
+      await saveScheduleVersion(tx,existing.staff_id,req.user!.id,addDays(localDate(),1));
+    });
     res.json({ success: true, message: 'Jadwal berhasil dihapus' });
   } catch (error) {
     console.error('Error delete jadwal:', error);
@@ -115,170 +125,16 @@ export const deleteJadwal = async (req: Request, res: Response) => {
 
 export const getRekapJadwal = async (req: Request, res: Response) => {
   try {
-    const { bulan, tahun, divisi } = req.query;
-    
-    if (!bulan || !tahun) {
-      res.status(400).json({ success: false, message: 'Bulan dan tahun harus diisi' });
-      return;
-    }
-
-    const startOfMonth = new Date(Number(tahun), Number(bulan) - 1, 1);
-    const endOfMonth = new Date(Number(tahun), Number(bulan), 0, 23, 59, 59, 999);
-
-    // Get Pengaturan for toleransi
-    const pengaturan = await prisma.pengaturanSistem.findUnique({ where: { id: 'singleton' } });
-    const toleransi = pengaturan?.toleransi_keterlambatan_menit || 15;
-
-    // Build staff filter
-    const staffWhere: any = {};
-    if (divisi && divisi !== 'SEMUA') {
-      staffWhere.divisi = divisi as any;
-    }
-
-    // Get all staff with their schedules
-    const staffList = await prisma.staff.findMany({
-      where: staffWhere,
-      select: {
-        id: true,
-        nama: true,
-        divisi: true,
-        jadwal_kerja: { where: { aktif: true } }
-      }
-    });
-
-    // Process each staff
-    const rekap = await Promise.all(staffList.map(async (staff) => {
-      // If no schedule, return basic stats
-      if (staff.jadwal_kerja.length === 0) {
-        return {
-          staff_id: staff.id,
-          nama: staff.nama,
-          divisi: staff.divisi,
-          total_jadwal_hari: 0,
-          total_jam_kerja_terjadwal: 0,
-          total_kehadiran: 0,
-          total_jam_aktual: 0,
-          total_terlambat: 0,
-          detail_terlambat: []
-        };
-      }
-
-      // Calculate scheduled hours per day mapping
-      const jadwalMap = new Map();
-      
-      for (const j of staff.jadwal_kerja) {
-        // Map enum to JS day index (0=Sunday, 1=Monday, etc)
-        const dayMap: Record<string, number> = { 'AHAD': 0, 'SENIN': 1, 'SELASA': 2, 'RABU': 3, 'KAMIS': 4, 'JUMAT': 5, 'SABTU': 6 };
-        const jsDay = dayMap[j.hari];
-        
-        const [mH, mM] = j.jam_masuk.split(':').map(Number);
-        const [kH, kM] = j.jam_keluar.split(':').map(Number);
-        
-        let durasi = (kH + kM/60) - (mH + mM/60);
-        if (durasi < 0) durasi += 24; // Cross midnight shift
-        
-        jadwalMap.set(jsDay, { jam_masuk: j.jam_masuk, durasi });
-      }
-
-      // Estimate monthly scheduled hours (rough approx based on days in month)
-      let totalJamKerjaTerjadwalBulan = 0;
-      let totalJadwalHari = 0;
-      for (let d = 1; d <= endOfMonth.getDate(); d++) {
-        const date = new Date(Number(tahun), Number(bulan) - 1, d);
-        if (jadwalMap.has(date.getDay())) {
-          totalJamKerjaTerjadwalBulan += jadwalMap.get(date.getDay()).durasi;
-          totalJadwalHari++;
-        }
-      }
-
-      // Get absensi for this month
-      const absensi = await prisma.absensi.findMany({
-        where: {
-          staff_id: staff.id,
-          waktu_server: { gte: startOfMonth, lte: endOfMonth }
-        },
-        orderBy: { waktu_server: 'asc' }
-      });
-
-      // Group absensi by date
-      const absensiByDate = new Map();
-      for (const a of absensi) {
-        const dateStr = a.waktu_server.toISOString().split('T')[0];
-        if (!absensiByDate.has(dateStr)) absensiByDate.set(dateStr, []);
-        absensiByDate.get(dateStr).push(a);
-      }
-
-      let totalKehadiran = 0;
-      let totalJamAktual = 0;
-      let totalTerlambat = 0;
-      const detailTerlambat = [];
-
-      for (const [dateStr, records] of absensiByDate.entries()) {
-        const date = new Date(dateStr);
-        const jsDay = date.getDay();
-        
-        const masukRecord = records.find((r: any) => r.jenis === 'MASUK');
-        const keluarRecord = records.find((r: any) => r.jenis === 'KELUAR');
-
-        if (masukRecord) {
-          totalKehadiran++;
-
-          // Check if scheduled on this day
-          if (jadwalMap.has(jsDay)) {
-            const jadwalInfo = jadwalMap.get(jsDay);
-            const jadwalMasuk = jadwalInfo.jam_masuk;
-            
-            const actualTimeStr = masukRecord.waktu_server.toISOString().split('T')[1].substring(0, 5); // HH:mm
-            
-            // Calculate lateness
-            const [jH, jM] = jadwalMasuk.split(':').map(Number);
-            const [aH, aM] = actualTimeStr.split(':').map(Number);
-            
-            const jadwalMinutes = jH * 60 + jM;
-            const actualMinutes = aH * 60 + aM;
-            
-            const diffMinutes = actualMinutes - jadwalMinutes;
-            
-            if (diffMinutes > toleransi) {
-              totalTerlambat++;
-              detailTerlambat.push({
-                tanggal: dateStr,
-                jadwal: jadwalMasuk,
-                aktual: actualTimeStr,
-                keterlambatan_menit: diffMinutes
-              });
-            }
-          }
-
-          // Calculate actual hours if keluar exists
-          if (keluarRecord) {
-            const mTime = masukRecord.waktu_server.getTime();
-            const kTime = keluarRecord.waktu_server.getTime();
-            const durasiJam = (kTime - mTime) / (1000 * 60 * 60);
-            totalJamAktual += durasiJam;
-          }
-        }
-      }
-
-      return {
-        staff_id: staff.id,
-        nama: staff.nama,
-        divisi: staff.divisi,
-        total_jadwal_hari: totalJadwalHari,
-        total_jam_kerja_terjadwal: Math.round(totalJamKerjaTerjadwalBulan),
-        total_kehadiran: totalKehadiran,
-        total_jam_aktual: Math.round(totalJamAktual),
-        total_terlambat: totalTerlambat,
-        detail_terlambat: detailTerlambat
-      };
-    }));
-
-    res.json({ success: true, data: rekap });
-
-  } catch (error) {
-    console.error('Error get rekap jadwal:', error);
-    res.status(500).json({ success: false, message: 'Gagal mengambil rekap jadwal' });
-  }
+    const year=Number(req.query.tahun||new Date().getFullYear()), month=Number(req.query.bulan||new Date().getMonth()+1);
+    if(!Number.isInteger(month)||month<1||month>12||year<2020||year>2100) {res.status(400).json({message:'Periode tidak valid'});return;}
+    const from=`${year}-${String(month).padStart(2,'0')}-01`, to=new Date(Date.UTC(year,month,0)).toISOString().slice(0,10);
+    const rows=await attendanceRows(from,to);
+    const filtered=rows.filter(r=>!req.query.divisi||req.query.divisi==='SEMUA'||r.divisi===req.query.divisi);
+    const data=[...new Set(filtered.map(r=>r.staff_id))].map(staff_id=>{
+      const list=filtered.filter(r=>r.staff_id===staff_id); const p=list[0];
+      return {staff_id,nama:p.nama,nik:p.nik,divisi:p.divisi,total_jadwal_hari:list.filter(r=>r.source!=='UNSCHEDULED').length,total_kehadiran:list.filter(r=>r.masuk).length,total_jam_aktual:list.reduce((n,r)=>n+(r.jam_aktual||0),0),total_jam_kerja_terjadwal:list.reduce((n,r)=>n+(+r.end_at-+r.start_at)/3600000,0),total_terlambat:list.filter(r=>r.terlambat).length,detail_terlambat:list.filter(r=>r.terlambat).map(r=>({tanggal:r.date,jadwal:r.start_at,aktual:r.masuk,keterlambatan_menit:r.menit_terlambat}))};
+    });res.json({success:true,data});
+  } catch(error) {res.status(400).json({message:'Gagal menghitung rekap jadwal.'});}
 };
 
 export const getPengaturan = async (req: Request, res: Response) => {
@@ -302,6 +158,12 @@ export const updatePengaturan = async (req: Request, res: Response) => {
     }
 
     const { toleransi_keterlambatan_menit } = parsed.data;
+    const old=await prisma.pengaturanSistem.findUnique({where:{id:'singleton'}});
+    await prisma.workforceAudit.upsert({where:{id:'attendance-policy-baseline'},update:{},create:{id:'attendance-policy-baseline',actor_id:'migration',subject_id:'attendance-policy',action:'POLICY_VERSION',reason:'Kebijakan awal',detail:{effective_date:'1900-01-01',tolerance:old?.toleransi_keterlambatan_menit??15}}});
+    await audit(prisma,req.user!.id,'attendance-policy','POLICY_VERSION','Perubahan toleransi berlaku mulai besok',{effective_date:addDays(localDate(),1),tolerance:toleransi_keterlambatan_menit});
+    const upcoming=await prisma.shiftInstance.findMany({where:{date:{gte:addDays(localDate(),1)}},select:{id:true}});
+    const linked=await prisma.absensi.findMany({where:{shift_id:{in:upcoming.map(s=>s.id)}},select:{shift_id:true}});
+    await prisma.shiftInstance.updateMany({where:{id:{in:upcoming.filter(s=>!linked.some(e=>e.shift_id===s.id)).map(s=>s.id)}},data:{tolerance:toleransi_keterlambatan_menit}});
     const pengaturan = await prisma.pengaturanSistem.upsert({
       where: { id: 'singleton' },
       update: { toleransi_keterlambatan_menit },

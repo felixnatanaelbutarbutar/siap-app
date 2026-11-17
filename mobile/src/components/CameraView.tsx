@@ -8,17 +8,18 @@ import { Text } from 'react-native-paper';
 import { format } from 'date-fns';
 import { useAuthStore } from '../store/auth.store';
 import { checkedImageUri } from '../utils/localImage';
+import { validateWorkArea, GeofenceError } from '../utils/geofence';
 
 interface Props {
   jenis: 'MASUK' | 'KELUAR' | 'MULAI_ISTIRAHAT' | 'SELESAI_ISTIRAHAT' | null;
   onClose: () => void;
-  onPhotoTaken: (uri: string, lat: number, lng: number) => void;
+  onPhotoTaken: (uri: string, lat: number, lng: number, capturedAt?: number) => void;
 }
 
 export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
   const [facing, setFacing] = useState<'front' | 'back'>(jenis ? 'front' : 'back');
   const device = useCameraDevice(facing);
-  const [preview, setPreview] = useState<{uri:string;lat:number;lng:number} | null>(null);
+  const [preview, setPreview] = useState<{uri:string;lat:number;lng:number;capturedAt:number} | null>(null);
   const camera = useRef<Camera>(null);
   const user = useAuthStore(state => state.user);
 
@@ -62,6 +63,7 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
         return;
       }
 
+      const capturedAt = Date.now();
       // 3. Ambil Foto
       const photo = await camera.current.takePhoto({
         flash: 'off',
@@ -73,9 +75,17 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
           const lng = position.coords.longitude;
 
           try {
+            if (jenis) validateWorkArea(lat, lng, useAuthStore.getState().user?.area_tugas);
             // 4. Tambah Watermark (Native Layer)
             const waktuLokal = format(new Date(), 'dd-MM-yyyy HH:mm:ss');
-            const watermarkText = `${user?.nama || 'Unknown'} | ${user?.divisi || ''}\n${waktuLokal}\nLat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+            const constants = Platform.constants as any;
+            const brand = Platform.OS === 'android' ? constants.Brand || '' : 'Apple';
+            const model = Platform.OS === 'android' ? constants.Model || '' : constants.systemName || 'iPhone';
+            const deviceName = `${brand} ${model}`.trim() || 'Perangkat HP';
+            const watermarkText = `${user?.nama || 'Unknown'} | ${user?.divisi || ''}\nDevice: ${deviceName}\n${waktuLokal}\nLat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+            const longestLine = Math.max(...watermarkText.split('\n').map(line => line.length));
+            const photoWidth = Math.min(photo.width, photo.height);
+            const fontSize = Math.max(12, Math.min(photoWidth * 0.028, photoWidth * 0.88 / (longestLine * 0.62)));
             
             const imageUri = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
             
@@ -88,12 +98,13 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
                 {
                   text: watermarkText,
                   positionOptions: {
-                    X: 20,
-                    Y: 20,
+                    X: Math.round(photoWidth * 0.03),
+                    Y: Math.round(photoWidth * 0.03),
                   },
                   style: {
-                    color: '#FF0000',
-                    fontSize: 44,
+                    color: '#FFFFFF',
+                    textBackgroundStyle: { color: '#80000000', padding: 10 },
+                    fontSize,
                   },
                 },
               ],
@@ -102,9 +113,14 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
 
             // 5. Kembalikan URL yang sudah dimanipulasi
             const markedImageUri = await checkedImageUri(markedImagePath);
-            setPreview({uri:markedImageUri,lat,lng});
+            setPreview({uri:markedImageUri,lat,lng,capturedAt});
             setIsProcessing(false);
           } catch (markerError) {
+            if (markerError instanceof GeofenceError) {
+              Alert.alert(markerError.title, markerError.message);
+              setIsProcessing(false);
+              return;
+            }
             console.log('Watermark error:', markerError);
             Alert.alert('Error', 'Gagal menambahkan watermark pada foto.');
             setIsProcessing(false);
@@ -115,7 +131,7 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
           Alert.alert('Gagal Mendapat Lokasi', 'Pastikan GPS Anda aktif dan beri izin lokasi ke aplikasi SIAP.');
           setIsProcessing(false);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
 
     } catch (e) {
@@ -149,7 +165,7 @@ export const CameraView = ({ jenis, onClose, onPhotoTaken }: Props) => {
   if (preview) return <View style={styles.container}>
     <Image source={{uri:preview.uri}} resizeMode="contain" style={StyleSheet.absoluteFill}/>
     <View style={styles.overlayBottom}>
-      <TouchableOpacity style={[styles.cancelBtn,{backgroundColor:'#087F5B',borderRadius:16,paddingHorizontal:32,minHeight:52,justifyContent:'center'}]} onPress={()=>onPhotoTaken(preview.uri,preview.lat,preview.lng)}><Text style={{color:'white',fontWeight:'700'}}>Gunakan foto ini</Text></TouchableOpacity>
+      <TouchableOpacity style={[styles.cancelBtn,{backgroundColor:'#087F5B',borderRadius:16,paddingHorizontal:32,minHeight:52,justifyContent:'center'}]} onPress={()=>onPhotoTaken(preview.uri,preview.lat,preview.lng,preview.capturedAt)}><Text style={{color:'white',fontWeight:'700'}}>Gunakan foto ini</Text></TouchableOpacity>
       <TouchableOpacity style={[styles.cancelBtn,{minHeight:48}]} onPress={()=>setPreview(null)}><Text style={{color:'white'}}>Ambil ulang</Text></TouchableOpacity>
     </View>
   </View>;

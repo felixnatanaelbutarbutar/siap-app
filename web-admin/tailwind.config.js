@@ -19,7 +19,7 @@ import tailwindcssAnimate from "tailwindcss-animate";
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
+        border: "hsl(var(--border-hsl))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",  
@@ -41,8 +41,8 @@ import tailwindcssAnimate from "tailwindcss-animate";
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-text)",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",

@@ -15,6 +15,7 @@ if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.includes('test')) {
 export const mockStorageObjects = new Map<string, Buffer>();
 
 jest.mock('../src/services/storage.service', () => ({
+  StorageUploadError: jest.requireActual('../src/services/storage.service').StorageUploadError,
   uploadFile: jest.fn(async (buffer: Buffer, filename: string) => {
     const cleanKey = filename.replace(/^\/+/, '');
     mockStorageObjects.set(cleanKey, Buffer.from(buffer));

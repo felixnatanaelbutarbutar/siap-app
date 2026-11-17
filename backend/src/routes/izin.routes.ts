@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware';
 import { uploadImage } from '../middleware/upload.middleware';
-import { createIzin, getMyIzin } from '../controllers/izin.controller';
+import { createIzin, getMyIzin, getLeaveAttachment } from '../controllers/izin.controller';
 
 const router = Router();
 
@@ -10,5 +10,6 @@ router.post('/', authenticate, uploadImage.single('foto'), createIzin);
 
 // 2. Lihat Riwayat Izin Saya (Mobile)
 router.get('/saya', authenticate, getMyIzin);
+router.get('/:id/lampiran', authenticate, getLeaveAttachment);
 
 export default router;

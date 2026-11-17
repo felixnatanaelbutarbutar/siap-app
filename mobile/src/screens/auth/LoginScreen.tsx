@@ -110,15 +110,6 @@ export const LoginScreen = () => {
             )}
           </TouchableOpacity>
         </Animated.View>
-
-        <View style={styles.footer}>
-          <Image
-            source={require('../../assets/emblem-emerald.png')}
-            style={styles.footerEmblem}
-            resizeMode="contain"
-          />
-          <Text style={styles.footerText}>© 2026 SIAP PROFESSIONAL MOBILITY</Text>
-        </View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -187,8 +178,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     paddingHorizontal: 32,
     paddingTop: 24,
-    justifyContent: 'space-between',
-    paddingBottom: 40,
+    justifyContent: 'center',
+    paddingBottom: 24,
     zIndex: 2,
   },
   formContainer: {
@@ -248,21 +239,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     overflow: 'hidden',
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  footerEmblem: {
-    width: 18,
-    height: 18,
-  },
-  footerText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6d7b6c', // outline
-    letterSpacing: 1,
   },
 });

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadBucketCommand, CreateBucketCommand } from '@aws-sdk/client-s3';
 import { logger } from '../utils/logger';
 
 const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
@@ -10,6 +10,11 @@ const BUCKET_NAME = process.env.MINIO_BUCKET || process.env.MINIO_BUCKET_NAME ||
 
 const protocol = MINIO_USE_SSL ? 'https' : 'http';
 
+export class StorageUploadError extends Error {
+  readonly code = 'STORAGE_UNAVAILABLE';
+  constructor() { super('Penyimpanan foto belum tersedia. Absensi belum tersimpan. Hubungi admin untuk memeriksa layanan penyimpanan, lalu coba lagi.'); }
+}
+
 // Inisialisasi S3 Client untuk MinIO
 const s3Client = new S3Client({
   endpoint: `${protocol}://${MINIO_ENDPOINT}:${MINIO_PORT}`,
@@ -20,6 +25,22 @@ const s3Client = new S3Client({
   },
   forcePathStyle: true,
 });
+
+const PRIVATE_BUCKET = `${BUCKET_NAME}-private`;
+export async function uploadPrivateFile(buffer:Buffer,key:string,mimetype:string) {
+  try { await s3Client.send(new HeadBucketCommand({Bucket:PRIVATE_BUCKET})); }
+  catch(e:any) {
+    if(e.$metadata?.httpStatusCode!==404) throw e;
+    try {await s3Client.send(new CreateBucketCommand({Bucket:PRIVATE_BUCKET}));}
+    catch(created:any){if(!['BucketAlreadyOwnedByYou','BucketAlreadyExists'].includes(created.name)) throw created;}
+  }
+  await s3Client.send(new PutObjectCommand({Bucket:PRIVATE_BUCKET,Key:key,Body:buffer,ContentType:mimetype}));
+  return `private:${key}`;
+}
+export async function downloadPrivateFile(reference:string) {
+  const result=await s3Client.send(new GetObjectCommand({Bucket:PRIVATE_BUCKET,Key:reference.slice('private:'.length)}));
+  return {buffer:Buffer.from(await result.Body!.transformToByteArray()),type:result.ContentType||'application/octet-stream'};
+}
 
 const extractObjectKey = (keyOrUrl: string): string => {
   if (!keyOrUrl.includes('://')) {
@@ -59,7 +80,7 @@ export const uploadFile = async (
     return getFileUrl(filename);
   } catch (error) {
     logger.error(`Error uploading file ${filename} to MinIO:`, error);
-    throw new Error('Gagal mengunggah file ke server penyimpanan.');
+    throw new StorageUploadError();
   }
 };
 
