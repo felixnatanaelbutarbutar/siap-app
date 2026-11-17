@@ -8,7 +8,7 @@ import { CameraView } from '../../components/CameraView';
 import { checkedImageUri } from '../../utils/localImage';
 import { colors, ui, Action } from '../../ui';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-const categories: Record<string,string[]>={SATPAM:['PATROLI','PENJAGAAN','PENGAWALAN','INSIDEN','PEMELIHARAAN'],CS:['KOMPLAIN','INFORMASI','PENGADUAN','LAIN_LAIN'],UTILITY:['KEBERSIHAN','KERUSAKAN','PERBAIKAN','PEMERIKSAAN_RUTIN']};
+const categories: Record<string,string[]>={SATPAM:['PATROLI','PENJAGAAN','PENGAWALAN','INSIDEN','PEMELIHARAAN'],CS:['KEBERSIHAN','PEMBERSIHAN_AREA','SANITASI_TOILET','PENGELOLAAN_SAMPAH','STOK_PERLENGKAPAN','LAIN_LAIN'],UTILITY:['KEBERSIHAN','KERUSAKAN','PERBAIKAN','PEMERIKSAAN_RUTIN']};
 export const BuatLaporanScreen=({navigation}:any)=>{
  const user=useAuthStore(s=>s.user);const choices=categories[user?.role||'']||[];const cacheKey=`laporan-form-${user?.id}`;
  const [kategori,setKategori]=useState(choices[0]||'');const [judul,setJudul]=useState('');const [deskripsi,setDeskripsi]=useState('');const [fotos,setFotos]=useState<string[]>([]);const [camera,setCamera]=useState(false);const [ready,setReady]=useState(false);const [restored,setRestored]=useState(false);const [errors,setErrors]=useState(false);const [preview,setPreview]=useState<string|null>(null);const client=useQueryClient();

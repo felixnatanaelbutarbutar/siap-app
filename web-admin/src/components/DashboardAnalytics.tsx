@@ -156,7 +156,7 @@ export function DashboardAnalytics() {
         ? "Keamanan"
         : division === "UTILITY"
           ? "Utility"
-          : "CS";
+          : "Cleaning Service";
   return (
     <div className="space-y-6">
       <div className="workspace-heading">
@@ -215,7 +215,7 @@ export function DashboardAnalytics() {
           >
             <option value="ALL">Semua divisi</option>
             <option value="KEAMANAN">Keamanan</option>
-            <option value="CUSTOMER_SERVICE">CS</option>
+            <option value="CLEANING_SERVICE">Cleaning Service</option>
             <option value="UTILITY">Utility</option>
           </select>
           <select

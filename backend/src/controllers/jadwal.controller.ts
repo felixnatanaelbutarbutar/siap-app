@@ -1,7 +1,16 @@
 import { audit, attendanceRows, seedScheduleHistory, saveScheduleVersion, addDays, localDate } from '../services/workforce.service';
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { getIO } from '../lib/socket';
 import { createJadwalSchema, updateJadwalSchema, updatePengaturanSchema } from '../schemas/jadwal.schema';
+
+const notifyScheduleChanged = (staffId: string) => {
+  try {
+    getIO().to(`staff:${staffId}`).emit('jadwal:updated', { staff_id: staffId });
+  } catch {
+    // Abaikan jika Socket.io belum siap
+  }
+};
 
 export const getJadwal = async (req: Request, res: Response) => {
   try {
@@ -63,10 +72,11 @@ export const createJadwal = async (req: Request, res: Response) => {
     const newJadwal = await prisma.$transaction(async tx => {
       await seedScheduleHistory(tx, staff_id);
       const row = await tx.jadwalKerja.create({data:{staff_id,hari,jam_masuk,jam_keluar}});
-      await saveScheduleVersion(tx,staff_id,req.user!.id,addDays(localDate(),1));
+      await saveScheduleVersion(tx,staff_id,req.user!.id,localDate());
       return row;
     });
 
+    notifyScheduleChanged(staff_id);
     res.status(201).json({ success: true, data: newJadwal, message: 'Jadwal berhasil dibuat' });
   } catch (error) {
     console.error('Error create jadwal:', error);
@@ -92,10 +102,11 @@ export const updateJadwal = async (req: Request, res: Response) => {
     const updatedJadwal = await prisma.$transaction(async tx => {
       await seedScheduleHistory(tx, existing.staff_id);
       const row=await tx.jadwalKerja.update({where:{id},data:parsed.data});
-      await saveScheduleVersion(tx,existing.staff_id,req.user!.id,addDays(localDate(),1));
+      await saveScheduleVersion(tx,existing.staff_id,req.user!.id,localDate());
       return row;
     });
 
+    notifyScheduleChanged(existing.staff_id);
     res.json({ success: true, data: updatedJadwal, message: 'Jadwal berhasil diperbarui' });
   } catch (error) {
     console.error('Error update jadwal:', error);
@@ -114,8 +125,9 @@ export const deleteJadwal = async (req: Request, res: Response) => {
     await prisma.$transaction(async tx=>{
       await seedScheduleHistory(tx,existing.staff_id);
       await tx.jadwalKerja.delete({where:{id}});
-      await saveScheduleVersion(tx,existing.staff_id,req.user!.id,addDays(localDate(),1));
+      await saveScheduleVersion(tx,existing.staff_id,req.user!.id,localDate());
     });
+    notifyScheduleChanged(existing.staff_id);
     res.json({ success: true, message: 'Jadwal berhasil dihapus' });
   } catch (error) {
     console.error('Error delete jadwal:', error);

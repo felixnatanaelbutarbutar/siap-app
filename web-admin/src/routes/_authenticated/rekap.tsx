@@ -357,8 +357,10 @@ function WorkforcePage() {
           onChange={(e) => setDivision(e.target.value)}
         >
           <option value="">Semua divisi</option>
-          {["KEAMANAN", "CUSTOMER_SERVICE", "UTILITY"].map((d) => (
-            <option key={d}>{d}</option>
+          {["KEAMANAN", "CLEANING_SERVICE", "UTILITY"].map((d) => (
+            <option key={d} value={d}>
+              {d === "CLEANING_SERVICE" ? "Cleaning Service" : d === "KEAMANAN" ? "Keamanan" : "Utility"}
+            </option>
           ))}
         </select>
         {tab === "attendance" && (

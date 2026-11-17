@@ -23,7 +23,7 @@ const inputStyle = {
 const getRoleFromDivisi = (divisi: string) => {
   const map: Record<string, string> = {
     KEAMANAN: 'SATPAM',
-    CUSTOMER_SERVICE: 'CS',
+    CLEANING_SERVICE: 'CS',
     UTILITY: 'UTILITY',
     MANAJEMEN: 'ADMIN',
   };
@@ -181,7 +181,7 @@ function StaffTambahPage() {
               </label>
               <select value={formDivisi} onChange={(e) => setFormDivisi(e.target.value)} style={inputStyle}>
                 <option value="KEAMANAN">Keamanan</option>
-                <option value="CUSTOMER_SERVICE">Cleaning Service</option>
+                <option value="CLEANING_SERVICE">Cleaning Service</option>
                 <option value="UTILITY">Utility</option>
                 <option value="MANAJEMEN">Manajemen (Admin)</option>
               </select>

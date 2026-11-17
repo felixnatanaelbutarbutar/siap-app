@@ -23,6 +23,7 @@ import { prisma } from './lib/prisma';
 import { initSocket } from './lib/socket';
 import { Role, JenisAbsensi } from '@prisma/client';
 import { sendToDevice } from './services/notification.service';
+import { checkAndSendPreShiftReminders } from './services/shiftReminder.service';
 
 // Load environment variables
 dotenv.config();
@@ -147,6 +148,16 @@ if (process.env.NODE_ENV !== 'test') {
       logger.info(`✅ Cron Job: Reminder Laporan Per 3 Jam untuk pukul ${currentHour}:00 selesai dicek.`);
     } catch (error) {
       logger.error('Error pada cron reminder laporan per 3 jam:', error);
+    }
+  });
+
+  // ─── Pengingat 1 Jam Sebelum Shift Dimulai (Semua Staff Aktif) ─────────────
+  // Jalan setiap menit agar jadwal mulai seperti 07:30, 08:00, 15:00, 23:00 tepat waktu
+  cron.schedule('* * * * *', async () => {
+    try {
+      await checkAndSendPreShiftReminders();
+    } catch (error) {
+      logger.error('Error pada cron pengingat 1 jam sebelum shift:', error);
     }
   });
 }

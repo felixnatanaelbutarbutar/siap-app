@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
@@ -7,6 +7,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { queryClient, asyncStoragePersister } from './src/services/queryClient';
 import { initDatabase } from './src/store/database';
 import { requestUserPermission, NotificationListener } from './src/services/fcm';
+import { syncShiftReminders, cancelShiftReminders } from './src/services/shiftReminder';
 import { socketService } from './src/services/socket';
 import { NetworkManager } from './src/components/NetworkManager';
 
@@ -28,27 +29,36 @@ const theme = {
 
 export default function App() {
   const token = useAuthStore(state => state.token);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+
   useEffect(() => {
-    if (token) void requestUserPermission();
+    if (token) {
+      void requestUserPermission();
+      void syncShiftReminders({ force: true, allowPrompt: true });
+      socketService.connect();
+      socketService.startLiveTracking();
+    } else {
+      void cancelShiftReminders();
+      socketService.disconnect();
+    }
   }, [token]);
   useEffect(() => {
     initDatabase();
     const unsubscribeFCM = NotificationListener();
 
-    // AppState Listener untuk Live Tracking Socket.io
+    // AppState Listener untuk Live Tracking Socket.io & sinkronisasi pengingat shift
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active') {
+      const prevState = appStateRef.current;
+      appStateRef.current = nextAppState;
+
+      if (prevState === 'background' && nextAppState === 'active') {
         socketService.connect();
         socketService.startLiveTracking();
-      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        void syncShiftReminders({ allowPrompt: false });
+      } else if (nextAppState === 'background') {
         socketService.stopLiveTracking();
       }
     };
-
-    if (AppState.currentState === 'active') {
-      socketService.connect();
-      socketService.startLiveTracking();
-    }
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 

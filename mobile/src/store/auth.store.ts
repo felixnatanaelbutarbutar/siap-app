@@ -3,7 +3,7 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { queryClient, asyncStoragePersister } from '../services/queryClient';
 
 export type Role = 'SATPAM' | 'CS' | 'UTILITY' | 'ADMIN';
-export type Divisi = 'KEAMANAN' | 'CUSTOMER_SERVICE' | 'UTILITY' | 'MANAJEMEN';
+export type Divisi = 'KEAMANAN' | 'CLEANING_SERVICE' | 'UTILITY' | 'MANAJEMEN';
 
 import { api } from '../services/api';
 
@@ -32,6 +32,7 @@ interface AuthState {
   login: (nik: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshUser: () => Promise<UserData | null>;
   updateFotoProfil: (foto_profil: string) => void;
 }
 
@@ -90,6 +91,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
+  refreshUser: async () => {
+    try {
+      const res = await api.get('/auth/me');
+      if (res.data?.success && res.data?.data) {
+        const latestUser = res.data.data as UserData;
+        await EncryptedStorage.setItem('user', JSON.stringify(latestUser));
+        set({ user: latestUser });
+        return latestUser;
+      }
+    } catch (err: any) {
+      console.log('Gagal menyinkronkan profil area tugas:', err?.message || err);
+    }
+    return useAuthStore.getState().user;
+  },
+
   checkAuth: async () => {
     try {
       const token = await EncryptedStorage.getItem('token');
@@ -109,7 +125,14 @@ export const useAuthStore = create<AuthState>((set) => ({
             await EncryptedStorage.setItem('user', JSON.stringify(latestUser));
             set({ user: latestUser });
           }
-        } catch (err) {
+        } catch (err: any) {
+          if (err?.response?.status === 401) {
+            await EncryptedStorage.removeItem('token');
+            await EncryptedStorage.removeItem('user');
+            delete api.defaults.headers.common['Authorization'];
+            set({ user: null, token: null, isLoading: false, error: null });
+            return;
+          }
           console.error('Failed to fetch latest user data silently', err);
         }
 

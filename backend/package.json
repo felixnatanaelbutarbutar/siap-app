@@ -14,6 +14,7 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:seed:demo": "ts-node prisma/seed-demo.ts",
+    "prisma:seed:rich": "ts-node prisma/seed-rich.ts",
     "lint": "eslint src --ext .ts",
     "test": "jest",
     "test:watch": "jest --watch",

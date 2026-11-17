@@ -174,7 +174,7 @@ function AbsensiPage() {
     const colorMap: Record<string, { bg: string; text: string }> = {
       KEAMANAN: { bg: "rgba(30,215,96,0.12)", text: "var(--accent)" },
       SATPAM: { bg: "rgba(30,215,96,0.12)", text: "var(--accent)" },
-      CUSTOMER_SERVICE: { bg: "rgba(83,157,245,0.12)", text: "var(--info)" },
+      CLEANING_SERVICE: { bg: "rgba(83,157,245,0.12)", text: "var(--info)" },
       CS: { bg: "rgba(83,157,245,0.12)", text: "var(--info)" },
       UTILITY: { bg: "rgba(255,164,43,0.12)", text: "var(--warning)" },
     };
@@ -305,7 +305,7 @@ function AbsensiPage() {
               >
                 <option value="SEMUA">Semua Divisi</option>
                 <option value="KEAMANAN">Keamanan</option>
-                <option value="CUSTOMER_SERVICE">Cleaning Service</option>
+                <option value="CLEANING_SERVICE">Cleaning Service</option>
                 <option value="UTILITY">Utility</option>
               </select>
             </div>
@@ -484,7 +484,7 @@ function AbsensiPage() {
                 >
                   <option value="SEMUA">Semua Divisi</option>
                   <option value="KEAMANAN">Keamanan</option>
-                  <option value="CUSTOMER_SERVICE">Cleaning Service</option>
+                  <option value="CLEANING_SERVICE">Cleaning Service</option>
                   <option value="UTILITY">Utility</option>
                 </select>
               </div>

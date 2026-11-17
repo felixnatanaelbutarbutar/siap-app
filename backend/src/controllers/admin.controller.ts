@@ -49,7 +49,7 @@ export const getDashboardSummary = async (req: Request, res: Response): Promise<
     }
 
     // 3. Status Kehadiran per Divisi
-    const divList = [Divisi.KEAMANAN, Divisi.CUSTOMER_SERVICE, Divisi.UTILITY];
+    const divList = [Divisi.KEAMANAN, Divisi.CLEANING_SERVICE, Divisi.UTILITY];
     const perDivisi: Record<string, any> = {};
 
     for (const div of divList) {
@@ -94,7 +94,7 @@ export const getDashboardSummary = async (req: Request, res: Response): Promise<
       success: true,
       data: {
         keamanan: perDivisi[Divisi.KEAMANAN],
-        cs: perDivisi[Divisi.CUSTOMER_SERVICE],
+        cs: perDivisi[Divisi.CLEANING_SERVICE],
         utility: perDivisi[Divisi.UTILITY],
         pending: {
           laporan: laporanPending,
@@ -174,10 +174,10 @@ export const getDashboardChart = async (req: Request, res: Response): Promise<vo
     });
 
     const chartData = [];
-    const divNames = ['KEAMANAN', 'CUSTOMER_SERVICE', 'UTILITY'];
+    const divNames = ['KEAMANAN', 'CLEANING_SERVICE', 'UTILITY'];
     const displayNames: any = {
       'KEAMANAN': 'Keamanan',
-      'CUSTOMER_SERVICE': 'CS',
+      'CLEANING_SERVICE': 'Cleaning Service',
       'UTILITY': 'Utility'
     };
 
@@ -350,7 +350,7 @@ export const getStatistikKehadiran = async (req: Request, res: Response): Promis
       const div = staffDivMap.get(a.staff_id);
       if (day >= 1 && day <= daysInMonth) {
         if (div === Divisi.KEAMANAN) dailySets[day].SATPAM.add(a.staff_id);
-        else if (div === Divisi.CUSTOMER_SERVICE) dailySets[day].CS.add(a.staff_id);
+        else if (div === Divisi.CLEANING_SERVICE) dailySets[day].CS.add(a.staff_id);
         else if (div === Divisi.UTILITY) dailySets[day].UTILITY.add(a.staff_id);
       }
     }

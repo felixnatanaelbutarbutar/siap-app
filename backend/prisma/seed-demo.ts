@@ -26,7 +26,7 @@ async function main() {
   const password_hash = await bcrypt.hash('DemoSiap2026!', 12);
   const groups = [
     { role: 'SATPAM', divisi: 'KEAMANAN', area: 'Menara Nusantara - Pos Utama', lat: -6.2088, lng: 106.8456, names: ['Arif Pratama', 'Dimas Saputra', 'Fajar Ramadhan', 'Yoga Saputra'], categories: ['PATROLI', 'PENJAGAAN', 'PENGAWALAN', 'INSIDEN', 'PEMELIHARAAN'] },
-    { role: 'CS', divisi: 'CUSTOMER_SERVICE', area: 'Menara Nusantara - Lobby', lat: -6.2093, lng: 106.8460, names: ['Nadia Putri', 'Rina Anggraini', 'Maya Lestari', 'Intan Permata'], categories: ['KOMPLAIN', 'INFORMASI', 'PENGADUAN', 'LAIN_LAIN'] },
+    { role: 'CS', divisi: 'CLEANING_SERVICE', area: 'Menara Nusantara - Lobby', lat: -6.2093, lng: 106.8460, names: ['Nadia Putri', 'Rina Anggraini', 'Maya Lestari', 'Intan Permata'], categories: ['KEBERSIHAN', 'PEMBERSIHAN_AREA', 'SANITASI_TOILET', 'PENGELOLAAN_SAMPAH', 'STOK_PERLENGKAPAN', 'LAIN_LAIN'] },
     { role: 'UTILITY', divisi: 'UTILITY', area: 'Menara Nusantara - Ruang Teknik', lat: -6.2100, lng: 106.8449, names: ['Rizky Maulana', 'Andi Setiawan', 'Bima Nugraha', 'Eko Purnomo'], categories: ['KEBERSIHAN', 'KERUSAKAN', 'PERBAIKAN', 'PEMERIKSAAN_RUTIN'] },
   ];
   const staff: any[] = [];

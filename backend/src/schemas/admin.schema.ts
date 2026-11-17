@@ -21,7 +21,7 @@ export const exportAbsensiSchema = z.object({
 export const ROLE_DIVISI_MAP: Record<Role, Divisi> = {
   ADMIN: Divisi.MANAJEMEN,
   SATPAM: Divisi.KEAMANAN,
-  CS: Divisi.CUSTOMER_SERVICE,
+  CS: Divisi.CLEANING_SERVICE,
   UTILITY: Divisi.UTILITY,
 };
 

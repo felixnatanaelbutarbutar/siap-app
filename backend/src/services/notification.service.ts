@@ -32,6 +32,7 @@ try {
  * Kirim notifikasi ke satu perangkat (satu token)
  */
 export const sendToDevice = async (fcmToken: string, title: string, body: string, data?: Record<string, string>): Promise<boolean> => {
+  if (admin.apps.length === 0) return false;
   try {
     const message = {
       notification: { title, body },
@@ -52,7 +53,7 @@ export const sendToDevice = async (fcmToken: string, title: string, body: string
  * Kirim notifikasi massal ke beberapa token
  */
 export const sendMulticast = async (tokens: string[], title: string, body: string, data?: Record<string, string>): Promise<void> => {
-  if (tokens.length === 0) return;
+  if (tokens.length === 0 || admin.apps.length === 0) return;
 
   try {
     const message = {

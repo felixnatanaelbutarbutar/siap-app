@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { getAvatarUrl } from '../../utils/url';
+import { getMinutesUntilShift, syncShiftReminders } from '../../services/shiftReminder';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -63,6 +64,12 @@ export const BerandaScreen = () => {
   }, [contentAnim, contentOpacity, headerAnim, notifBlink]);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowTick(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: pengumumanData, isLoading: loadingPengumuman, refetch: refetchPengumuman } = useQuery({
     queryKey: ['pengumuman'],
@@ -113,6 +120,7 @@ export const BerandaScreen = () => {
         refetchJadwalHariIni(),
         refetchPengumuman(),
         refetchLaporan(),
+        syncShiftReminders({ force: true }),
       ]);
     } finally {
       setRefreshing(false);
@@ -140,32 +148,52 @@ export const BerandaScreen = () => {
     : 0;
   const sedangIstirahat = countMulaiIstirahat > countSelesaiIstirahat;
 
-  let statusBadgeLabel = 'Shift Hari Ini';
   let statusBadgeColor = '#ba1a1a';
   let statusBadgeBg = '#ffdad6';
   let statusTitle = 'Belum Absen Masuk';
+  let statusSubtitle = 'Pastikan berada di area tugas sebelum memulai shift.';
+  let statusIcon = 'clock-alert-outline';
+  let statusAccentBg = '#ffdad6';
+  let statusAccentColor = '#ba1a1a';
 
   if (!jadwalHariIni) {
-    statusBadgeLabel = 'Libur';
     statusBadgeColor = '#515f74';
     statusBadgeBg = '#e8f0e4';
-    statusTitle = 'Tidak ada shift hari ini';
+    statusTitle = 'Hari Libur';
+    statusSubtitle = 'Tidak ada jadwal shift aktif hari ini.';
+    statusIcon = 'calendar-blank-outline';
+    statusAccentBg = '#e8f0e4';
+    statusAccentColor = '#515f74';
   } else if (sudahKeluar) {
-    statusBadgeLabel = 'Shift Selesai';
     statusBadgeColor = '#006e2f';
-    statusBadgeBg = '#cdeed5';
-    statusTitle = 'Tugas shift hari ini telah selesai';
+    statusBadgeBg = '#d8f3e0';
+    statusTitle = 'Shift Selesai';
+    statusSubtitle = 'Kehadiran hari ini sudah tercatat lengkap.';
+    statusIcon = 'check-circle-outline';
+    statusAccentBg = '#d8f3e0';
+    statusAccentColor = '#006e2f';
   } else if (sedangIstirahat) {
-    statusBadgeLabel = 'Sedang Istirahat';
     statusBadgeColor = '#c77800';
     statusBadgeBg = '#ffefd4';
-    statusTitle = 'Waktu istirahat aktif';
+    statusTitle = 'Sedang Istirahat';
+    statusSubtitle = 'Jangan lupa absen selesai istirahat saat kembali.';
+    statusIcon = 'coffee-outline';
+    statusAccentBg = '#ffefd4';
+    statusAccentColor = '#c77800';
   } else if (sudahMasuk) {
-    statusBadgeLabel = 'Shift Aktif';
     statusBadgeColor = '#006e2f';
-    statusBadgeBg = '#cdeed5';
-    statusTitle = 'Sedang bertugas di area';
+    statusBadgeBg = '#d8f3e0';
+    statusTitle = 'Sedang Bertugas';
+    statusSubtitle = 'Shift aktif — semangat menjalankan tugas hari ini.';
+    statusIcon = 'shield-check-outline';
+    statusAccentBg = '#d8f3e0';
+    statusAccentColor = '#006e2f';
   }
+
+  const minutesUntilShift = useMemo(() => {
+    if (!jadwalHariIni?.jam_masuk || sudahMasuk || sudahKeluar) return null;
+    return getMinutesUntilShift(jadwalHariIni.jam_masuk, new Date(nowTick));
+  }, [jadwalHariIni?.jam_masuk, sudahMasuk, sudahKeluar, nowTick]);
 
   // Gabungkan aktivitas absensi & laporan harian
   const combinedActivities = useMemo(() => {
@@ -174,7 +202,7 @@ export const BerandaScreen = () => {
     if (Array.isArray(absensiHariIni)) {
       absensiHariIni.forEach((item: any) => {
         let title = 'Absensi';
-        let icon = 'fingerprint';
+        let icon = 'map-marker-check';
         let iconBg = '#e8f0e4';
         let iconColor = '#006e2f';
         let badge = item.status_kehadiran === 'TERLAMBAT' ? 'Terlambat' : 'Tepat Waktu';
@@ -259,7 +287,7 @@ export const BerandaScreen = () => {
     user?.role === 'SATPAM'
       ? 'Laporan Patroli'
       : user?.role === 'CS'
-      ? 'Laporan Layanan'
+      ? 'Laporan Kebersihan'
       : 'Laporan Fasilitas';
 
   const isEligibleSerahTerima = user?.role === 'SATPAM' || user?.role === 'UTILITY';
@@ -309,62 +337,94 @@ export const BerandaScreen = () => {
                     <Text style={styles.avatarInitials}>{user?.nama?.substring(0, 2).toUpperCase() || 'SI'}</Text>
                   </View>
                 )}
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.greetingLabel}>SELAMAT DATANG</Text>
-                  <Text style={styles.greetingText}>{user?.nama?.split(' ')[0] || 'Pengguna'}</Text>
+                  <Text style={styles.greetingText} numberOfLines={1}>{user?.nama?.split(' ')[0] || 'Pengguna'}</Text>
                 </View>
               </View>
             </View>
 
-            {/* FLOATING STATUS CARD */}
-            <View style={styles.statusCard}>
-              <View style={styles.statusCardHeader}>
-                <Text style={styles.statusCardLabel}>STATUS HARI INI</Text>
-                {jadwalHariIni ? (
-                  <View style={[styles.shiftBadge, { backgroundColor: statusBadgeBg }]}>
-                    <Icon name="clock-outline" size={14} color={statusBadgeColor} style={{ marginRight: 4 }} />
-                    <Text style={[styles.shiftBadgeText, { color: statusBadgeColor }]}>
-                      {jadwalHariIni.jam_masuk} - {jadwalHariIni.jam_keluar}
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={[styles.shiftBadge, { backgroundColor: '#e8f0e4' }]}>
-                    <Icon name="calendar-remove" size={14} color="#515f74" style={{ marginRight: 4 }} />
-                    <Text style={[styles.shiftBadgeText, { color: '#515f74' }]}>Libur</Text>
-                  </View>
-                )}
-              </View>
+          </View>
 
-              <Text style={styles.statusTitle}>{statusTitle}</Text>
-
-              <View style={styles.locationBox}>
-                <Icon name="map-marker" size={24} color="#006e2f" style={styles.locationIcon} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.locationTitle}>{user?.area_tugas?.nama || 'Area Penugasan Belum Diatur'}</Text>
-                  <Text style={styles.locationSubtitle}>
-                    {user?.area_tugas?.radius_meter ? `Radius Validasi: ${user.area_tugas.radius_meter}m` : 'SIAP Smart Security & Facility'}
+          {/* FLOATING STATUS CARD (In-flow negative margin: zero overlap with avatar/name) */}
+          <View style={styles.statusCard}>
+            <View style={styles.statusCardHeader}>
+              <Text style={styles.statusCardLabel}>STATUS HARI INI</Text>
+              {jadwalHariIni ? (
+                <View style={[styles.shiftBadge, { backgroundColor: statusBadgeBg }]}>
+                  <Icon name="clock-outline" size={13} color={statusBadgeColor} style={{ marginRight: 4 }} />
+                  <Text style={[styles.shiftBadgeText, { color: statusBadgeColor }]}>
+                    {jadwalHariIni.jam_masuk} - {jadwalHariIni.jam_keluar}
                   </Text>
                 </View>
-                {jadwalHariIni && (
-                  <TouchableOpacity onPress={handleOpenJadwalMingguan} style={styles.btnMiniJadwal}>
-                    <Text style={styles.btnMiniJadwalText}>Jadwal</Text>
-                  </TouchableOpacity>
-                )}
+              ) : (
+                <View style={[styles.shiftBadge, { backgroundColor: '#e8f0e4' }]}>
+                  <Icon name="calendar-remove" size={13} color="#515f74" style={{ marginRight: 4 }} />
+                  <Text style={[styles.shiftBadgeText, { color: '#515f74' }]}>Libur</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.statusHeroRow}>
+              <View style={[styles.statusHeroIconWrap, { backgroundColor: statusAccentBg }]}>
+                <Icon name={statusIcon} size={22} color={statusAccentColor} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.statusTitle} numberOfLines={1}>{statusTitle}</Text>
+                <Text style={styles.statusSubtitle} numberOfLines={2}>{statusSubtitle}</Text>
               </View>
             </View>
 
+            <View style={styles.locationBox}>
+              <Icon name="map-marker" size={22} color="#006e2f" style={styles.locationIcon} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.locationTitle} numberOfLines={1}>{user?.area_tugas?.nama || 'Area Penugasan Belum Diatur'}</Text>
+                <Text style={styles.locationSubtitle} numberOfLines={1}>
+                  {user?.area_tugas?.radius_meter ? `Radius Validasi: ${user.area_tugas.radius_meter}m` : 'SIAP Smart Security & Facility'}
+                </Text>
+              </View>
+              {jadwalHariIni && (
+                <TouchableOpacity onPress={handleOpenJadwalMingguan} style={styles.btnMiniJadwal}>
+                  <Text style={styles.btnMiniJadwalText}>Jadwal</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </Animated.View>
 
         {/* QUICK ACTIONS */}
         <Animated.View style={[styles.sectionContainer, { opacity: contentOpacity, transform: [{ translateY: contentAnim }] }]}>
+          {minutesUntilShift !== null && jadwalHariIni && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.shiftReminderBanner}
+              onPress={() => navigation.navigate('Absensi')}
+            >
+              <View style={styles.shiftReminderIconWrap}>
+                <Icon name="bell-ring-outline" size={22} color="#c77800" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.shiftReminderTitle}>
+                  {minutesUntilShift === 60
+                    ? 'Shift Dimulai 1 Jam Lagi'
+                    : `Shift Dimulai ${minutesUntilShift} Menit Lagi`}
+                </Text>
+                <Text style={styles.shiftReminderBody}>
+                  Jadwal pukul {jadwalHariIni.jam_masuk} - {jadwalHariIni.jam_keluar}. Segera bersiap menuju lokasi tugas.
+                </Text>
+              </View>
+              <View style={styles.shiftReminderAction}>
+                <Text style={styles.shiftReminderActionText}>Absen</Text>
+              </View>
+            </TouchableOpacity>
+          )}
           <Text style={styles.sectionTitle}>Aksi Cepat</Text>
 
           <View style={styles.gridContainer}>
             {/* Action 1: Absensi */}
             <TouchableOpacity activeOpacity={0.75} style={[styles.gridItem, styles.gridItemWhite]} onPress={() => navigation.navigate('Absensi')}>
               <View style={[styles.iconCircle, { backgroundColor: '#006e2f' }]}>
-                <Icon name="fingerprint" size={32} color="#ffffff" />
+                <Icon name="map-marker-check" size={32} color="#ffffff" />
               </View>
               <Text style={styles.gridItemText}>Absensi</Text>
             </TouchableOpacity>
@@ -567,8 +627,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 32,
     paddingHorizontal: 24,
     paddingTop: 18,
-    paddingBottom: 100, // extra space for floating card
-    position: 'relative',
+    paddingBottom: 68,
   },
   brandBar: {
     flexDirection: 'row',
@@ -584,7 +643,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 8,
   },
   userInfoRow: {
     flexDirection: 'row',
@@ -645,35 +704,35 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
-    width: width - 48,
-    alignSelf: 'center',
-    position: 'absolute',
-    bottom: -60, // float effect
+    borderRadius: 20,
+    padding: 18,
+    marginHorizontal: 24,
+    marginTop: -46,
+    borderWidth: 1,
+    borderColor: '#e2ece0',
     elevation: 4,
     shadowColor: '#161d16',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
   statusCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   statusCardLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#515f74',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   shiftBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffdad6',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
@@ -682,11 +741,31 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#ba1a1a',
   },
+  statusHeroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statusHeroIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   statusTitle: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: '800',
     color: '#161d16',
-    marginBottom: 16,
+    letterSpacing: -0.3,
+  },
+  statusSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#5a685a',
+    marginTop: 2,
+    lineHeight: 17,
   },
   locationBox: {
     flexDirection: 'row',
@@ -710,7 +789,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     paddingHorizontal: 24,
-    marginTop: 80, // compensate for floating card
+    marginTop: 28,
   },
   sectionTitle: {
     fontSize: 20,
@@ -1021,5 +1100,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
+  },
+  shiftReminderBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff8ea',
+    borderWidth: 1,
+    borderColor: '#f3d9a4',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 20,
+    gap: 12,
+  },
+  shiftReminderIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffefd4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shiftReminderTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#7c4a00',
+    marginBottom: 2,
+  },
+  shiftReminderBody: {
+    fontSize: 12,
+    color: '#8a5a14',
+    lineHeight: 17,
+  },
+  shiftReminderAction: {
+    backgroundColor: '#c77800',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  shiftReminderActionText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

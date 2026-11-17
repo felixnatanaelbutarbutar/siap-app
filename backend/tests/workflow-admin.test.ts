@@ -102,7 +102,7 @@ describe('Admin, Izin, Serah Terima & Security Integration Tests', () => {
         nama: 'CS Bystander',
         password_hash,
         role: 'CS',
-        divisi: 'CUSTOMER_SERVICE',
+        divisi: 'CLEANING_SERVICE',
         area_tugas_id: areaId,
         aktif: true,
       },

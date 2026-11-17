@@ -3,6 +3,8 @@ import { useAuthStore } from '../store/auth.store';
 import Geolocation from 'react-native-geolocation-service';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { API_BASE_URL } from './api';
+import { queryClient } from './queryClient';
+import { displayShiftReminderNow, syncShiftReminders } from './shiftReminder';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -11,6 +13,11 @@ class SocketService {
   connect() {
     const token = useAuthStore.getState().token;
     if (!token) return;
+    if (this.socket?.connected) return;
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
 
     this.socket = io(API_BASE_URL, {
       auth: { token },
@@ -22,6 +29,18 @@ class SocketService {
 
     this.socket.on('disconnect', () => {
       console.log('Socket terputus');
+    });
+
+    this.socket.on('shift:reminder', (data: { title?: string; body?: string }) => {
+      const title = data?.title || 'Shift Dimulai 1 Jam Lagi';
+      const body = data?.body || 'Shift kerja Anda akan dimulai dalam 1 jam. Harap bersiap menuju lokasi tugas.';
+      void displayShiftReminderNow(title, body);
+    });
+
+    this.socket.on('jadwal:updated', () => {
+      queryClient.invalidateQueries({ queryKey: ['jadwal-hari-ini'] });
+      queryClient.invalidateQueries({ queryKey: ['jadwal-mingguan'] });
+      void syncShiftReminders({ force: true });
     });
   }
 
@@ -66,6 +85,13 @@ class SocketService {
       console.log('Menghentikan Live Tracking GPS');
       clearInterval(this.locationInterval);
       this.locationInterval = null;
+    }
+  }
+
+  emitLocationNow(lat: number, lng: number, akurasi = 0) {
+    if (!this.socket) this.connect();
+    if (this.socket && this.socket.connected) {
+      this.socket.emit('location:update', { lat, lng, akurasi });
     }
   }
 }

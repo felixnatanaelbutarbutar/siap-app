@@ -72,6 +72,8 @@ export const initSocket = (server: HttpServer) => {
       socket.join('admin');
       const locationsSnapshot = Array.from(activeLocations.values());
       socket.emit('location:snapshot', locationsSnapshot);
+    } else if (user.id) {
+      socket.join(`staff:${user.id}`);
     }
 
     socket.on('location:update', (data: { lat: number; lng: number; akurasi?: number }) => {

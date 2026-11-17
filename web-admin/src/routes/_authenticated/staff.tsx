@@ -27,7 +27,7 @@ const tdStyle = {
 
 function StaffPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'SEMUA' | 'KEAMANAN' | 'CUSTOMER_SERVICE' | 'UTILITY'>('SEMUA');
+  const [activeTab, setActiveTab] = useState<'SEMUA' | 'KEAMANAN' | 'CLEANING_SERVICE' | 'UTILITY'>('SEMUA');
 
   const { data: staffList } = useQuery({
     queryKey: ['staff-list', activeTab],
@@ -52,7 +52,7 @@ function StaffPage() {
   const DivisiBadge = ({ divisi }: { divisi: string }) => {
     const m: Record<string, { bg: string; text: string }> = {
       KEAMANAN: { bg: 'rgba(30,215,96,0.12)', text: 'var(--accent)' },
-      CUSTOMER_SERVICE: { bg: 'rgba(83,157,245,0.12)', text: 'var(--info)' },
+      CLEANING_SERVICE: { bg: 'rgba(83,157,245,0.12)', text: 'var(--info)' },
       UTILITY: { bg: 'rgba(255,164,43,0.12)', text: 'var(--warning)' },
       MANAJEMEN: { bg: 'rgba(167,139,250,0.12)', text: '#a78bfa' },
     };
@@ -64,9 +64,9 @@ function StaffPage() {
     );
   };
 
-  const TABS = ['SEMUA', 'KEAMANAN', 'CUSTOMER_SERVICE', 'UTILITY'] as const;
+  const TABS = ['SEMUA', 'KEAMANAN', 'CLEANING_SERVICE', 'UTILITY'] as const;
   const tabLabel = (t: string) =>
-    t === 'SEMUA' ? 'Semua' : t === 'CUSTOMER_SERVICE' ? 'CS' : t.charAt(0) + t.slice(1).toLowerCase();
+    t === 'SEMUA' ? 'Semua' : t === 'CLEANING_SERVICE' ? 'Cleaning Service' : t.charAt(0) + t.slice(1).toLowerCase();
 
   return (
     <div className="space-y-6 animate-fadeInUp">

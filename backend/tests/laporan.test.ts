@@ -34,7 +34,7 @@ describe('Laporan Harian & Per-Jam API Tests', () => {
         nik: 'TEST-LAP-CS',
         nama: 'Test CS Laporan',
         password_hash,
-        divisi: 'CUSTOMER_SERVICE',
+        divisi: 'CLEANING_SERVICE',
         role: 'CS',
         aktif: true,
       },
@@ -90,14 +90,14 @@ describe('Laporan Harian & Per-Jam API Tests', () => {
     const res = await request(app)
       .post('/laporan')
       .set('Authorization', `Bearer ${csToken}`)
-      .field('kategori', 'KOMPLAIN')
-      .field('judul', 'Komplain Pengunjung Lobby')
-      .field('deskripsi', 'Pengunjung menanyakan lokasi ruang rapat lantai 2 dan telah dibantu.')
+      .field('kategori', 'PEMBERSIHAN_AREA')
+      .field('judul', 'Pembersihan Area Lobby Utama')
+      .field('deskripsi', 'Pembersihan lantai lobby utama dan meja resepsionis telah selesai dilakukan.')
       .attach('foto', jpegBuffer, { filename: 'bukti.jpg', contentType: 'image/jpeg' });
 
     expect(res.statusCode).toBe(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.kategori).toBe('KOMPLAIN');
+    expect(res.body.data.kategori).toBe('PEMBERSIHAN_AREA');
     expect(Array.isArray(res.body.data.foto_urls)).toBe(true);
   });
 

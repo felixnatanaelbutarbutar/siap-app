@@ -207,6 +207,7 @@ export const absenKeluar = async (req: Request, res: Response): Promise<void> =>
     const absensi = await prisma.absensi.create({
       data: {
         staff_id: staff!.id,
+        ...res.locals.attendance,
         jenis: JenisAbsensi.KELUAR,
         foto_url: fotoUrl,
         lat,

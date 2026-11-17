@@ -90,7 +90,7 @@ function KalenderJadwalPage() {
             >
               <option value="SEMUA">SEMUA DIVISI</option>
               <option value="KEAMANAN">KEAMANAN</option>
-              <option value="CUSTOMER_SERVICE">CUSTOMER SERVICE</option>
+              <option value="CLEANING_SERVICE">Cleaning Service</option>
               <option value="UTILITY">UTILITY</option>
             </select>
           </div>

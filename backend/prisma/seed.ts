@@ -99,8 +99,8 @@ async function main() {
     console.log(`  ✅ SATPAM: ${s.nama} (NIK: ${s.nik})`);
   }
 
-  // ─── 5. Buat CS (Divisi CUSTOMER_SERVICE) ────────────────────────────────
-  console.log('\n🎧 Membuat akun CS (Customer Service)...');
+  // ─── 5. Buat CS (Divisi CLEANING_SERVICE) ────────────────────────────────
+  console.log('\n🧹 Membuat akun CS (Cleaning Service)...');
 
   const csData = [
     { nik: '12001', nama: 'Dewi Rahayu',    area_tugas_id: areaLobby.id },
@@ -116,7 +116,7 @@ async function main() {
         nama: data.nama,
         password_hash: staffPassword,
         role: Role.CS,
-        divisi: Divisi.CUSTOMER_SERVICE,
+        divisi: Divisi.CLEANING_SERVICE,
         area_tugas_id: data.area_tugas_id,
         aktif: true,
       },
@@ -169,7 +169,7 @@ async function main() {
   console.log('  ─── Satpam (Keamanan) ───────────────────────');
   console.log('  NIK: 11001  | Password: staff123  | Role: SATPAM');
   console.log('  NIK: 11002  | Password: staff123  | Role: SATPAM');
-  console.log('  ─── Customer Service ────────────────────────');
+  console.log('  ─── Cleaning Service ────────────────────────');
   console.log('  NIK: 12001  | Password: staff123  | Role: CS');
   console.log('  NIK: 12002  | Password: staff123  | Role: CS');
   console.log('  ─── Utility ─────────────────────────────────');

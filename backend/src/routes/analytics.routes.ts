@@ -9,7 +9,7 @@ import {addDays,attendanceRows,localDate,daysBetween} from '../services/workforc
 const router=Router();router.use(authenticate,requireRole('ADMIN'));
 router.get('/',safe(async(req,res)=>{
   const period=z.coerce.number().int().min(7).max(31).parse(req.query.days||14);
-  const division=z.enum(['ALL','KEAMANAN','CUSTOMER_SERVICE','UTILITY']).parse(req.query.division||'ALL');
+  const division=z.enum(['ALL','KEAMANAN','CLEANING_SERVICE','UTILITY']).parse(req.query.division||'ALL');
   const today=localDate(),from=addDays(today,1-period),now=Date.now();
   const allRows=await attendanceRows(from,today);
   const rows=allRows.filter(r=>r.source!=='UNSCHEDULED'&&(division==='ALL'||r.divisi===division));
@@ -22,9 +22,9 @@ router.get('/',safe(async(req,res)=>{
     const late=group.filter(r=>r.terlambat);
     return {date,label:date.slice(8)+'/'+date.slice(5,7),scheduled:group.length,due:due.length,attended:group.filter(attended).length,leave:group.filter(isLeave).length,absent:group.filter(r=>r.status==='TIDAK_HADIR').length,waiting:group.filter(r=>r.status==='BELUM_ABSEN').length,late:late.length,late_minutes:late.reduce((n,r)=>n+r.menit_terlambat,0),late_average:late.length?Math.round(late.reduce((n,r)=>n+r.menit_terlambat,0)/late.length):0};
   });
-  const coverage=['KEAMANAN','CUSTOMER_SERVICE','UTILITY'].filter(d=>division==='ALL'||division===d).map(divisi=>{
+  const coverage=['KEAMANAN','CLEANING_SERVICE','UTILITY'].filter(d=>division==='ALL'||division===d).map(divisi=>{
     const list=todayRows.filter(r=>r.divisi===divisi),due=list.filter(r=>(+new Date(r.start_at)<=now||!!r.masuk)&&!isLeave(r));
-    return {name:divisi==='CUSTOMER_SERVICE'?'CS':divisi==='KEAMANAN'?'Keamanan':'Utility',scheduled:list.length,due:due.length,attended:due.filter(attended).length,waiting:due.filter(r=>!r.masuk).length,leave:list.filter(isLeave).length};
+    return {name:divisi==='CLEANING_SERVICE'?'Cleaning Service':divisi==='KEAMANAN'?'Keamanan':'Utility',scheduled:list.length,due:due.length,attended:due.filter(attended).length,waiting:due.filter(r=>!r.masuk).length,leave:list.filter(isLeave).length};
   });
   const leaveRequests=await prisma.izinCuti.findMany({where:{created_at:{gte:new Date(from+'T00:00:00+07:00')},...(division!=='ALL'?{staff:{divisi:division}}:{})},select:{jenis:true,status:true}});
   const staffFilter=division!=='ALL'?{staff:{divisi:division}}:{};

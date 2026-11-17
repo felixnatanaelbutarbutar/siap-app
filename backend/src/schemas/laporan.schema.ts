@@ -3,7 +3,7 @@ import { Divisi, KategoriLaporan, StatusLaporan, StatusKeamanan } from '@prisma/
 
 export const kategoriPerDivisi: Record<string, string[]> = {
   [Divisi.KEAMANAN]: ['PATROLI', 'PENJAGAAN', 'PENGAWALAN', 'INSIDEN', 'PEMELIHARAAN'],
-  [Divisi.CUSTOMER_SERVICE]: ['KOMPLAIN', 'INFORMASI', 'PENGADUAN', 'LAIN_LAIN'],
+  [Divisi.CLEANING_SERVICE]: ['KEBERSIHAN', 'PEMBERSIHAN_AREA', 'SANITASI_TOILET', 'PENGELOLAAN_SAMPAH', 'STOK_PERLENGKAPAN', 'LAIN_LAIN'],
   [Divisi.UTILITY]: ['KEBERSIHAN', 'KERUSAKAN', 'PERBAIKAN', 'PEMERIKSAAN_RUTIN'],
 };
 

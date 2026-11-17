@@ -1,22 +1,16 @@
-import { Platform } from 'react-native';
-
-const STORAGE_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-const STORAGE_BASE = `http://${STORAGE_HOST}:9000/siap-storage`;
+const STORAGE_BASE = 'http://localhost:9000/siap-storage';
 
 export const getFileUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
 
-  let clean = url.trim();
+  const clean = url.trim();
 
   // Jika sudah URL absolut (http/https)
   if (clean.startsWith('http://') || clean.startsWith('https://')) {
-    if (Platform.OS === 'android' && clean.includes('localhost')) {
-      return clean.replace(/localhost/g, '10.0.2.2');
-    }
     return clean;
   }
 
-  // Jika berupa path/key relatif MinIO
+  // Jika berupa path/key relatif MinIO (didukung via adb reverse tcp:9000 tcp:9000)
   const key = clean.replace(/^\/+/, '');
   return `${STORAGE_BASE}/${key}`;
 };

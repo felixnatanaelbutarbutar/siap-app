@@ -90,7 +90,7 @@ function JadwalPage() {
           <select value={filterDivisi} onChange={e => setFilterDivisi(e.target.value)} style={inputStyle}>
             <option value="SEMUA">Semua Divisi</option>
             <option value="KEAMANAN">Keamanan</option>
-            <option value="CUSTOMER_SERVICE">Cleaning Service</option>
+            <option value="CLEANING_SERVICE">Cleaning Service</option>
             <option value="UTILITY">Utility</option>
           </select>
         </div>
