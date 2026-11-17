@@ -1,0 +1,21 @@
+{
+  "name": "SIAP Admin Command Center",
+  "short_name": "SIAP Admin",
+  "description": "Sistem Informasi Absensi, Pelaporan & Tanggap Darurat SOS SIAP",
+  "start_url": "/sos",
+  "display": "standalone",
+  "background_color": "#0e1511",
+  "theme_color": "#006e2f",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

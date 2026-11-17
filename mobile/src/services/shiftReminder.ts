@@ -5,6 +5,7 @@ import { api } from './api';
 import { useAuthStore } from '../store/auth.store';
 
 const SHIFT_CHANNEL_ID = 'shift-reminder';
+const SOS_CHANNEL_ID = 'sos-darurat';
 const SHIFT_NOTIF_PREFIX = 'shift_reminder_';
 const HARI_MAP = ['AHAD', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'] as const;
 
@@ -118,6 +119,56 @@ export const displayShiftReminderNow = async (title: string, body: string): Prom
     });
   } catch (error) {
     console.log('Gagal menampilkan notifikasi pengingat shift:', error);
+  }
+};
+
+export const displaySosAlertNotification = async (alert: {
+  id?: string;
+  kategori?: string;
+  keterangan?: string;
+  area_nama?: string | null;
+  staff?: { nama?: string; divisi?: string };
+}): Promise<void> => {
+  const sender = alert.staff?.nama || 'Rekan Staff';
+  const divisi = (alert.staff?.divisi || '').replace(/_/g, ' ');
+  const kategori = alert.kategori || 'DARURAT';
+  const area = alert.area_nama ? ` | Area: ${alert.area_nama}` : '';
+  const title = `SOS DARURAT: ${sender}${divisi ? ` (${divisi})` : ''}`;
+  const body = `[${kategori}] ${alert.keterangan || 'Membutuhkan bantuan segera!'}${area}`;
+
+  try {
+    Toast.show({
+      type: 'error',
+      text1: title,
+      text2: body,
+      visibilityTime: 8000,
+    });
+
+    const channelId = await notifee.createChannel({
+      id: SOS_CHANNEL_ID,
+      name: 'Peringatan SOS Darurat',
+      description: 'Notifikasi panggilan darurat SOS dari rekan staff lapangan',
+      importance: AndroidImportance.HIGH,
+      sound: 'default',
+      vibration: true,
+    });
+
+    await notifee.displayNotification({
+      id: `sos_${alert.id || Date.now()}`,
+      title,
+      body,
+      android: {
+        channelId,
+        importance: AndroidImportance.HIGH,
+        pressAction: { id: 'default' },
+        vibrationPattern: [300, 150, 300, 150, 500],
+      },
+      ios: {
+        sound: 'default',
+      },
+    });
+  } catch (error) {
+    console.log('Gagal menampilkan notifikasi SOS:', error);
   }
 };
 

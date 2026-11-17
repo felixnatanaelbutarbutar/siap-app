@@ -15,6 +15,7 @@ import {
   Moon,
   Sun,
   Megaphone,
+  ShieldAlert,
   Menu,
   X,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pendingReports = useNotificationStore((s) => s.pendingReports);
+  const activeSosCount = useNotificationStore((s) => s.activeSosCount);
 
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -50,6 +52,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
+    { label: 'SOS Darurat', icon: ShieldAlert, to: '/sos', badge: activeSosCount },
     { label: 'Absensi', icon: MapPin, to: '/absensi' },
     { label: 'Rekap & Verifikasi', icon: ClipboardCheck, to: '/rekap' },
     { label: 'Laporan', icon: FileText, to: '/laporan', badge: pendingReports },

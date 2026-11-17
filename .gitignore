@@ -35,6 +35,7 @@ mobile/ios/build/
 
 # Infra secrets
 infra/.env
+.vapid-keys.json
 
 # Local caches & agent settings
 .tanstack/

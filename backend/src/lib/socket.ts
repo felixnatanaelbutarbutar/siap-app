@@ -31,8 +31,21 @@ export const initSocket = (server: HttpServer) => {
     },
   });
 
-  // Middleware Autentikasi Socket
+  // Middleware Autentikasi Socket (mendukung JWT normal DAN sosChannelToken untuk browser admin saat tidak login)
   io.use(async (socket, next) => {
+    const sosChannelToken = socket.handshake.auth?.sosChannelToken;
+    if (sosChannelToken && typeof sosChannelToken === 'string') {
+      try {
+        const sub = await prisma.webPushSubscription.findFirst({
+          where: { channel_token: sosChannelToken, aktif: true },
+        });
+        if (sub) {
+          socket.data.user = { id: `sos-browser:${sub.id}`, role: 'SOS_BROWSER', subId: sub.id };
+          return next();
+        }
+      } catch {}
+    }
+
     const token =
       socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
     if (!token) {
@@ -68,12 +81,18 @@ export const initSocket = (server: HttpServer) => {
     const user = socket.data.user;
     logger.info(`Socket connected: ${socket.id} (User: ${user.id} - ${user.role})`);
 
+    if (user.role === 'SOS_BROWSER') {
+      socket.join('sos-browsers');
+      return;
+    }
+
     if (user.role === 'ADMIN') {
       socket.join('admin');
       const locationsSnapshot = Array.from(activeLocations.values());
       socket.emit('location:snapshot', locationsSnapshot);
     } else if (user.id) {
       socket.join(`staff:${user.id}`);
+      socket.join('staff-all');
     }
 
     socket.on('location:update', (data: { lat: number; lng: number; akurasi?: number }) => {

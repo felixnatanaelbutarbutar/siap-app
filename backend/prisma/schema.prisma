@@ -147,6 +147,7 @@ model Staff {
   izin_cuti         IzinCuti[]
   jadwal_kerja      JadwalKerja[]
   pengumuman        Pengumuman[]
+  sos_alerts        SosAlert[]
 
   @@index([area_tugas_id])
   @@index([aktif])
@@ -428,4 +429,44 @@ model Pengumuman {
   admin      Staff          @relation(fields: [admin_id], references: [id])
 
   @@map("pengumuman")
+}
+
+model SosAlert {
+  id            String    @id @default(cuid())
+  staff_id      String
+  kategori      String    @default("KEAMANAN")
+  keterangan    String    @db.Text
+  lat           Float?
+  lng           Float?
+  akurasi_gps   Float?
+  area_nama     String?
+  status        String    @default("AKTIF")
+  handled_by    String?
+  handled_at    DateTime?
+  catatan_admin String?   @db.Text
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  staff Staff @relation(fields: [staff_id], references: [id])
+
+  @@index([staff_id])
+  @@index([status])
+  @@index([created_at])
+  @@map("sos_alerts")
+}
+
+model WebPushSubscription {
+  id            String   @id @default(cuid())
+  endpoint      String   @unique @db.Text
+  p256dh        String   @db.Text
+  auth          String   @db.Text
+  channel_token String   @unique
+  user_agent    String?
+  staff_id      String?
+  aktif         Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([aktif])
+  @@map("web_push_subscriptions")
 }

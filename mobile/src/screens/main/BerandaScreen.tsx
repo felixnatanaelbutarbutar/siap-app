@@ -1,5 +1,23 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image, Dimensions, Modal, ActivityIndicator, Animated, RefreshControl } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  Image,
+  Dimensions,
+  Modal,
+  ActivityIndicator,
+  Animated,
+  RefreshControl,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
+import Toast from 'react-native-toast-message';
 import { Text } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -28,6 +46,11 @@ export const BerandaScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [showPengumuman, setShowPengumuman] = useState(false);
   const [showJadwalMingguan, setShowJadwalMingguan] = useState(false);
+  const [showSosModal, setShowSosModal] = useState(false);
+  const [sosKategori, setSosKategori] = useState<'KEAMANAN' | 'MEDIS' | 'KEBAKARAN' | 'FASILITAS' | 'LAINNYA'>('KEAMANAN');
+  const [sosKeterangan, setSosKeterangan] = useState('');
+  const [sosSending, setSosSending] = useState(false);
+  const [sosCoords, setSosCoords] = useState<{ lat: number; lng: number; acc: number } | null>(null);
 
   // Entrance animation
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -135,6 +158,60 @@ export const BerandaScreen = () => {
   const handleOpenJadwalMingguan = () => {
     refetchJadwalMingguan();
     setShowJadwalMingguan(true);
+  };
+
+  const handleOpenSos = () => {
+    setSosKategori('KEAMANAN');
+    setSosKeterangan('');
+    setShowSosModal(true);
+    Geolocation.getCurrentPosition(
+      (pos) => {
+        setSosCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          acc: Math.round(pos.coords.accuracy || 0),
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
+    );
+  };
+
+  const handleSubmitSos = async () => {
+    const cleanNote = sosKeterangan.trim();
+    if (cleanNote.length < 5) {
+      Alert.alert(
+        'Keterangan Wajib Diisi',
+        'Harap jelaskan kondisi darurat yang sedang terjadi minimal 5 karakter agar Admin dan rekan staff dapat segera membantu.'
+      );
+      return;
+    }
+
+    setSosSending(true);
+    try {
+      await api.post('/sos', {
+        kategori: sosKategori,
+        keterangan: cleanNote,
+        lat: sosCoords?.lat ?? null,
+        lng: sosCoords?.lng ?? null,
+        akurasi_gps: sosCoords?.acc ?? null,
+      });
+      setShowSosModal(false);
+      setSosKeterangan('');
+      Toast.show({
+        type: 'success',
+        text1: 'SOS Darurat Terkirim',
+        text2: 'Notifikasi darurat sudah dikirim ke browser Admin & rekan staff aktif.',
+        visibilityTime: 5000,
+      });
+    } catch (err: any) {
+      Alert.alert(
+        'Gagal Mengirim SOS',
+        err?.response?.data?.message || 'Periksa koneksi internet Anda lalu coba kirim ulang.'
+      );
+    } finally {
+      setSosSending(false);
+    }
   };
 
   // Status Kehadiran Realtime
@@ -312,19 +389,29 @@ export const BerandaScreen = () => {
         <Animated.View style={[styles.greenHeaderWrapper, { opacity: headerAnim }]}>
           <View style={styles.greenHeaderContent}>
 
-            {/* Brand Strip + Announcement Bell */}
+            {/* Brand Strip + SOS Alert + Announcement Bell */}
             <View style={styles.brandBar}>
               <Image
                 source={require('../../assets/logo-white.png')}
                 style={styles.headerBrandLogo}
                 resizeMode="contain"
               />
-              <TouchableOpacity style={styles.bellIconBtn} onPress={handleOpenPengumuman} activeOpacity={0.7}>
-                <Icon name="bullhorn-outline" size={22} color="#ffffff" />
-                {pengumumanData && pengumumanData.length > 0 && (
-                  <Animated.View style={[styles.notifDot, { opacity: notifBlink }]} />
-                )}
-              </TouchableOpacity>
+              <View style={styles.headerActionsRow}>
+                <TouchableOpacity
+                  style={styles.sosHeaderBtn}
+                  onPress={handleOpenSos}
+                  activeOpacity={0.75}
+                >
+                  <Icon name="alarm-light-outline" size={16} color="#ffffff" />
+                  <Text style={styles.sosHeaderBtnText}>SOS</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.bellIconBtn} onPress={handleOpenPengumuman} activeOpacity={0.7}>
+                  <Icon name="bullhorn-outline" size={22} color="#ffffff" />
+                  {pengumumanData && pengumumanData.length > 0 && (
+                    <Animated.View style={[styles.notifDot, { opacity: notifBlink }]} />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Top Bar (Avatar & Welcome) */}
@@ -601,6 +688,136 @@ export const BerandaScreen = () => {
           </View>
         </View>
       </Modal>
+      {/* MODAL SOS DARURAT (WAJIB KETERANGAN) */}
+      <Modal
+        visible={showSosModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !sosSending && setShowSosModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.sosModalContent}>
+            <View style={styles.sosModalHeader}>
+              <View style={styles.sosHeaderTitleRow}>
+                <View style={styles.sosModalIconWrap}>
+                  <Icon name="alarm-light" size={22} color="#ffffff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sosModalTitle}>Kirim SOS Darurat</Text>
+                  <Text style={styles.sosModalSub}>
+                    Notifikasi langsung ke browser Admin &amp; seluruh rekan staff
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => !sosSending && setShowSosModal(false)}
+                style={styles.closeBtn}
+              >
+                <Icon name="close" size={22} color="#161d16" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={styles.sosFieldLabel}>1. PILIH JENIS DARURAT</Text>
+              <View style={styles.sosChipGrid}>
+                {(
+                  [
+                    { key: 'KEAMANAN', label: 'Keamanan', icon: 'shield-alert-outline' },
+                    { key: 'MEDIS', label: 'Medis / Kecelakaan', icon: 'medical-bag' },
+                    { key: 'KEBAKARAN', label: 'Kebakaran', icon: 'fire-alert' },
+                    { key: 'FASILITAS', label: 'Kerusakan Kritis', icon: 'wrench-outline' },
+                    { key: 'LAINNYA', label: 'Lainnya', icon: 'alert-circle-outline' },
+                  ] as const
+                ).map((item) => {
+                  const active = sosKategori === item.key;
+                  return (
+                    <TouchableOpacity
+                      key={item.key}
+                      onPress={() => setSosKategori(item.key)}
+                      style={[styles.sosChip, active && styles.sosChipActive]}
+                      activeOpacity={0.75}
+                    >
+                      <Icon
+                        name={item.icon}
+                        size={15}
+                        color={active ? '#ffffff' : '#7f1d1d'}
+                        style={{ marginRight: 5 }}
+                      />
+                      <Text style={[styles.sosChipText, active && styles.sosChipTextActive]}>
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.sosLabelRow}>
+                <Text style={styles.sosFieldLabel}>2. KETERANGAN DARURAT (WAJIB)</Text>
+                <Text style={styles.sosCharCount}>{sosKeterangan.trim().length} karakter</Text>
+              </View>
+              <TextInput
+                style={styles.sosTextInput}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                placeholder="Jelaskan kejadian darurat secara singkat & jelas (contoh: Ada tamu mencurigakan memaksa masuk Gerbang Selatan, butuh bantuan segera)..."
+                placeholderTextColor="#8a978a"
+                value={sosKeterangan}
+                onChangeText={setSosKeterangan}
+                maxLength={1000}
+              />
+              <Text style={styles.sosHelperText}>
+                Wajib diisi minimal 5 karakter agar Admin dan rekan staff mengetahui kondisi serta lokasi bantuan.
+              </Text>
+
+              <View style={styles.sosGpsBox}>
+                <Icon name="map-marker-radius" size={18} color="#b91c1c" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sosGpsTitle}>
+                    Lokasi Terlampir: {user?.area_tugas?.nama || 'Area Penugasan'}
+                  </Text>
+                  <Text style={styles.sosGpsSub}>
+                    {sosCoords
+                      ? `GPS Terkunci: ${sosCoords.lat.toFixed(5)}, ${sosCoords.lng.toFixed(5)} (±${sosCoords.acc} m)`
+                      : 'Mengambil titik koordinat GPS terkini...'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.sosBtnRow}>
+                <TouchableOpacity
+                  style={styles.sosCancelBtn}
+                  onPress={() => !sosSending && setShowSosModal(false)}
+                  disabled={sosSending}
+                >
+                  <Text style={styles.sosCancelBtnText}>Batal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.sosSendBtn,
+                    (sosSending || sosKeterangan.trim().length < 5) && styles.sosSendBtnDisabled,
+                  ]}
+                  onPress={handleSubmitSos}
+                  disabled={sosSending}
+                  activeOpacity={0.8}
+                >
+                  {sosSending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <>
+                      <Icon name="send" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                      <Text style={styles.sosSendBtnText}>KIRIM SOS DARURAT</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -692,6 +909,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.14)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sosHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 12,
+    height: 38,
+    borderRadius: 19,
+    gap: 5,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.45)',
+    elevation: 3,
+  },
+  sosHeaderBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
   },
   notifDot: {
     position: 'absolute',
@@ -1141,5 +1381,165 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 11,
     fontWeight: '700',
+  },
+  sosModalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 28,
+    maxHeight: '88%',
+  },
+  sosModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  sosHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+    marginRight: 8,
+  },
+  sosModalIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#dc2626',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sosModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#7f1d1d',
+  },
+  sosModalSub: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 1,
+  },
+  sosFieldLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#4b5563',
+    letterSpacing: 0.7,
+    marginBottom: 8,
+  },
+  sosLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+  },
+  sosCharCount: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  sosChipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  sosChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  sosChipActive: {
+    backgroundColor: '#dc2626',
+    borderColor: '#b91c1c',
+  },
+  sosChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#7f1d1d',
+  },
+  sosChipTextActive: {
+    color: '#ffffff',
+  },
+  sosTextInput: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    borderRadius: 14,
+    padding: 12,
+    minHeight: 100,
+    fontSize: 14,
+    color: '#111827',
+    lineHeight: 20,
+  },
+  sosHelperText: {
+    fontSize: 11,
+    color: '#6b7280',
+    marginTop: 6,
+  },
+  sosGpsBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 14,
+  },
+  sosGpsTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#7f1d1d',
+  },
+  sosGpsSub: {
+    fontSize: 11,
+    color: '#991b1b',
+    marginTop: 1,
+  },
+  sosBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 18,
+  },
+  sosCancelBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sosCancelBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  sosSendBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#dc2626',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+  },
+  sosSendBtnDisabled: {
+    backgroundColor: '#fca5a5',
+  },
+  sosSendBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
 });

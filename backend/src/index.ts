@@ -19,6 +19,7 @@ import laporanRoutes from './routes/laporan.routes';
 import izinRoutes from './routes/izin.routes';
 import serahTerimaRoutes from './routes/serahterima.routes';
 import pengumumanRoutes from './routes/pengumuman.routes';
+import sosRoutes from './routes/sos.routes';
 import { prisma } from './lib/prisma';
 import { initSocket } from './lib/socket';
 import { Role, JenisAbsensi } from '@prisma/client';
@@ -63,6 +64,7 @@ app.use('/laporan', laporanRoutes);
 app.use('/izin', izinRoutes);
 app.use('/serah-terima', serahTerimaRoutes);
 app.use('/pengumuman', pengumumanRoutes);
+app.use('/sos', sosRoutes);
 
 // ─── Global Error Handler ────────────────────────────────────────────────────
 app.use(errorHandler);

@@ -1,10 +1,14 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/auth.store';
 import Geolocation from 'react-native-geolocation-service';
-import { PermissionsAndroid, Platform } from 'react-native';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import { API_BASE_URL } from './api';
 import { queryClient } from './queryClient';
-import { displayShiftReminderNow, syncShiftReminders } from './shiftReminder';
+import {
+  displayShiftReminderNow,
+  displaySosAlertNotification,
+  syncShiftReminders,
+} from './shiftReminder';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -41,6 +45,24 @@ class SocketService {
       queryClient.invalidateQueries({ queryKey: ['jadwal-hari-ini'] });
       queryClient.invalidateQueries({ queryKey: ['jadwal-mingguan'] });
       void syncShiftReminders({ force: true });
+    });
+
+    this.socket.on('sos:alert', (alert: any) => {
+      const currentUser = useAuthStore.getState().user;
+      if (!alert || (currentUser?.id && alert.staff_id === currentUser.id)) {
+        return;
+      }
+
+      void displaySosAlertNotification(alert);
+
+      const sender = alert.staff?.nama || 'Rekan Staff';
+      const divisi = (alert.staff?.divisi || '').replace(/_/g, ' ');
+      const area = alert.area_nama ? `\nArea: ${alert.area_nama}` : '';
+      Alert.alert(
+        `SOS DARURAT (${alert.kategori || 'DARURAT'})`,
+        `Dari: ${sender}${divisi ? ` (${divisi})` : ''}${area}\n\nKeterangan:\n${alert.keterangan || 'Membutuhkan bantuan segera!'}`,
+        [{ text: 'Mengerti', style: 'destructive' }]
+      );
     });
   }
 
