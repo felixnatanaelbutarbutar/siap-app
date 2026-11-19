@@ -11,7 +11,7 @@ cd ..
 echo.
 
 echo [2/4] Menghidupkan Mesin Utama (Backend)...
-start "SIAP - Backend" cmd /k "cd backend && npm install && npm run prisma:generate && npm run dev"
+start "SIAP - Backend" cmd /k "cd backend && npm install && npx prisma migrate deploy && npm run prisma:generate && npm run dev"
 
 echo [3/4] Menghidupkan Pusat Komando (Web Admin)...
 start "SIAP - Web Admin" cmd /k "cd web-admin && npm install && npm run dev"

@@ -6,6 +6,7 @@ import { uploadPrivateFile, downloadPrivateFile, downloadFile } from '../service
 import { sendToDevice } from '../services/notification.service';
 import { createIzinSchema, reviewIzinSchema } from '../schemas/izin.schema';
 import { getIO } from '../lib/socket';
+import { catatAktivitasAdmin } from '../services/audit.service';
 
 // ─── POST /izin (Mobile) ──────────────────────────────────────────────────────
 export const createIzin = async (req: Request, res: Response): Promise<void> => {
@@ -86,6 +87,7 @@ export const getAdminIzin = async (_req: Request, res: Response): Promise<void> 
     const izinList = await prisma.izinCuti.findMany({
       include: {
         staff: { select: { nama: true, nik: true, divisi: true } },
+        reviewer: { select: { id: true, nama: true, nik: true } },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -139,6 +141,24 @@ export const reviewIzin = async (req: Request, res: Response): Promise<void> => 
       const row=await tx.izinCuti.update({where:{id},data:{status,komentar_admin,work_dates:dates,reviewed_by:req.user!.id,reviewed_at:new Date()}});
       await audit(tx,req.user!.id,id,'LEAVE_'+status,komentar_admin||'Keputusan admin',{dates});
       return row;
+    });
+
+    // Catat ke log aktivitas admin
+    const statusText = status === 'APPROVED' ? 'menyetujui' : 'menolak';
+    await catatAktivitasAdmin({
+      adminId: req.user!.id,
+      tipeAksi: status === 'APPROVED' ? 'APPROVE_IZIN' : 'REJECT_IZIN',
+      targetEntitas: 'IZIN_CUTI',
+      targetId: id,
+      keterangan: `Admin ${req.user!.nama} telah ${statusText} pengajuan ${izin.jenis} dari ${izin.staff?.nama || 'Staff'}${komentar_admin ? ` dengan catatan: "${komentar_admin}"` : ''}`,
+      metadata: {
+        izin_id: id,
+        jenis: izin.jenis,
+        staff_id: izin.staff_id,
+        status,
+        komentar_admin,
+      },
+      ipAddress: req.ip,
     });
 
     if (izin.staff?.fcm_token) {

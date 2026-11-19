@@ -16,6 +16,7 @@ import {
 import bcrypt from 'bcryptjs';
 import Papa from 'papaparse';
 import { uploadFile } from '../services/storage.service';
+import { catatAktivitasAdmin, getDaftarAktivitasAdmin } from '../services/audit.service';
 
 // ─── DASHBOARD & STATISTIK ──────────────────────────────────────────────────
 
@@ -610,5 +611,26 @@ export const broadcastNotifikasi = async (req: Request, res: Response): Promise<
   } catch (error) {
     logger.error('Error broadcastNotifikasi:', error);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+  }
+};
+
+// ─── AUDIT & LOG AKTIVITAS ADMIN ─────────────────────────────────────────────
+
+export const getAdminAktivitas = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { admin_id, tipe_aksi, target_entitas, dari, sampai, page, limit } = req.query;
+    const result = await getDaftarAktivitasAdmin({
+      adminId: admin_id as string | undefined,
+      tipeAksi: tipe_aksi as string | undefined,
+      targetEntitas: target_entitas as string | undefined,
+      startDate: dari as string | undefined,
+      endDate: sampai as string | undefined,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 20,
+    });
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Error getAdminAktivitas:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengambil log aktivitas admin.' });
   }
 };

@@ -18,6 +18,7 @@ import Toast from 'react-native-toast-message';
 import { CameraView } from '../../components/CameraView';
 import { validateWorkArea, hitungJarakMeter, GeofenceError } from '../../utils/geofence';
 import { cancelTodayShiftReminder } from '../../services/shiftReminder';
+import { setupLaporan6JamReminders, cancelAllLaporanReminders } from '../../services/laporanReminder';
 import { socketService } from '../../services/socket';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -261,30 +262,9 @@ export const AbsensiScreen = () => {
       }
       if (user?.role === 'SATPAM') {
         if (variables.jenis === 'MASUK') {
-          try {
-            await notifee.requestPermission();
-            await notifee.createChannel({ id: 'default', name: 'Pengingat tugas' });
-            const trigger: IntervalTrigger = {
-              type: TriggerType.INTERVAL,
-              interval: 3,
-              timeUnit: TimeUnit.HOURS,
-            };
-            await notifee.createTriggerNotification(
-              {
-                id: 'satpam_hourly_reminder',
-                title: 'Waktunya Laporan Per 3 Jam!',
-                body: 'Segera periksa area dan isi laporan rutin 3 jam Anda.',
-                android: { channelId: 'default' },
-              },
-              trigger
-            );
-            console.log('Notifee: Reminder per 3 jam diaktifkan');
-          } catch (e) {
-            console.log('Notifee Error:', e);
-          }
+          void setupLaporan6JamReminders(new Date());
         } else if (variables.jenis === 'KELUAR') {
-          try { await notifee.cancelNotification('satpam_hourly_reminder'); } catch (e) { console.log('Gagal menghentikan pengingat:', e); }
-          console.log('Notifee: Reminder per 3 jam dibatalkan');
+          void cancelAllLaporanReminders();
         }
       }
     },

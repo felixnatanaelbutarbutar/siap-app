@@ -155,7 +155,7 @@ function IzinCutiPage() {
         <table className="w-full">
           <thead>
             <tr>
-              {["Staff", "Jenis", "Tanggal", "Status", ""].map((h) => (
+              {["Staff", "Jenis", "Tanggal", "Status", "Ditinjau Oleh", ""].map((h) => (
                 <th key={h} style={thStyle}>
                   {h}
                 </th>
@@ -204,6 +204,32 @@ function IzinCutiPage() {
                 <td style={tdStyle}>
                   <StatusBadge status={item.status} />
                 </td>
+                <td style={tdStyle}>
+                  {item.status !== "PENDING" ? (
+                    <div>
+                      <div
+                        className="font-medium text-xs"
+                        style={{ color: "var(--text-base)" }}
+                      >
+                        {item.reviewer?.nama || "Administrator SIAP"}
+                      </div>
+                      {item.reviewed_at && (
+                        <div
+                          className="text-[11px] mt-0.5"
+                          style={{ color: "var(--text-dim)" }}
+                        >
+                          {format(
+                            new Date(item.reviewed_at),
+                            "dd MMM yyyy, HH:mm",
+                            { locale: id }
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: "var(--text-dim)" }}>-</span>
+                  )}
+                </td>
                 <td style={{ ...tdStyle, textAlign: "right" }}>
                   <button
                     onClick={() => setSelectedIzin(item)}
@@ -224,7 +250,7 @@ function IzinCutiPage() {
             {(!izinList || izinList.length === 0) && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   style={{
                     ...tdStyle,
                     textAlign: "center",
@@ -299,7 +325,9 @@ function IzinCutiPage() {
                 >
                   Status
                 </label>
-                <StatusBadge status={selectedIzin.status} />
+                <div>
+                  <StatusBadge status={selectedIzin.status} />
+                </div>
               </div>
               <div>
                 <label
@@ -312,15 +340,73 @@ function IzinCutiPage() {
                   className="text-sm font-mono"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  {format(new Date(selectedIzin.tanggal_mulai), "dd MMM yyyy")}{" "}
+                  {format(new Date(selectedIzin.tanggal_mulai), "dd MMM yyyy", { locale: id })}{" "}
                   –{" "}
                   {format(
                     new Date(selectedIzin.tanggal_selesai),
                     "dd MMM yyyy",
+                    { locale: id }
                   )}
                 </div>
               </div>
             </div>
+
+            {selectedIzin.status !== "PENDING" && (
+              <div
+                className="p-4 rounded-xl flex items-center justify-between"
+                style={{
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div>
+                  <p
+                    className="text-xs font-bold uppercase mb-1"
+                    style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
+                  >
+                    {selectedIzin.status === "APPROVED"
+                      ? "Disetujui Oleh"
+                      : selectedIzin.status === "REJECTED"
+                      ? "Ditolak Oleh"
+                      : "Diproses Oleh"}
+                  </p>
+                  <p
+                    className="font-bold text-sm"
+                    style={{
+                      color:
+                        selectedIzin.status === "APPROVED"
+                          ? "var(--accent)"
+                          : selectedIzin.status === "REJECTED"
+                          ? "#ef4444"
+                          : "var(--text-base)",
+                    }}
+                  >
+                    {selectedIzin.reviewer?.nama || "Administrator SIAP"}
+                    {selectedIzin.reviewer?.nik ? ` (${selectedIzin.reviewer.nik})` : ""}
+                  </p>
+                </div>
+                {selectedIzin.reviewed_at && (
+                  <div className="text-right">
+                    <p
+                      className="text-xs font-bold uppercase mb-1"
+                      style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
+                    >
+                      Waktu Keputusan
+                    </p>
+                    <p
+                      className="text-xs font-mono"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {format(
+                        new Date(selectedIzin.reviewed_at),
+                        "dd MMMM yyyy, HH:mm",
+                        { locale: id }
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label
@@ -458,6 +544,30 @@ function IzinCutiPage() {
                   >
                     <CheckCircle2 className="w-4 h-4" /> Setujui
                   </button>
+                </div>
+              </div>
+            )}
+
+            {selectedIzin.status !== "PENDING" && selectedIzin.komentar_admin && (
+              <div
+                className="pt-4"
+                style={{ borderTop: "1px solid var(--border)" }}
+              >
+                <label
+                  className="block text-xs font-bold uppercase mb-2"
+                  style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
+                >
+                  Catatan / Alasan Keputusan Admin
+                </label>
+                <div
+                  className="p-3.5 rounded-xl text-xs leading-relaxed"
+                  style={{
+                    background: "var(--bg-input)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-base)",
+                  }}
+                >
+                  {selectedIzin.komentar_admin}
                 </div>
               </div>
             )}

@@ -18,6 +18,7 @@ import {
 } from '../schemas/laporan.schema';
 import { StatusLaporan, Divisi, JenisAbsensi, Role } from '@prisma/client';
 import { format } from 'date-fns';
+import { catatAktivitasAdmin } from '../services/audit.service';
 
 // ─── Laporan Harian (Generik) ────────────────────────────────────────────────
 
@@ -226,6 +227,7 @@ export const getAdminLaporan = async (req: Request, res: Response): Promise<void
       where,
       include: {
         staff: { select: { nama: true, nik: true, role: true, divisi: true } },
+        reviewer: { select: { id: true, nama: true, nik: true } },
       },
       orderBy: { created_at: 'desc' },
       take: 200,
@@ -250,7 +252,7 @@ export const reviewLaporan = async (req: Request, res: Response): Promise<void> 
 
     const existing = await prisma.laporan.findUnique({ 
       where: { id },
-      include: { staff: { select: { fcm_token: true } } }
+      include: { staff: { select: { nama: true, fcm_token: true } } }
     });
     
     if (!existing) {
@@ -263,7 +265,31 @@ export const reviewLaporan = async (req: Request, res: Response): Promise<void> 
       data: {
         status: parsed.data.status,
         komentar_admin: parsed.data.komentar,
+        reviewed_by: req.user!.id,
+        reviewed_at: new Date(),
       },
+      include: {
+        staff: { select: { nama: true, nik: true, role: true, divisi: true } },
+        reviewer: { select: { id: true, nama: true, nik: true } },
+      },
+    });
+
+    // Catat log aktivitas admin
+    const statusText = parsed.data.status === StatusLaporan.APPROVED ? 'menyetujui' : 'menolak';
+    await catatAktivitasAdmin({
+      adminId: req.user!.id,
+      tipeAksi: parsed.data.status === StatusLaporan.APPROVED ? 'APPROVE_LAPORAN' : 'REJECT_LAPORAN',
+      targetEntitas: 'LAPORAN',
+      targetId: id,
+      keterangan: `Admin ${req.user!.nama} telah ${statusText} laporan "${existing.judul}" dari ${existing.staff?.nama || 'Staff'}${parsed.data.komentar ? ` dengan catatan: "${parsed.data.komentar}"` : ''}`,
+      metadata: {
+        laporan_id: id,
+        judul: existing.judul,
+        staff_id: existing.staff_id,
+        status: parsed.data.status,
+        komentar: parsed.data.komentar,
+      },
+      ipAddress: req.ip,
     });
 
     // Kirim notifikasi ke staff ybs

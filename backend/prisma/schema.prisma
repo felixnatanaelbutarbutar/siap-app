@@ -148,6 +148,9 @@ model Staff {
   jadwal_kerja      JadwalKerja[]
   pengumuman        Pengumuman[]
   sos_alerts        SosAlert[]
+  aktivitas_admin   AktivitasAdmin[] @relation("AdminAktivitas")
+  laporan_reviewed  Laporan[]        @relation("LaporanReviewer")
+  izin_reviewed     IzinCuti[]       @relation("IzinReviewer")
 
   @@index([area_tugas_id])
   @@index([aktif])
@@ -189,10 +192,13 @@ model Laporan {
   foto_urls      Json           @default("[]")
   status         StatusLaporan  @default(DRAFT)
   komentar_admin String?
+  reviewed_by    String?
+  reviewed_at    DateTime?
   created_at     DateTime       @default(now())
   updated_at     DateTime       @updatedAt
 
-  staff Staff @relation(fields: [staff_id], references: [id])
+  staff    Staff  @relation(fields: [staff_id], references: [id])
+  reviewer Staff? @relation("LaporanReviewer", fields: [reviewed_by], references: [id])
 
   @@index([staff_id])
   @@index([divisi])
@@ -277,7 +283,8 @@ model IzinCuti {
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
 
-  staff Staff @relation(fields: [staff_id], references: [id])
+  staff    Staff  @relation(fields: [staff_id], references: [id])
+  reviewer Staff? @relation("IzinReviewer", fields: [reviewed_by], references: [id])
 
   @@index([staff_id])
   @@index([jenis])
@@ -469,4 +476,24 @@ model WebPushSubscription {
 
   @@index([aktif])
   @@map("web_push_subscriptions")
+}
+
+model AktivitasAdmin {
+  id             String   @id @default(cuid())
+  admin_id       String
+  tipe_aksi      String
+  target_entitas String
+  target_id      String
+  keterangan     String   @db.Text
+  metadata       Json?
+  ip_address     String?
+  created_at     DateTime @default(now())
+
+  admin Staff @relation("AdminAktivitas", fields: [admin_id], references: [id])
+
+  @@index([admin_id])
+  @@index([tipe_aksi])
+  @@index([target_entitas, target_id])
+  @@index([created_at])
+  @@map("aktivitas_admin")
 }

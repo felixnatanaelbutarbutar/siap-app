@@ -714,7 +714,7 @@ export const BerandaScreen = () => {
               </View>
               <TouchableOpacity
                 onPress={() => !sosSending && setShowSosModal(false)}
-                style={styles.closeBtn}
+                style={{ padding: 4 }}
               >
                 <Icon name="close" size={22} color="#161d16" />
               </TouchableOpacity>

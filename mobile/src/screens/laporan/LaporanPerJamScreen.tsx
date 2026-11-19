@@ -3,13 +3,15 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, Image } f
 import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import notifee, { TriggerType, RepeatFrequency } from '@notifee/react-native';
 import { CameraView } from '../../components/CameraView';
+import { cancelLaporanReminderForHour, setupLaporan6JamReminders } from '../../services/laporanReminder';
+import { useAuthStore } from '../../store/auth.store';
 
 const STATUS_KEAMANAN = ['AMAN', 'ADA_TEMUAN', 'PERLU_PERIKSA'];
 
 export const LaporanPerJamScreen = () => {
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
   
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -64,13 +66,16 @@ export const LaporanPerJamScreen = () => {
       return res.data;
     },
     onSuccess: () => {
-      Alert.alert('Sukses', 'Laporan per 3 jam berhasil dikirim.');
+      if (selectedHour !== null) {
+        void cancelLaporanReminderForHour(selectedHour);
+      }
+      Alert.alert('Sukses', 'Laporan per 6 jam berhasil dikirim.');
       queryClient.invalidateQueries({ queryKey: ['laporanPerJam'] });
       setModalVisible(false);
       resetForm();
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'Gagal mengirim laporan per 3 jam.');
+      Alert.alert('Error', error.response?.data?.message || 'Gagal mengirim laporan per 6 jam.');
     }
   });
 
@@ -82,31 +87,15 @@ export const LaporanPerJamScreen = () => {
     setSelectedHour(null);
   };
 
-  // Setup Notifee Reminder (setiap jam 00)
+  // Setup Notifee Reminder (H-5 menit sebelum jam laporan) - Hanya untuk Satpam yang sedang shift
   useEffect(() => {
-    async function setupReminder() {
-      await notifee.requestPermission();
-
-      const trigger = {
-        type: TriggerType.TIMESTAMP,
-        // Dibuat sederhana: trigger setiap 1 jam jika belum dimatikan
-        timestamp: new Date(Date.now() + 3600000).getTime(),
-        repeatFrequency: RepeatFrequency.HOURLY,
-      };
-
-      await notifee.createTriggerNotification(
-        {
-          title: 'Waktunya Laporan Per 3 Jam!',
-          body: 'Segera periksa area dan isi laporan rutin 3 jam Anda.',
-          android: {
-            channelId: 'default',
-          },
-        },
-        trigger as any
-      );
+    if (user?.role !== 'SATPAM') return;
+    const absenMasuk = absensiHariIni?.find((a: any) => a.jenis === 'MASUK');
+    const sudahKeluar = absensiHariIni?.some((a: any) => a.jenis === 'KELUAR');
+    if (absenMasuk && !sudahKeluar) {
+      void setupLaporan6JamReminders(new Date(absenMasuk.waktu_server));
     }
-    setupReminder();
-  }, []);
+  }, [absensiHariIni, user?.role]);
 
   const handleBukaForm = (jam: number) => {
     setSelectedHour(jam);
@@ -134,21 +123,21 @@ export const LaporanPerJamScreen = () => {
   
   const currentHour = new Date().getHours();
 
-  // Generate 3-hour interval timeline
+  // Generate 6-hour interval timeline
   let hours: number[] = [];
   if (absenMasuk) {
     const jamMasuk = new Date(absenMasuk.waktu_server).getHours();
-    for (let i = jamMasuk; i < 24; i += 3) {
+    for (let i = jamMasuk; i < 24; i += 6) {
       hours.push(i);
     }
   } else {
     // Default fallback if not checked in
-    hours = [0, 3, 6, 9, 12, 15, 18, 21];
+    hours = [0, 6, 12, 18];
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>TIMELINE LAPORAN</Text>
+      <Text style={styles.headerTitle}>TIMELINE LAPORAN 6 JAM</Text>
       <ScrollView contentContainerStyle={styles.timelineContent}>
         {hours.map((hour) => {
           const lapor = laporanPerJam?.find((l: any) => l.jam === hour);
@@ -162,7 +151,7 @@ export const LaporanPerJamScreen = () => {
             statusText = 'Selesai (' + lapor.status_keamanan + ')';
           } else if (shiftAktif && currentHour >= hour) {
             circleColor = '#f1c40f'; // Kuning
-            statusText = (currentHour - hour < 3) ? 'Perlu Dilaporkan (Sekarang)' : 'Terlewat / Belum Dilaporkan';
+            statusText = (currentHour - hour < 6) ? 'Perlu Dilaporkan (Sekarang)' : 'Terlewat / Belum Dilaporkan';
             canTap = true;
           }
 

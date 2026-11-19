@@ -42,7 +42,7 @@ export function getVapidKeys(): VapidKeys {
   } catch (err) {
     logger.warn('Tidak dapat menyimpan .vapid-keys.json ke disk:', err);
   }
-  return cachedKeys;
+  return generated;
 }
 
 function ensureConfigured() {

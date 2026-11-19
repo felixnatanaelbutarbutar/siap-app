@@ -15,7 +15,8 @@ import {
   getAllAreaTugas,
   createAreaTugas,
   updateAreaTugas,
-  broadcastNotifikasi
+  broadcastNotifikasi,
+  getAdminAktivitas
 } from '../controllers/admin.controller';
 import { getAdminLaporan, reviewLaporan, getAdminLaporanPerJam } from '../controllers/laporan.controller';
 import { getJadwal, createJadwal, updateJadwal, deleteJadwal, getRekapJadwal, getPengaturan, updatePengaturan } from '../controllers/jadwal.controller';
@@ -36,6 +37,7 @@ router.get('/dashboard/activities', getDashboardActivities);
 router.get('/dashboard/live-tracking', getLiveTracking);
 router.get('/statistik/kehadiran', getStatistikKehadiran);
 router.get('/export/absensi', exportAbsensiCsv);
+router.get('/aktivitas', getAdminAktivitas);
 
 // ─── TRANSAKSIONAL ──────────────────────────────────────────────────────────
 

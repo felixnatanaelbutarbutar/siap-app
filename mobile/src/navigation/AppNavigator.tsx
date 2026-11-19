@@ -94,10 +94,10 @@ const MainTabs = () => {
 
       {user.role === 'SATPAM' && (
         <Tab.Screen 
-          name="Per 3 Jam" 
+          name="Per 6 Jam" 
           component={LaporanPerJamScreen} 
           options={{
-            title: 'Per 3 Jam',
+            title: 'Per 6 Jam',
             tabBarIcon: ({ color, size }) => <Icon name="clock-check" color={color} size={size} />
           }}
         />

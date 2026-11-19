@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import { WorkspaceDialog } from "../../components/WorkspaceDialog";
 import { useNotificationStore } from "../../store/notificationStore";
 import { api } from "../../services/api";
@@ -70,6 +71,9 @@ function LaporanPage() {
         deskripsi: l.deskripsi,
         foto_urls: l.foto_urls || [],
         komentar_admin: l.komentar_admin,
+        reviewer: l.reviewer,
+        reviewed_by: l.reviewed_by,
+        reviewed_at: l.reviewed_at,
       }));
     },
   });
@@ -205,7 +209,7 @@ function LaporanPage() {
               letterSpacing: "1px",
             }}
           >
-            {tab === "HARIAN" ? "Laporan Harian" : "Per 3 Jam (Satpam)"}
+            {tab === "HARIAN" ? "Laporan Harian" : "Per 6 Jam (Satpam)"}
           </button>
         ))}
       </div>
@@ -263,7 +267,7 @@ function LaporanPage() {
             <table className="w-full">
               <thead>
                 <tr>
-                  {["Waktu", "Pelapor", "Kategori", "Judul", "Status", ""].map(
+                  {["Waktu", "Pelapor", "Kategori", "Judul", "Status", "Ditinjau Oleh", ""].map(
                     (h) => (
                       <th key={h} style={thStyle}>
                         {h}
@@ -316,6 +320,32 @@ function LaporanPage() {
                     <td style={tdStyle}>
                       <StatusBadge status={log.status} />
                     </td>
+                    <td style={tdStyle}>
+                      {log.status !== "SUBMITTED" && log.status !== "DRAFT" ? (
+                        <div>
+                          <div
+                            className="font-medium text-xs"
+                            style={{ color: "var(--text-base)" }}
+                          >
+                            {log.reviewer?.nama || "Administrator SIAP"}
+                          </div>
+                          {log.reviewed_at && (
+                            <div
+                              className="text-[11px] mt-0.5"
+                              style={{ color: "var(--text-dim)" }}
+                            >
+                              {format(
+                                new Date(log.reviewed_at),
+                                "dd MMM yyyy, HH:mm",
+                                { locale: id }
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ color: "var(--text-dim)" }}>-</span>
+                      )}
+                    </td>
                     <td style={{ ...tdStyle, textAlign: "right" }}>
                       <button
                         onClick={() => handleOpenSheet(log)}
@@ -335,7 +365,7 @@ function LaporanPage() {
                 {(!laporanHarian || laporanHarian.length === 0) && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       style={{
                         ...tdStyle,
                         textAlign: "center",
@@ -547,10 +577,10 @@ function LaporanPage() {
                 className="font-bold text-sm"
                 style={{ color: "var(--text-base)" }}
               >
-                Belum Ada Laporan Per 3 Jam
+                Belum Ada Laporan Per 6 Jam
               </p>
               <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>
-                Staff Satpam belum mengirimkan checklist rutin 3 jam pada
+                Staff Satpam belum mengirimkan checklist rutin 6 jam pada
                 tanggal {dateHarian}.
               </p>
             </div>
@@ -754,22 +784,44 @@ function LaporanPage() {
                   style={{ borderTop: "1px solid var(--border)" }}
                 >
                   <div
-                    className="p-4 rounded-xl flex items-center gap-3"
+                    className="p-4 rounded-xl space-y-3"
                     style={{ background: "var(--bg-input)" }}
                   >
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      Status: <StatusBadge status={selectedLaporan.status} />
-                    </p>
-                    {selectedLaporan.komentar_admin && (
-                      <p
-                        className="text-sm mt-2"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        {selectedLaporan.komentar_admin}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-dim)" }}>
+                        Keputusan Peninjau
+                      </span>
+                      <StatusBadge status={selectedLaporan.status} />
+                    </div>
+                    <div className="text-xs pt-2 border-t" style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+                      <p>
+                        <span className="font-semibold" style={{ color: "var(--text-base)" }}>
+                          {selectedLaporan.status === "APPROVED" ? "Disetujui oleh:" : "Ditolak oleh:"}
+                        </span>{" "}
+                        <span
+                          className="font-bold"
+                          style={{
+                            color:
+                              selectedLaporan.status === "APPROVED"
+                                ? "var(--accent)"
+                                : "var(--error)",
+                          }}
+                        >
+                          {selectedLaporan.reviewer?.nama || "Administrator SIAP"}
+                        </span>
+                        {selectedLaporan.reviewer?.nik ? ` (${selectedLaporan.reviewer.nik})` : ""}
                       </p>
+                      {selectedLaporan.reviewed_at && (
+                        <p className="mt-1 text-[11px]" style={{ color: "var(--text-dim)" }}>
+                          Waktu Keputusan: {format(new Date(selectedLaporan.reviewed_at), "dd MMMM yyyy, HH:mm", { locale: id })}
+                        </p>
+                      )}
+                    </div>
+                    {selectedLaporan.komentar_admin && (
+                      <div className="p-3 rounded-lg text-xs" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
+                        <p className="font-semibold mb-1 text-[11px]" style={{ color: "var(--text-dim)" }}>Catatan / Komentar:</p>
+                        <p style={{ color: "var(--text-base)" }}>{selectedLaporan.komentar_admin}</p>
+                      </div>
                     )}
                   </div>
                 </div>
