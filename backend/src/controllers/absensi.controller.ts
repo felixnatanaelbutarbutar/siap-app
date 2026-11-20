@@ -409,7 +409,7 @@ export const getAdminAbsensi = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const { tanggal, staff_id, divisi } = parsed.data;
+    const { tanggal, staff_id, divisi, page } = parsed.data;
 
     const where: any = {};
     if (staff_id) where.staff_id = staff_id;
@@ -418,15 +418,19 @@ export const getAdminAbsensi = async (req: Request, res: Response): Promise<void
     }
 
     if (tanggal) {
-      const date = new Date(tanggal);
-      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      const startOfDay = new Date(`${tanggal}T00:00:00+07:00`);
+      const endOfDay = new Date(startOfDay.getTime()+86400000-1);
       where.waktu_server = {
         gte: startOfDay,
         lte: endOfDay,
       };
     }
 
+    // Page by employee, not events, to keep all punches for an employee together.
+    const staffWhere:any = { ...(divisi ? {divisi} : {}), ...(staff_id ? {id:staff_id} : {}), absensi:{some:where.waktu_server ? {waktu_server:where.waktu_server} : {}} };
+    const totalStaff=await prisma.staff.count({where:staffWhere});
+    const staffPage=await prisma.staff.findMany({where:staffWhere,select:{id:true},orderBy:[{nama:'asc'},{id:'asc'}],skip:(page-1)*25,take:25});
+    where.staff_id={in:staffPage.map(s=>s.id)};
     const absensi = await prisma.absensi.findMany({
       where,
       include: {
@@ -435,12 +439,13 @@ export const getAdminAbsensi = async (req: Request, res: Response): Promise<void
         },
       },
       orderBy: { waktu_server: 'desc' },
-      take: 200,
+
     });
 
     res.status(200).json({
       success: true,
       data: absensi,
+      pagination:{page,total:totalStaff,totalPages:Math.max(1,Math.ceil(totalStaff/25))},
     });
   } catch (error) {
     logger.error('Error getAdminAbsensi:', error);

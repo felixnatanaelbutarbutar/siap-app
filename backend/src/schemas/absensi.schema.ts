@@ -12,6 +12,7 @@ export const getRiwayatSchema = z.object({
 });
 
 export const getAdminAbsensiSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
   tanggal: z.string().optional(),
   staff_id: z.string().optional(),
   divisi: z.string().optional(),

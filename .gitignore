@@ -40,3 +40,9 @@ infra/.env
 # Local caches & agent settings
 .tanstack/
 .claude/
+
+# Firebase local credentials and project configuration
+backend/serviceAccountKey.json
+mobile/android/app/google-services.json
+
+*firebase-adminsdk*.json

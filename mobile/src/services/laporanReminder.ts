@@ -67,62 +67,9 @@ export const cancelLaporanReminderForHour = async (hour: number): Promise<void> 
   }
 };
 
-/**
- * Jadwalkan pengingat laporan rutin 6 jam yang berbunyi tepat 5 MENIT SEBELUM jam laporan tiba.
- * @param jamMasuk Waktu absen masuk
- * @param durasiShiftJam Total durasi shift (default 12 jam)
- */
-export const setupLaporan6JamReminders = async (
-  jamMasuk: Date = new Date(),
-  durasiShiftJam = 12
-): Promise<void> => {
-  try {
-    const channelId = await ensureLaporanReminderChannel(true);
-    if (!channelId) return;
-
-    // Bersihkan notifikasi lama terlebih dahulu
-    await cancelAllLaporanReminders();
-
-    const now = Date.now();
-    const intervalJam = 6;
-
-    // Generate titik waktu laporan setiap 6 jam selama durasi shift
-    for (let offset = intervalJam; offset <= durasiShiftJam; offset += intervalJam) {
-      const checkpointTime = new Date(jamMasuk.getTime() + offset * 60 * 60 * 1000);
-      
-      // Target pemicu: 5 MENIT SEBELUM jam checkpoint tiba
-      const triggerTimeMs = checkpointTime.getTime() - 5 * 60 * 1000;
-
-      // Hanya jadwalkan jika waktu pemicu masih di masa depan
-      if (triggerTimeMs > now) {
-        const jamTargetStr = format(checkpointTime, 'HH:mm');
-        const notifId = `${LAPORAN_NOTIF_PREFIX}${checkpointTime.getHours()}`;
-
-        await notifee.createTriggerNotification(
-          {
-            id: notifId,
-            title: 'Pengingat Laporan 6 Jam (5 Menit Lagi)',
-            body: `Waktu pengisian laporan rutin 6 jam akan tiba pukul ${jamTargetStr}. Segera lakukan pengecekan area tugas dan submit laporan Anda.`,
-            android: {
-              channelId: LAPORAN_CHANNEL_ID,
-              pressAction: { id: 'default' },
-            },
-          },
-          {
-            type: TriggerType.TIMESTAMP,
-            timestamp: triggerTimeMs,
-          }
-        );
-
-        console.log(
-          `[LaporanReminder] Dijadwalkan untuk jam ${jamTargetStr} (Trigger: ${format(new Date(triggerTimeMs), 'HH:mm:ss')})`
-        );
-      }
-    }
-  } catch (error) {
-    console.log('[LaporanReminder] Gagal menjadwalkan pengingat laporan 6 jam:', error);
-  }
+// Server checks the current shift and leave status immediately before sending FCM.
+// Remove legacy local triggers so schedule edits cannot leave stale/duplicate alarms.
+export const setupLaporan6JamReminders = async (_legacyStart?: Date): Promise<void> => {
+  await cancelAllLaporanReminders();
 };
-
-// Alias untuk kompatibilitas
 export const setupLaporan3JamReminders = setupLaporan6JamReminders;

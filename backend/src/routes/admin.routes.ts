@@ -1,3 +1,5 @@
+import reportSettings from './report-settings.routes';
+import reportCleanup from './report-cleanup.routes';
 import { Router } from 'express';
 import { getAdminAbsensi } from '../controllers/absensi.controller';
 import { getAdminSerahTerima, getAdminInventarisBermasalah } from '../controllers/serahterima.controller';
@@ -45,6 +47,8 @@ router.get('/aktivitas', getAdminAktivitas);
 router.get('/absensi', getAdminAbsensi);
 
 // Laporan
+router.use('/report-cleanup', reportCleanup);
+router.use('/report-settings', reportSettings);
 router.get('/laporan', getAdminLaporan);
 router.patch('/laporan/:id/review', reviewLaporan);
 

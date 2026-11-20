@@ -1,5 +1,5 @@
 import { WorkspaceDialog } from "../../components/WorkspaceDialog";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -22,7 +22,9 @@ import { Download, Eye, X, MapPin, ExternalLink } from "lucide-react";
 import { ModernMap } from "../../components/ModernMap";
 
 export const Route = createFileRoute("/_authenticated/absensi")({
-  component: AbsensiPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/absensi/$role", params: { role: "satpam" } });
+  },
 });
 
 const inputStyle = {
@@ -35,15 +37,22 @@ const inputStyle = {
   outline: "none",
 };
 
-function AbsensiPage() {
+export function AbsensiPage({
+  division = "SEMUA",
+  label = "Semua bagian",
+}: {
+  division?: string;
+  label?: string;
+}) {
+  const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<"HARIAN" | "BULANAN">("HARIAN");
   const [dateHarian, setDateHarian] = useState(
     format(new Date(), "yyyy-MM-dd"),
   );
-  const [divisiHarian, setDivisiHarian] = useState("SEMUA");
+  const [divisiHarian, setDivisiHarian] = useState(division);
   const [bulan, setBulan] = useState(new Date().getMonth() + 1);
   const [tahun, setTahun] = useState(new Date().getFullYear());
-  const [divisiBulanan, setDivisiBulanan] = useState("SEMUA");
+  const [divisiBulanan, setDivisiBulanan] = useState(division);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const queryClient = useQueryClient();
 
@@ -60,10 +69,15 @@ function AbsensiPage() {
     };
   }, [token, queryClient]);
 
-  const { data: logs } = useQuery({
-    queryKey: ["absensi-harian", dateHarian, divisiHarian],
+  useEffect(() => setPage(1), [dateHarian, divisiHarian]);
+  const {
+    data: daily,
+    isPending: loadingDaily,
+    isError: errorDaily,
+  } = useQuery({
+    queryKey: ["absensi-harian", dateHarian, divisiHarian, page],
     queryFn: async () => {
-      const params: any = { tanggal: dateHarian };
+      const params: any = { tanggal: dateHarian, page };
       if (divisiHarian !== "SEMUA") params.divisi = divisiHarian;
       const res = await api.get("/admin/absensi", { params });
       const rawData = res.data.data;
@@ -135,10 +149,11 @@ function AbsensiPage() {
         {},
       );
       const finalData = Object.values(grouped);
-      return finalData;
+      return { rows: finalData, pagination: res.data.pagination };
     },
   });
 
+  const logs = daily?.rows;
   const { data: stats } = useQuery({
     queryKey: ["absensi-bulanan", bulan, tahun, divisiBulanan],
     queryFn: async () => {
@@ -236,7 +251,7 @@ function AbsensiPage() {
           className="text-2xl font-bold"
           style={{ color: "var(--text-base)" }}
         >
-          Absensi
+          Absensi - {label}
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
           Kelola data kehadiran staff
@@ -291,26 +306,54 @@ function AbsensiPage() {
                 style={inputStyle}
               />
             </div>
-            <div>
-              <label
-                className="block text-xs font-bold uppercase mb-2"
-                style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
-              >
-                Divisi
-              </label>
-              <select
-                value={divisiHarian}
-                onChange={(e) => setDivisiHarian(e.target.value)}
-                style={inputStyle}
-              >
-                <option value="SEMUA">Semua Divisi</option>
-                <option value="KEAMANAN">Keamanan</option>
-                <option value="CLEANING_SERVICE">Cleaning Service</option>
-                <option value="UTILITY">Utility</option>
-              </select>
-            </div>
+            {division === "SEMUA" && (
+              <div>
+                <label
+                  className="block text-xs font-bold uppercase mb-2"
+                  style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
+                >
+                  Divisi
+                </label>
+                <select
+                  disabled={division !== "SEMUA"}
+                  value={divisiHarian}
+                  onChange={(e) => setDivisiHarian(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="SEMUA">Semua Divisi</option>
+                  <option value="KEAMANAN">Keamanan</option>
+                  <option value="CLEANING_SERVICE">Cleaning Service</option>
+                  <option value="UTILITY">Utility</option>
+                </select>
+              </div>
+            )}
           </div>
 
+          <div className="flex items-center gap-3">
+            <button
+              className="workspace-button"
+              disabled={page <= 1 || loadingDaily}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Sebelumnya
+            </button>
+            <span>
+              Halaman {page} / {daily?.pagination?.totalPages || 1} ·{" "}
+              {daily?.pagination?.total || 0} pegawai
+            </span>
+            <button
+              className="workspace-button"
+              disabled={
+                loadingDaily || page >= (daily?.pagination?.totalPages || 1)
+              }
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Berikutnya
+            </button>
+          </div>
+          {errorDaily && (
+            <p role="alert">Gagal memuat absensi. Silakan muat ulang.</p>
+          )}
           {/* Table */}
           <div
             className="rounded-xl overflow-hidden"
@@ -410,7 +453,11 @@ function AbsensiPage() {
                         color: "var(--text-dim)",
                       }}
                     >
-                      Tidak ada data absensi untuk tanggal ini
+                      {loadingDaily
+                        ? "Memuat absensi…"
+                        : errorDaily
+                          ? "Data belum tersedia karena koneksi gagal."
+                          : "Tidak ada data absensi untuk tanggal ini"}
                     </td>
                   </tr>
                 )}
@@ -470,24 +517,27 @@ function AbsensiPage() {
                   </select>
                 </div>
               ))}
-              <div>
-                <label
-                  className="block text-xs font-bold uppercase mb-2"
-                  style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
-                >
-                  Divisi
-                </label>
-                <select
-                  value={divisiBulanan}
-                  onChange={(e) => setDivisiBulanan(e.target.value)}
-                  style={inputStyle}
-                >
-                  <option value="SEMUA">Semua Divisi</option>
-                  <option value="KEAMANAN">Keamanan</option>
-                  <option value="CLEANING_SERVICE">Cleaning Service</option>
-                  <option value="UTILITY">Utility</option>
-                </select>
-              </div>
+              {division === "SEMUA" && (
+                <div>
+                  <label
+                    className="block text-xs font-bold uppercase mb-2"
+                    style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
+                  >
+                    Divisi
+                  </label>
+                  <select
+                    disabled={division !== "SEMUA"}
+                    value={divisiBulanan}
+                    onChange={(e) => setDivisiBulanan(e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="SEMUA">Semua Divisi</option>
+                    <option value="KEAMANAN">Keamanan</option>
+                    <option value="CLEANING_SERVICE">Cleaning Service</option>
+                    <option value="UTILITY">Utility</option>
+                  </select>
+                </div>
+              )}
             </div>
             <button
               onClick={handleExportCSV}

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -9,7 +9,9 @@ import { api } from "../../services/api";
 import { Eye, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/laporan")({
-  component: LaporanPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/laporan/$role", params: { role: "satpam" } });
+  },
 });
 
 const thStyle = {
@@ -38,10 +40,18 @@ const inputStyle = {
   outline: "none",
 };
 
-function LaporanPage() {
+export function LaporanPage({
+  division,
+  label,
+  patrol = true,
+}: {
+  division: string;
+  label: string;
+  patrol?: boolean;
+}) {
   const [activeTab, setActiveTab] = useState<"HARIAN" | "PER_JAM">("HARIAN");
   const queryClient = useQueryClient();
-  const setPendingReports = useNotificationStore((s) => s.setPendingReports);
+
   const decrementPending = useNotificationStore((s) => s.decrementPending);
 
   const [dateHarian, setDateHarian] = useState(
@@ -54,9 +64,9 @@ function LaporanPage() {
   const [reviewKomentar, setReviewKomentar] = useState("");
 
   const { data: laporanHarian } = useQuery({
-    queryKey: ["laporan-harian", dateHarian, statusHarian],
+    queryKey: ["laporan-harian", division, dateHarian, statusHarian],
     queryFn: async () => {
-      const params: any = { tanggal: dateHarian };
+      const params: any = { tanggal: dateHarian, divisi: division };
       if (statusHarian !== "SEMUA") params.status = statusHarian;
       const res = await api.get("/admin/laporan", { params });
       let data = res.data.data || [];
@@ -79,21 +89,15 @@ function LaporanPage() {
   });
 
   const { data: laporanPerJamList, isLoading: loadingPerJam } = useQuery({
-    queryKey: ["admin-laporan-perjam", dateHarian],
+    queryKey: ["admin-laporan-perjam", division, dateHarian],
+    enabled: patrol && activeTab === "PER_JAM",
     queryFn: async () => {
-      const res = await api.get("/admin/laporan/perjam", {
-        params: { tanggal: dateHarian },
+      const res = await api.get("/admin/laporan-perjam", {
+        params: { tanggal: dateHarian, divisi: division },
       });
       return res.data.data || [];
     },
   });
-
-  useEffect(() => {
-    if (laporanHarian)
-      setPendingReports(
-        laporanHarian.filter((l: any) => l.status === "SUBMITTED").length,
-      );
-  }, [laporanHarian, setPendingReports]);
 
   const reviewMutation = useMutation({
     mutationFn: async (payload: {
@@ -183,10 +187,10 @@ function LaporanPage() {
           className="text-2xl font-bold"
           style={{ color: "var(--text-base)" }}
         >
-          Laporan
+          Laporan {label}
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Review dan kelola laporan dari staff
+          Review dan kelola laporan {label}
         </p>
       </div>
 
@@ -195,7 +199,10 @@ function LaporanPage() {
         className="flex gap-1 p-1 rounded-full w-fit"
         style={{ background: "var(--bg-input)" }}
       >
-        {(["HARIAN", "PER_JAM"] as const).map((tab) => (
+        {(patrol
+          ? (["HARIAN", "PER_JAM"] as const)
+          : (["HARIAN"] as const)
+        ).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -209,7 +216,7 @@ function LaporanPage() {
               letterSpacing: "1px",
             }}
           >
-            {tab === "HARIAN" ? "Laporan Harian" : "Per 6 Jam (Satpam)"}
+            {tab === "HARIAN" ? "Laporan Harian" : "Laporan Terjadwal"}
           </button>
         ))}
       </div>
@@ -267,13 +274,19 @@ function LaporanPage() {
             <table className="w-full">
               <thead>
                 <tr>
-                  {["Waktu", "Pelapor", "Kategori", "Judul", "Status", "Ditinjau Oleh", ""].map(
-                    (h) => (
-                      <th key={h} style={thStyle}>
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Waktu",
+                    "Pelapor",
+                    "Kategori",
+                    "Judul",
+                    "Status",
+                    "Ditinjau Oleh",
+                    "",
+                  ].map((h) => (
+                    <th key={h} style={thStyle}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -337,7 +350,7 @@ function LaporanPage() {
                               {format(
                                 new Date(log.reviewed_at),
                                 "dd MMM yyyy, HH:mm",
-                                { locale: id }
+                                { locale: id },
                               )}
                             </div>
                           )}
@@ -349,6 +362,7 @@ function LaporanPage() {
                     <td style={{ ...tdStyle, textAlign: "right" }}>
                       <button
                         onClick={() => handleOpenSheet(log)}
+                        aria-label="Lihat detail laporan"
                         style={{
                           color: "var(--accent)",
                           background: "none",
@@ -385,204 +399,74 @@ function LaporanPage() {
 
       {activeTab === "PER_JAM" && (
         <div className="space-y-4">
-          <div
-            className="flex flex-wrap gap-4 items-end p-5 rounded-xl"
-            style={{
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <div>
-              <label
-                className="block text-xs font-bold uppercase mb-2"
-                style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
-              >
-                Tanggal Audit
-              </label>
+          <div className="workspace-card p-5 flex flex-wrap gap-4 items-end">
+            <label>
+              Tanggal laporan
               <input
                 type="date"
                 value={dateHarian}
                 onChange={(e) => setDateHarian(e.target.value)}
-                style={inputStyle}
+                className="workspace-input block mt-2"
               />
-            </div>
-            <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
-              Total {groupedPerJam.length} staff Satpam bertugas •{" "}
-              {laporanPerJamList?.length || 0} laporan terkirim
-            </div>
+            </label>
+            <p className="workspace-description">
+              Laporan terjadwal {label} yang sudah dikirim. Jadwal dan
+              penyimpanan dikelola melalui Pengaturan Laporan.
+            </p>
           </div>
-
           {loadingPerJam ? (
-            <div
-              className="p-12 text-center text-sm"
-              style={{ color: "var(--text-dim)" }}
-            >
-              Memuat data audit laporan per jam...
-            </div>
-          ) : groupedPerJam.length > 0 ? (
-            groupedPerJam.map((group, gIdx) => (
-              <div
-                key={gIdx}
-                className="p-6 rounded-xl space-y-4"
-                style={{
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border)",
-                }}
+            <p>Memuat laporan…</p>
+          ) : groupedPerJam.length ? (
+            groupedPerJam.map((group) => (
+              <section
+                key={group.staff.id || group.staff.nik}
+                className="workspace-card p-5"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3
-                      className="font-bold text-base"
-                      style={{ color: "var(--text-base)" }}
+                <h2 className="font-bold text-lg">{group.staff.nama}</h2>
+                <p className="workspace-description">
+                  {group.items.length} laporan terkirim
+                </p>
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
+                  {group.items.map((item: any) => (
+                    <article
+                      key={item.id}
+                      className="rounded-xl border p-4 space-y-3"
                     >
-                      {group.staff.nama}
-                    </h3>
-                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-                      NIK: {group.staff.nik || "-"}
-                    </p>
-                  </div>
-                  <span
-                    className="text-xs font-bold px-3 py-1 rounded-full"
-                    style={{
-                      background: "rgba(30,215,96,0.12)",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    {group.items.length} Laporan Masuk
-                  </span>
-                </div>
-
-                <div>
-                  <p
-                    className="text-xs font-bold uppercase mb-3"
-                    style={{ color: "var(--text-dim)", letterSpacing: "1px" }}
-                  >
-                    Timeline 24 Jam
-                  </p>
-                  <div className="flex overflow-x-auto pb-2 gap-1.5">
-                    {timelineHours.map((hour) => {
-                      const isReported = group.hours.has(hour);
-                      let bg = isReported ? "var(--accent)" : "var(--bg-input)";
-                      let color = isReported
-                        ? "var(--accent-text)"
-                        : "var(--text-dim)";
-                      return (
-                        <div
-                          key={hour}
-                          className="flex flex-col items-center flex-shrink-0"
-                        >
-                          <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs"
-                            style={{ background: bg, color }}
-                          >
-                            {hour}
-                          </div>
-                          <span
-                            className="text-[9px] mt-1"
-                            style={{
-                              color: isReported
-                                ? "var(--accent)"
-                                : "var(--text-dim)",
-                            }}
-                          >
-                            {String(hour).padStart(2, "0")}:00
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-                  {group.items.map((item: any) => {
-                    const statusBadgeBg =
-                      item.status_keamanan === "AMAN"
-                        ? "rgba(30,215,96,0.12)"
-                        : "rgba(243,114,127,0.12)";
-                    const statusBadgeColor =
-                      item.status_keamanan === "AMAN"
-                        ? "var(--accent)"
-                        : "var(--error)";
-                    return (
-                      <div
-                        key={item.id}
-                        className="p-3 rounded-lg flex gap-3 items-start"
-                        style={{
-                          background: "var(--bg-input)",
-                          border: "1px solid var(--border-bright)",
-                        }}
-                      >
-                        {item.foto_url ? (
-                          <a
-                            href={item.foto_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 block"
-                          >
-                            <img
-                              src={item.foto_url}
-                              alt="Foto Per Jam"
-                              className="w-full h-full object-contain"
-                            />
-                          </a>
-                        ) : (
-                          <div
-                            className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: "var(--bg-surface)" }}
-                          >
-                            <Clock className="w-5 h-5 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="font-bold text-xs text-white">
-                              Jam {String(item.jam).padStart(2, "0")}:00
-                            </span>
-                            <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                              style={{
-                                background: statusBadgeBg,
-                                color: statusBadgeColor,
-                              }}
-                            >
-                              {item.status_keamanan}
-                            </span>
-                          </div>
-                          <p
-                            className="text-xs truncate"
-                            style={{ color: "var(--text-secondary)" }}
-                          >
-                            {item.catatan || "Kondisi terpantau aman."}
-                          </p>
-                        </div>
+                      <div className="flex justify-between">
+                        <strong>
+                          {String(item.jam).padStart(2, "0")}:
+                          {String(item.menit || 0).padStart(2, "0")} WIB
+                        </strong>
+                        <span className="text-xs">
+                          {item.status_keamanan === "AMAN"
+                            ? "NORMAL"
+                            : item.status_keamanan.replaceAll("_", " ")}
+                        </span>
                       </div>
-                    );
-                  })}
+                      {item.foto_url && (
+                        <a
+                          href={item.foto_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <img
+                            src={item.foto_url}
+                            alt="Bukti laporan terjadwal"
+                            className="w-full h-44 object-contain rounded-lg"
+                          />
+                        </a>
+                      )}
+                      <p className="workspace-description whitespace-pre-wrap">
+                        {item.catatan || "Tidak ada catatan tambahan."}
+                      </p>
+                    </article>
+                  ))}
                 </div>
-              </div>
+              </section>
             ))
           ) : (
-            <div
-              className="p-12 text-center rounded-xl"
-              style={{
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <Clock
-                className="w-10 h-10 mx-auto mb-3 opacity-30"
-                style={{ color: "var(--text-dim)" }}
-              />
-              <p
-                className="font-bold text-sm"
-                style={{ color: "var(--text-base)" }}
-              >
-                Belum Ada Laporan Per 6 Jam
-              </p>
-              <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>
-                Staff Satpam belum mengirimkan checklist rutin 6 jam pada
-                tanggal {dateHarian}.
-              </p>
+            <div className="workspace-card p-8 text-center">
+              Belum ada laporan terjadwal pada tanggal ini.
             </div>
           )}
         </div>
@@ -788,15 +672,29 @@ function LaporanPage() {
                     style={{ background: "var(--bg-input)" }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-dim)" }}>
+                      <span
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: "var(--text-dim)" }}
+                      >
                         Keputusan Peninjau
                       </span>
                       <StatusBadge status={selectedLaporan.status} />
                     </div>
-                    <div className="text-xs pt-2 border-t" style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+                    <div
+                      className="text-xs pt-2 border-t"
+                      style={{
+                        borderColor: "var(--border)",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       <p>
-                        <span className="font-semibold" style={{ color: "var(--text-base)" }}>
-                          {selectedLaporan.status === "APPROVED" ? "Disetujui oleh:" : "Ditolak oleh:"}
+                        <span
+                          className="font-semibold"
+                          style={{ color: "var(--text-base)" }}
+                        >
+                          {selectedLaporan.status === "APPROVED"
+                            ? "Disetujui oleh:"
+                            : "Ditolak oleh:"}
                         </span>{" "}
                         <span
                           className="font-bold"
@@ -807,20 +705,44 @@ function LaporanPage() {
                                 : "var(--error)",
                           }}
                         >
-                          {selectedLaporan.reviewer?.nama || "Administrator SIAP"}
+                          {selectedLaporan.reviewer?.nama ||
+                            "Administrator SIAP"}
                         </span>
-                        {selectedLaporan.reviewer?.nik ? ` (${selectedLaporan.reviewer.nik})` : ""}
+                        {selectedLaporan.reviewer?.nik
+                          ? ` (${selectedLaporan.reviewer.nik})`
+                          : ""}
                       </p>
                       {selectedLaporan.reviewed_at && (
-                        <p className="mt-1 text-[11px]" style={{ color: "var(--text-dim)" }}>
-                          Waktu Keputusan: {format(new Date(selectedLaporan.reviewed_at), "dd MMMM yyyy, HH:mm", { locale: id })}
+                        <p
+                          className="mt-1 text-[11px]"
+                          style={{ color: "var(--text-dim)" }}
+                        >
+                          Waktu Keputusan:{" "}
+                          {format(
+                            new Date(selectedLaporan.reviewed_at),
+                            "dd MMMM yyyy, HH:mm",
+                            { locale: id },
+                          )}
                         </p>
                       )}
                     </div>
                     {selectedLaporan.komentar_admin && (
-                      <div className="p-3 rounded-lg text-xs" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
-                        <p className="font-semibold mb-1 text-[11px]" style={{ color: "var(--text-dim)" }}>Catatan / Komentar:</p>
-                        <p style={{ color: "var(--text-base)" }}>{selectedLaporan.komentar_admin}</p>
+                      <div
+                        className="p-3 rounded-lg text-xs"
+                        style={{
+                          background: "var(--bg-surface)",
+                          border: "1px solid var(--border)",
+                        }}
+                      >
+                        <p
+                          className="font-semibold mb-1 text-[11px]"
+                          style={{ color: "var(--text-dim)" }}
+                        >
+                          Catatan / Komentar:
+                        </p>
+                        <p style={{ color: "var(--text-base)" }}>
+                          {selectedLaporan.komentar_admin}
+                        </p>
                       </div>
                     )}
                   </div>

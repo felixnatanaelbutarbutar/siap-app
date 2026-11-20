@@ -1,3 +1,4 @@
+import { cancelAllLaporanReminders } from './src/services/laporanReminder';
 import React, { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -32,6 +33,7 @@ export default function App() {
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
+    void cancelAllLaporanReminders();
     if (token) {
       void requestUserPermission();
       void syncShiftReminders({ force: true, allowPrompt: true });

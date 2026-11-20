@@ -44,7 +44,7 @@ const HeaderBrandEmblem = () => (
 const MainTabs = () => {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
-  
+
   if (!user) return null;
 
   return (
@@ -67,45 +67,45 @@ const MainTabs = () => {
         headerShadowVisible: false,
       }}
     >
-      <Tab.Screen 
-        name="Beranda" 
-        component={BerandaScreen} 
+      <Tab.Screen
+        name="Beranda"
+        component={BerandaScreen}
         options={{
           headerShown: false,
           tabBarIcon: ({ color, size }) => <Icon name="home" color={color} size={size} />
         }}
       />
-      
-      <Tab.Screen 
-        name="Absensi" 
-        component={AbsensiScreen} 
+
+      <Tab.Screen
+        name="Absensi"
+        component={AbsensiScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Icon name="map-marker-check" color={color} size={size} />
         }}
       />
 
-      <Tab.Screen 
-        name="Laporan" 
-        component={LaporanStack} 
+      <Tab.Screen
+        name="Laporan"
+        component={LaporanStack}
         options={{ headerShown: false,
           tabBarIcon: ({ color, size }) => <Icon name="file-document-edit" color={color} size={size} />
         }}
       />
 
-      {user.role === 'SATPAM' && (
-        <Tab.Screen 
-          name="Per 6 Jam" 
-          component={LaporanPerJamScreen} 
+      {['SATPAM','CS','UTILITY'].includes(user.role) && (
+        <Tab.Screen
+          name="Terjadwal"
+          component={LaporanPerJamScreen}
           options={{
-            title: 'Per 6 Jam',
+            title: 'Terjadwal',
             tabBarIcon: ({ color, size }) => <Icon name="clock-check" color={color} size={size} />
           }}
         />
       )}
 
-      <Tab.Screen 
-        name="Profil" 
-        component={ProfilScreen} 
+      <Tab.Screen
+        name="Profil"
+        component={ProfilScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Icon name="account" color={color} size={size} />
         }}
@@ -126,23 +126,23 @@ export const AppNavigator = () => {
       {/* Modals (Hanya SATPAM & UTILITY yang bisa akses fitur Serah Terima) */}
       {(user?.role === 'SATPAM' || user?.role === 'UTILITY') && (
         <Stack.Group screenOptions={{ presentation: 'modal' }}>
-          <Stack.Screen 
-            name="SerahTerimaModal" 
-            component={SerahTerimaScreen} 
+          <Stack.Screen
+            name="SerahTerimaModal"
+            component={SerahTerimaScreen}
             options={{ headerShown: true, title: 'Mulai Serah Terima' }}
           />
-          <Stack.Screen 
-            name="KonfirmasiSerahTerimaModal" 
-            component={KonfirmasiSerahTerimaScreen} 
+          <Stack.Screen
+            name="KonfirmasiSerahTerimaModal"
+            component={KonfirmasiSerahTerimaScreen}
             options={{ headerShown: true, title: 'Konfirmasi Serah Terima' }}
           />
         </Stack.Group>
       )}
 
       {/* Global Screens */}
-      <Stack.Screen 
-        name="IzinCuti" 
-        component={IzinCutiScreen} 
+      <Stack.Screen
+        name="IzinCuti"
+        component={IzinCutiScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

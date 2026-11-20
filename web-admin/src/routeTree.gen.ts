@@ -26,7 +26,10 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAbsensiRouteImport } from './routes/_authenticated/absensi'
 import { Route as AuthenticatedStaffTambahRouteImport } from './routes/_authenticated/staff_.tambah'
 import { Route as AuthenticatedPengumumanBuatRouteImport } from './routes/_authenticated/pengumuman_.buat'
+import { Route as AuthenticatedLaporanPengaturanRouteImport } from './routes/_authenticated/laporan_.pengaturan'
+import { Route as AuthenticatedLaporanRoleRouteImport } from './routes/_authenticated/laporan_.$role'
 import { Route as AuthenticatedJadwalStaffIdRouteImport } from './routes/_authenticated/jadwal_.$staffId'
+import { Route as AuthenticatedAbsensiRoleRouteImport } from './routes/_authenticated/absensi_.$role'
 import { Route as AuthenticatedStaffStaffIdEditRouteImport } from './routes/_authenticated/staff_.$staffId.edit'
 import { Route as AuthenticatedPengaturanAreaTambahRouteImport } from './routes/_authenticated/pengaturan_.area.tambah'
 import { Route as AuthenticatedJadwalStaffIdTambahRouteImport } from './routes/_authenticated/jadwal_.$staffId_.tambah'
@@ -120,10 +123,28 @@ const AuthenticatedPengumumanBuatRoute =
     path: '/pengumuman/buat',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedLaporanPengaturanRoute =
+  AuthenticatedLaporanPengaturanRouteImport.update({
+    id: '/laporan_/pengaturan',
+    path: '/laporan/pengaturan',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedLaporanRoleRoute =
+  AuthenticatedLaporanRoleRouteImport.update({
+    id: '/laporan_/$role',
+    path: '/laporan/$role',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedJadwalStaffIdRoute =
   AuthenticatedJadwalStaffIdRouteImport.update({
     id: '/jadwal_/$staffId',
     path: '/jadwal/$staffId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAbsensiRoleRoute =
+  AuthenticatedAbsensiRoleRouteImport.update({
+    id: '/absensi_/$role',
+    path: '/absensi/$role',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedStaffStaffIdEditRoute =
@@ -172,7 +193,10 @@ export interface FileRoutesByFullPath {
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/sos': typeof AuthenticatedSosRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/absensi/$role': typeof AuthenticatedAbsensiRoleRoute
   '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
+  '/laporan/$role': typeof AuthenticatedLaporanRoleRoute
+  '/laporan/pengaturan': typeof AuthenticatedLaporanPengaturanRoute
   '/pengumuman/buat': typeof AuthenticatedPengumumanBuatRoute
   '/staff/tambah': typeof AuthenticatedStaffTambahRoute
   '/jadwal/$staffId/tambah': typeof AuthenticatedJadwalStaffIdTambahRoute
@@ -196,7 +220,10 @@ export interface FileRoutesByTo {
   '/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/sos': typeof AuthenticatedSosRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/absensi/$role': typeof AuthenticatedAbsensiRoleRoute
   '/jadwal/$staffId': typeof AuthenticatedJadwalStaffIdRoute
+  '/laporan/$role': typeof AuthenticatedLaporanRoleRoute
+  '/laporan/pengaturan': typeof AuthenticatedLaporanPengaturanRoute
   '/pengumuman/buat': typeof AuthenticatedPengumumanBuatRoute
   '/staff/tambah': typeof AuthenticatedStaffTambahRoute
   '/jadwal/$staffId/tambah': typeof AuthenticatedJadwalStaffIdTambahRoute
@@ -222,7 +249,10 @@ export interface FileRoutesById {
   '/_authenticated/serah-terima': typeof AuthenticatedSerahTerimaRoute
   '/_authenticated/sos': typeof AuthenticatedSosRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/absensi_/$role': typeof AuthenticatedAbsensiRoleRoute
   '/_authenticated/jadwal_/$staffId': typeof AuthenticatedJadwalStaffIdRoute
+  '/_authenticated/laporan_/$role': typeof AuthenticatedLaporanRoleRoute
+  '/_authenticated/laporan_/pengaturan': typeof AuthenticatedLaporanPengaturanRoute
   '/_authenticated/pengumuman_/buat': typeof AuthenticatedPengumumanBuatRoute
   '/_authenticated/staff_/tambah': typeof AuthenticatedStaffTambahRoute
   '/_authenticated/jadwal_/$staffId_/tambah': typeof AuthenticatedJadwalStaffIdTambahRoute
@@ -248,7 +278,10 @@ export interface FileRouteTypes {
     | '/serah-terima'
     | '/sos'
     | '/staff'
+    | '/absensi/$role'
     | '/jadwal/$staffId'
+    | '/laporan/$role'
+    | '/laporan/pengaturan'
     | '/pengumuman/buat'
     | '/staff/tambah'
     | '/jadwal/$staffId/tambah'
@@ -272,7 +305,10 @@ export interface FileRouteTypes {
     | '/serah-terima'
     | '/sos'
     | '/staff'
+    | '/absensi/$role'
     | '/jadwal/$staffId'
+    | '/laporan/$role'
+    | '/laporan/pengaturan'
     | '/pengumuman/buat'
     | '/staff/tambah'
     | '/jadwal/$staffId/tambah'
@@ -297,7 +333,10 @@ export interface FileRouteTypes {
     | '/_authenticated/serah-terima'
     | '/_authenticated/sos'
     | '/_authenticated/staff'
+    | '/_authenticated/absensi_/$role'
     | '/_authenticated/jadwal_/$staffId'
+    | '/_authenticated/laporan_/$role'
+    | '/_authenticated/laporan_/pengaturan'
     | '/_authenticated/pengumuman_/buat'
     | '/_authenticated/staff_/tambah'
     | '/_authenticated/jadwal_/$staffId_/tambah'
@@ -434,11 +473,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPengumumanBuatRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/laporan_/pengaturan': {
+      id: '/_authenticated/laporan_/pengaturan'
+      path: '/laporan/pengaturan'
+      fullPath: '/laporan/pengaturan'
+      preLoaderRoute: typeof AuthenticatedLaporanPengaturanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/laporan_/$role': {
+      id: '/_authenticated/laporan_/$role'
+      path: '/laporan/$role'
+      fullPath: '/laporan/$role'
+      preLoaderRoute: typeof AuthenticatedLaporanRoleRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/jadwal_/$staffId': {
       id: '/_authenticated/jadwal_/$staffId'
       path: '/jadwal/$staffId'
       fullPath: '/jadwal/$staffId'
       preLoaderRoute: typeof AuthenticatedJadwalStaffIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/absensi_/$role': {
+      id: '/_authenticated/absensi_/$role'
+      path: '/absensi/$role'
+      fullPath: '/absensi/$role'
+      preLoaderRoute: typeof AuthenticatedAbsensiRoleRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/staff_/$staffId/edit': {
@@ -492,7 +552,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSerahTerimaRoute: typeof AuthenticatedSerahTerimaRoute
   AuthenticatedSosRoute: typeof AuthenticatedSosRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
+  AuthenticatedAbsensiRoleRoute: typeof AuthenticatedAbsensiRoleRoute
   AuthenticatedJadwalStaffIdRoute: typeof AuthenticatedJadwalStaffIdRoute
+  AuthenticatedLaporanRoleRoute: typeof AuthenticatedLaporanRoleRoute
+  AuthenticatedLaporanPengaturanRoute: typeof AuthenticatedLaporanPengaturanRoute
   AuthenticatedPengumumanBuatRoute: typeof AuthenticatedPengumumanBuatRoute
   AuthenticatedStaffTambahRoute: typeof AuthenticatedStaffTambahRoute
   AuthenticatedJadwalStaffIdTambahRoute: typeof AuthenticatedJadwalStaffIdTambahRoute
@@ -515,7 +578,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSerahTerimaRoute: AuthenticatedSerahTerimaRoute,
   AuthenticatedSosRoute: AuthenticatedSosRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
+  AuthenticatedAbsensiRoleRoute: AuthenticatedAbsensiRoleRoute,
   AuthenticatedJadwalStaffIdRoute: AuthenticatedJadwalStaffIdRoute,
+  AuthenticatedLaporanRoleRoute: AuthenticatedLaporanRoleRoute,
+  AuthenticatedLaporanPengaturanRoute: AuthenticatedLaporanPengaturanRoute,
   AuthenticatedPengumumanBuatRoute: AuthenticatedPengumumanBuatRoute,
   AuthenticatedStaffTambahRoute: AuthenticatedStaffTambahRoute,
   AuthenticatedJadwalStaffIdTambahRoute: AuthenticatedJadwalStaffIdTambahRoute,

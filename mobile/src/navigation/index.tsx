@@ -1,3 +1,4 @@
+import {notificationNavigation,flushReportNavigation} from './notificationNavigation';
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
@@ -28,7 +29,7 @@ export const RootNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={notificationNavigation} onReady={flushReportNavigation} onStateChange={flushReportNavigation}>
       {token ? <AppNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );

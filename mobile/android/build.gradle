@@ -12,6 +12,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+        if (file("app/google-services.json").exists()) {
+            classpath("com.google.gms:google-services:4.5.0")
+        }
         classpath("com.android.tools.build:gradle:8.3.2")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")

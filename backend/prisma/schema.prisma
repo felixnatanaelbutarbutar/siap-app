@@ -213,6 +213,8 @@ model LaporanPerJam {
   staff_id        String
   tanggal         DateTime       @db.Date
   jam             Int            // 0-23
+  menit           Int            @default(0)
+  checkpoint_at   DateTime?
   status_keamanan StatusKeamanan @default(AMAN)
   foto_url        String?
   catatan         String?
@@ -221,7 +223,7 @@ model LaporanPerJam {
   staff Staff @relation(fields: [staff_id], references: [id])
 
   // Satu jam hanya boleh ada satu laporan per staff per hari
-  @@unique([staff_id, tanggal, jam])
+  @@unique([staff_id, tanggal, jam, menit])
   @@index([staff_id])
   @@index([tanggal])
   @@index([staff_id, tanggal])
@@ -496,4 +498,14 @@ model AktivitasAdmin {
   @@index([target_entitas, target_id])
   @@index([created_at])
   @@map("aktivitas_admin")
+}
+
+model ReportScheduleSetting {
+  role       Role @id
+  enabled    Boolean @default(false)
+  times      Json @default("[]")
+  version    Int @default(1)
+  updated_by String
+  updated_at DateTime @updatedAt
+  @@map("report_schedule_settings")
 }

@@ -1,3 +1,5 @@
+import 'dotenv/config';
+import { sendReportReminders } from './services/reportSchedule.service';
 import analyticsRoutes from './routes/analytics.routes';
 import offlineAttendanceRoutes from './routes/offline-attendance.routes';
 import deviceRoutes from './routes/device.routes';
@@ -7,7 +9,6 @@ import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import cron from 'node-cron';
 
 import { logger } from './utils/logger';
@@ -26,8 +27,7 @@ import { Role, JenisAbsensi } from '@prisma/client';
 import { sendToDevice } from './services/notification.service';
 import { checkAndSendPreShiftReminders } from './services/shiftReminder.service';
 
-// Load environment variables
-dotenv.config();
+// Environment is loaded before service imports.
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -99,68 +99,8 @@ if (process.env.NODE_ENV !== 'test') {
     }
   });
 
-  // ─── Reminder Laporan Per 6 Jam (Khusus SATPAM yang Sedang Bershift) ───────────
-  // Dijalankan setiap jam pada menit ke-55 (tepat 5 menit sebelum jam checkpoint laporan berikutnya)
-  cron.schedule('55 * * * *', async () => {
-    try {
-      const now = new Date();
-      // Target checkpoint adalah 5 menit dari sekarang (jam genap berikutnya)
-      const targetCheckpointTime = new Date(now.getTime() + 5 * 60 * 1000);
-      const targetHour = targetCheckpointTime.getHours();
-
-      // Cari SATPAM aktif yang memiliki FCM token
-      const satpamList = await prisma.staff.findMany({
-        where: { role: Role.SATPAM, aktif: true, fcm_token: { not: null } },
-        select: { id: true, nama: true, fcm_token: true }
-      });
-
-      const startOfDay = new Date(now);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(now);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      let notifTerkirim = 0;
-
-      for (const satpam of satpamList) {
-        // Cek apakah satpam HANYA yang sedang bershift (sudah MASUK dan BELUM KELUAR hari ini)
-        const absensiHariIni = await prisma.absensi.findMany({
-          where: { staff_id: satpam.id, waktu_server: { gte: startOfDay, lte: endOfDay } }
-        });
-
-        const absenMasuk = absensiHariIni.find(a => a.jenis === JenisAbsensi.MASUK);
-        const sudahKeluar = absensiHariIni.some(a => a.jenis === JenisAbsensi.KELUAR);
-
-        // Hanya kirim notif jika petugas sedang aktif bershift
-        if (absenMasuk && !sudahKeluar) {
-          // Hitung selisih jam dari absen masuk ke target checkpoint
-          const diffMs = targetCheckpointTime.getTime() - absenMasuk.waktu_server.getTime();
-          const diffHours = Math.round(diffMs / (60 * 60 * 1000));
-
-          // Pemicu tepat per 6 jam sejak absen masuk (misal jam ke-6, jam ke-12)
-          if (diffHours > 0 && diffHours % 6 === 0) {
-            // Cek apakah sudah membuat laporan untuk jam target tersebut
-            const laporanTerbuat = await prisma.laporanPerJam.findFirst({
-              where: { staff_id: satpam.id, tanggal: startOfDay, jam: targetHour }
-            });
-
-            if (!laporanTerbuat && satpam.fcm_token) {
-              const jamTargetStr = `${targetHour.toString().padStart(2, '0')}:00`;
-              await sendToDevice(
-                satpam.fcm_token,
-                'Pengingat Laporan Rutin 6 Jam (5 Menit Lagi)',
-                `Waktu pengisian laporan rutin 6 jam akan tiba pukul ${jamTargetStr}. Segera lakukan pengecekan area tugas dan submit laporan Anda.`,
-                { type: 'reminder_laporan_perjam', jam: targetHour.toString() }
-              );
-              notifTerkirim++;
-              logger.info(`[Reminder 6 Jam] Notifikasi H-5 dikirim ke Satpam ${satpam.nama} untuk target ${jamTargetStr}`);
-            }
-          }
-        }
-      }
-      logger.info(`✅ Cron Job: Reminder Laporan Per 6 Jam selesai dicek. Terkirim ke ${notifTerkirim} petugas bershift.`);
-    } catch (error) {
-      logger.error('Error pada cron reminder laporan per 6 jam:', error);
-    }
+  cron.schedule('* * * * *', async () => {
+    try {await sendReportReminders();} catch(error){logger.error('Report reminder failed',error);}
   });
 
   // ─── Pengingat 1 Jam Sebelum Shift Dimulai (Semua Staff Aktif) ─────────────

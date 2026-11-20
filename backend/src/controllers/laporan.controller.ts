@@ -1,3 +1,4 @@
+import { reportSchedule } from '../services/reportSchedule.service';
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { logger } from '../utils/logger';
@@ -314,7 +315,7 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
     const file = req.file;
 
     if (!file) {
-      res.status(400).json({ success: false, message: 'Foto laporan per 3 jam wajib disertakan.' });
+      res.status(400).json({ success: false, message: 'Foto laporan terjadwal wajib disertakan.' });
       return;
     }
 
@@ -326,36 +327,27 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
 
     const { jam, status_keamanan, catatan, lat, lng } = parsed.data;
     
-    // Cek apakah satpam sedang aktif shift
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const absensiHariIni = await prisma.absensi.findMany({
-      where: { staff_id: user.id, waktu_server: { gte: startOfDay, lte: endOfDay } },
-    });
-    const sudahMasuk = absensiHariIni.some(a => a.jenis === JenisAbsensi.MASUK);
-    const sudahKeluar = absensiHariIni.some(a => a.jenis === JenisAbsensi.KELUAR);
-
-    if (!sudahMasuk || sudahKeluar) {
-      res.status(400).json({ success: false, message: 'Laporan per 3 jam hanya bisa dibuat saat shift aktif.' });
-      return;
+    const schedule=await reportSchedule(user.id);
+    const slot=schedule.slots.find(s=>s.at===parsed.data.checkpoint && s.hour===jam);
+    if(!schedule.active || !slot || Date.now()<Date.parse(slot.at)) {
+      res.status(400).json({success:false,message:'Laporan hanya dapat dikirim pada jadwal yang ditentukan admin dalam shift aktif. Muat ulang jadwal laporan.'});return;
     }
+    const startOfDay=new Date(slot.date);
 
     // Cek duplikasi laporan per jam (satu jam hanya satu laporan per staff)
     const existing = await prisma.laporanPerJam.findUnique({
       where: {
-        staff_id_tanggal_jam: {
+        staff_id_tanggal_jam_menit: {
           staff_id: user.id,
           tanggal: startOfDay,
           jam,
+          menit:slot.minute,
         },
       },
     });
 
     if (existing) {
-      res.status(400).json({ success: false, message: `Laporan per 3 jam untuk pukul ${jam}:00 sudah pernah dibuat hari ini.` });
+      res.status(400).json({ success: false, message: `Laporan terjadwal untuk pukul ${slot.label} sudah pernah dibuat hari ini.` });
       return;
     }
 
@@ -384,14 +376,17 @@ export const createLaporanPerJam = async (req: Request, res: Response): Promise<
         staff_id: user.id,
         tanggal: startOfDay,
         jam,
+        menit:slot.minute,
+        checkpoint_at:new Date(slot.at),
         status_keamanan,
         catatan,
         foto_url: fotoUrl,
       },
     });
 
-    res.status(201).json({ success: true, message: 'Laporan per 3 jam berhasil disimpan.', data: laporan });
+    res.status(201).json({ success: true, message: 'Laporan terjadwal berhasil disimpan.', data: laporan });
   } catch (error) {
+    if((error as any)?.code==='P2002'){res.status(409).json({success:false,message:'Laporan pada jadwal ini sudah dikirim.'});return;}
     logger.error('Error createLaporanPerJam:', error);
     res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
   }
@@ -402,15 +397,15 @@ export const getLaporanPerJamSaya = async (req: Request, res: Response): Promise
     const user = req.user!;
     const tanggalStr = req.query.tanggal as string;
     
-    const date = tanggalStr ? new Date(tanggalStr) : new Date();
-    date.setHours(0, 0, 0, 0);
+    const date = new Date(tanggalStr || new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(new Date()));
+
 
     const laporan = await prisma.laporanPerJam.findMany({
       where: {
         staff_id: user.id,
         tanggal: date,
       },
-      orderBy: { jam: 'asc' },
+      orderBy: [{ jam: 'asc' }, { menit:'asc' }],
     });
 
     res.status(200).json({ success: true, data: laporan });
@@ -428,11 +423,12 @@ export const getAdminLaporanPerJam = async (req: Request, res: Response): Promis
       return;
     }
 
-    const { tanggal, staff_id } = parsed.data;
+    const { tanggal, staff_id, divisi } = parsed.data;
     const date = new Date(tanggal);
-    date.setHours(0, 0, 0, 0);
+
 
     const where: any = { tanggal: date };
+    if(divisi) where.staff={divisi};
     if (staff_id) where.staff_id = staff_id;
 
     const laporan = await prisma.laporanPerJam.findMany({
@@ -443,6 +439,7 @@ export const getAdminLaporanPerJam = async (req: Request, res: Response): Promis
       orderBy: [
         { staff_id: 'asc' },
         { jam: 'asc' },
+        { menit:'asc' },
       ],
     });
 

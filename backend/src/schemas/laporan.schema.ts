@@ -39,7 +39,8 @@ export const getAdminLaporanSchema = z.object({
 
 // ─── Laporan Per Jam (Khusus SATPAM) ─────────────────────────────────────────
 export const createLaporanPerJamSchema = z.object({
-  jam: z.coerce.number().min(0).max(23, 'Jam harus antara 0 - 23'),
+  checkpoint: z.string().datetime(),
+  jam: z.coerce.number().int().min(0).max(23, 'Jam harus antara 0 - 23'),
   status_keamanan: z.nativeEnum(StatusKeamanan, { required_error: 'Status keamanan wajib diisi.' }),
   catatan: z.string().optional(),
   lat: z.coerce.number({ required_error: 'Latitude wajib diisi.' }),
@@ -47,6 +48,7 @@ export const createLaporanPerJamSchema = z.object({
 });
 
 export const getAdminLaporanPerJamSchema = z.object({
+  divisi: z.nativeEnum(Divisi).optional(),
   tanggal: z.string({ required_error: 'Tanggal wajib diisi.' }),
   staff_id: z.string().optional(),
 });

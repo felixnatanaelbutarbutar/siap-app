@@ -1,29 +1,31 @@
+import 'dotenv/config';
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
+import { createPrivateKey } from 'crypto';
 import admin from 'firebase-admin';
 import { logger } from '../utils/logger';
 import { prisma } from '../lib/prisma';
 import { Divisi, Role } from '@prisma/client';
 
-// Inisialisasi Firebase Admin
+// Prefer the service-account file; retain environment variables for deployments.
 try {
-  // Parsing private key karena newline dari dotenv kadang masih berupa literal '\n'
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-    : undefined;
-
-  if (!privateKey) {
-    logger.warn('Firebase Private Key tidak ditemukan di environment. Push notification mungkin tidak berjalan.');
-  } else {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey,
-      }),
-    });
-    logger.info('Firebase Admin SDK berhasil diinisialisasi.');
+  const accountPath=resolve(process.env.FCM_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json');
+  let account: {projectId:string;clientEmail:string;privateKey:string}|undefined;
+  if(existsSync(accountPath)) {
+    const raw=JSON.parse(readFileSync(accountPath,'utf8'));
+    account={projectId:raw.project_id,clientEmail:raw.client_email,privateKey:raw.private_key};
+  } else if(process.env.FIREBASE_PRIVATE_KEY && !process.env.FIREBASE_PRIVATE_KEY.includes('YOUR_PRIVATE_KEY_HERE')) {
+    account={projectId:process.env.FIREBASE_PROJECT_ID||'',clientEmail:process.env.FIREBASE_CLIENT_EMAIL||'',privateKey:process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g,'\n')};
   }
-} catch (error) {
-  logger.error('Gagal inisialisasi Firebase Admin:', error);
+  if(account) {
+    if(!account.projectId || !account.clientEmail)throw Error('Incomplete service account');
+    createPrivateKey(account.privateKey);
+    if(!admin.apps.length)admin.initializeApp({credential:admin.credential.cert(account)});
+    logger.info('Firebase Admin siap untuk push notification.');
+  } else logger.warn('Push belum aktif: pasang serviceAccountKey.json atau environment Firebase yang valid.');
+} catch {
+  // Do not print credentials or SDK errors containing key material.
+  logger.warn('Konfigurasi Firebase belum valid. Periksa file service account dan project Firebase.');
 }
 
 // ─── Core Sender ─────────────────────────────────────────────────────────────
@@ -38,6 +40,7 @@ export const sendToDevice = async (fcmToken: string, title: string, body: string
       notification: { title, body },
       data: data || {},
       token: fcmToken,
+      android: {priority:'high' as const, ...(data?.type==='reminder_laporan_perjam'?{notification:{channelId:'siap-reports',sound:'default'},ttl:Math.max(0,Math.min(300000,Date.parse(data.checkpoint||'')-Date.now()||300000))}:{})},
     };
 
     const response = await admin.messaging().send(message);
