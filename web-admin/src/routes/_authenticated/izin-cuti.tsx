@@ -152,118 +152,120 @@ function IzinCutiPage() {
           border: "1px solid var(--border)",
         }}
       >
-        <table className="w-full">
-          <thead>
-            <tr>
-              {["Staff", "Jenis", "Tanggal", "Status", "Ditinjau Oleh", ""].map((h) => (
-                <th key={h} style={thStyle}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {izinList?.map((item: any) => (
-              <tr
-                key={item.id}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--bg-hover)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
-              >
-                <td style={tdStyle}>
-                  <div
-                    className="font-semibold"
-                    style={{ color: "var(--text-base)" }}
-                  >
-                    {item.staff.nama}
-                  </div>
-                  <div
-                    className="text-xs mt-0.5"
-                    style={{ color: "var(--text-dim)" }}
-                  >
-                    {item.staff.nik} · {item.staff.divisi.replace("_", " ")}
-                  </div>
-                </td>
-                <td style={tdStyle}>
-                  <JenisBadge jenis={item.jenis} />
-                </td>
-                <td
-                  style={{ ...tdStyle, fontFamily: "monospace", fontSize: 12 }}
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-[760px]">
+            <thead>
+              <tr>
+                {["Staff", "Jenis", "Tanggal", "Status", "Ditinjau Oleh", ""].map((h) => (
+                  <th key={h} style={thStyle}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {izinList?.map((item: any) => (
+                <tr
+                  key={item.id}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "var(--bg-hover)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
                 >
-                  {format(new Date(item.tanggal_mulai), "dd MMM yyyy", {
-                    locale: id,
-                  })}
-                  <span style={{ color: "var(--text-dim)" }}> s/d </span>
-                  {format(new Date(item.tanggal_selesai), "dd MMM yyyy", {
-                    locale: id,
-                  })}
-                </td>
-                <td style={tdStyle}>
-                  <StatusBadge status={item.status} />
-                </td>
-                <td style={tdStyle}>
-                  {item.status !== "PENDING" ? (
-                    <div>
-                      <div
-                        className="font-medium text-xs"
-                        style={{ color: "var(--text-base)" }}
-                      >
-                        {item.reviewer?.nama || "Administrator SIAP"}
-                      </div>
-                      {item.reviewed_at && (
-                        <div
-                          className="text-[11px] mt-0.5"
-                          style={{ color: "var(--text-dim)" }}
-                        >
-                          {format(
-                            new Date(item.reviewed_at),
-                            "dd MMM yyyy, HH:mm",
-                            { locale: id }
-                          )}
-                        </div>
-                      )}
+                  <td style={tdStyle}>
+                    <div
+                      className="font-semibold"
+                      style={{ color: "var(--text-base)" }}
+                    >
+                      {item.staff.nama}
                     </div>
-                  ) : (
-                    <span style={{ color: "var(--text-dim)" }}>-</span>
-                  )}
-                </td>
-                <td style={{ ...tdStyle, textAlign: "right" }}>
-                  <button
-                    onClick={() => setSelectedIzin(item)}
-                    className="inline-flex items-center gap-1.5 font-bold text-xs uppercase transition-colors"
+                    <div
+                      className="text-xs mt-0.5"
+                      style={{ color: "var(--text-dim)" }}
+                    >
+                      {item.staff.nik} · {item.staff.divisi.replace("_", " ")}
+                    </div>
+                  </td>
+                  <td style={tdStyle}>
+                    <JenisBadge jenis={item.jenis} />
+                  </td>
+                  <td
+                    style={{ ...tdStyle, fontFamily: "monospace", fontSize: 12 }}
+                  >
+                    {format(new Date(item.tanggal_mulai), "dd MMM yyyy", {
+                      locale: id,
+                    })}
+                    <span style={{ color: "var(--text-dim)" }}> s/d </span>
+                    {format(new Date(item.tanggal_selesai), "dd MMM yyyy", {
+                      locale: id,
+                    })}
+                  </td>
+                  <td style={tdStyle}>
+                    <StatusBadge status={item.status} />
+                  </td>
+                  <td style={tdStyle}>
+                    {item.status !== "PENDING" ? (
+                      <div>
+                        <div
+                          className="font-medium text-xs"
+                          style={{ color: "var(--text-base)" }}
+                        >
+                          {item.reviewer?.nama || "Administrator SIAP"}
+                        </div>
+                        {item.reviewed_at && (
+                          <div
+                            className="text-[11px] mt-0.5"
+                            style={{ color: "var(--text-dim)" }}
+                          >
+                            {format(
+                              new Date(item.reviewed_at),
+                              "dd MMM yyyy, HH:mm",
+                              { locale: id }
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span style={{ color: "var(--text-dim)" }}>-</span>
+                    )}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: "right" }}>
+                    <button
+                      onClick={() => setSelectedIzin(item)}
+                      className="inline-flex items-center gap-1.5 font-bold text-xs uppercase transition-colors"
+                      style={{
+                        color: "var(--accent)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        letterSpacing: "0.8px",
+                      }}
+                    >
+                      <Eye className="w-4 h-4" /> Detail
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {(!izinList || izinList.length === 0) && (
+                <tr>
+                  <td
+                    colSpan={6}
                     style={{
-                      color: "var(--accent)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      letterSpacing: "0.8px",
+                      ...tdStyle,
+                      textAlign: "center",
+                      padding: "40px 20px",
+                      color: "var(--text-dim)",
                     }}
                   >
-                    <Eye className="w-4 h-4" /> Detail
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {(!izinList || izinList.length === 0) && (
-              <tr>
-                <td
-                  colSpan={6}
-                  style={{
-                    ...tdStyle,
-                    textAlign: "center",
-                    padding: "40px 20px",
-                    color: "var(--text-dim)",
-                  }}
-                >
-                  Belum ada pengajuan izin/cuti.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                    Belum ada pengajuan izin/cuti.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Detail Modal */}
@@ -341,7 +343,7 @@ function IzinCutiPage() {
                   style={{ color: "var(--text-secondary)" }}
                 >
                   {format(new Date(selectedIzin.tanggal_mulai), "dd MMM yyyy", { locale: id })}{" "}
-                  –{" "}
+                  s/d{" "}
                   {format(
                     new Date(selectedIzin.tanggal_selesai),
                     "dd MMM yyyy",

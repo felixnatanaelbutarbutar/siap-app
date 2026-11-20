@@ -323,8 +323,8 @@ function SosAdminPage() {
             Belum ada riwayat SOS yang selesai ditangani.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm min-w-[720px]">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-dim)' }}>
                   <th className="text-left px-5 py-3 text-xs font-bold uppercase">Waktu</th>

@@ -1,0 +1,354 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==============================================================================
+% PAKET FORMAL & TIPOGRAFI KLASIK (MONOKROM, KOMPATIBEL PDFLATEX / OVERLEAF)
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[indonesian]{babel}
+\usepackage{mathptmx} % Font serif formal Times (standar dokumen resmi/korporat)
+\usepackage{courier}  % Font monospace vektor Type 1 (selaras dengan Times)
+\usepackage{microtype}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{framed}
+\usepackage{hyperref}
+
+% ==============================================================================
+% PALET MONOKROM FORMAL (HITAM & ABU-ABU NETRAL, TANPA WARNA-WARNI)
+% ==============================================================================
+\definecolor{inkblack}{HTML}{111111}
+\definecolor{charcoal}{HTML}{333333}
+\definecolor{mutedgray}{HTML}{555555}
+\definecolor{rulegray}{HTML}{B8B8B8}
+\definecolor{shadegray}{HTML}{F4F4F4}
+
+\color{inkblack}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=inkblack,
+    urlcolor=charcoal,
+    citecolor=inkblack,
+    pdftitle={Proposal Penawaran Sistem Informasi Absensi dan Pelaporan (SIAP)},
+    pdfauthor={Tim Pengembang Sistem SIAP}
+}
+
+% ==============================================================================
+% PENGATURAN HEADER, FOOTER & JUDUL BAB FORMAL
+% ==============================================================================
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\headheight}{15pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\textcolor{mutedgray}{PROPOSAL PENAWARAN SISTEM INFORMASI ABSENSI \& PELAPORAN (SIAP)}}
+\fancyhead[R]{\footnotesize\textcolor{mutedgray}{DOKUMEN RESMI}}
+\fancyfoot[L]{\footnotesize\textcolor{mutedgray}{Bersifat Rahasia dan Negotiable}}
+\fancyfoot[R]{\footnotesize\textcolor{mutedgray}{Halaman \thepage\ dari \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\titleformat{\section}
+  {\large\bfseries}
+  {\thesection.}{0.6em}{\MakeUppercase}
+  [\vspace{2pt}{\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{16pt}{8pt}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries}
+  {\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+\setlist[itemize]{leftmargin=1.5em, itemsep=2pt, topsep=3pt}
+\setlist[enumerate]{leftmargin=1.8em, itemsep=2pt, topsep=3pt}
+
+% ==============================================================================
+% DOKUMEN UTAMA
+% ==============================================================================
+\begin{document}
+
+% ==============================================================================
+% HALAMAN SAMPUL (COVER FORMAL MONOKROM)
+% ==============================================================================
+\begin{titlepage}
+    \thispagestyle{empty}
+    \vspace*{0.8cm}
+
+    {\footnotesize\bfseries\textcolor{mutedgray}{DOKUMEN PENAWARAN TEKNIS DAN KOMERSIAL}}\\[4pt]
+    \rule{\textwidth}{1.5pt}
+
+    \vspace{1.8cm}
+
+    {\Huge\bfseries PROPOSAL PENAWARAN}\\[10pt]
+    {\LARGE\bfseries PENGEMBANGAN DAN IMPLEMENTASI}\\[6pt]
+    {\LARGE\bfseries SISTEM INFORMASI ABSENSI \& PELAPORAN (SIAP)}
+
+    \vspace{0.8cm}
+    {\large\textcolor{charcoal}{Platform Terintegrasi Web Admin, Backend Server, Object Storage, dan Aplikasi Mobile Android (APK) untuk Divisi Keamanan (Satpam), Cleaning Service, dan Utility}}
+
+    \vspace{1.2cm}
+    \rule{\textwidth}{0.6pt}
+
+    \vspace{1.0cm}
+    \begin{tabular}{@{}L{4.6cm}L{0.3cm}L{9.8cm}@{}}
+        \textbf{Nomor Dokumen} & : & 001/PROP-SIAP/XI/2026 \\[4pt]
+        \textbf{Tanggal Penawaran} & : & 20 November 2026 \\[4pt]
+        \textbf{Masa Berlaku Penawaran} & : & 30 (Tiga Puluh) Hari Kalender \\[4pt]
+        \textbf{Cakupan Paket} & : & Aplikasi Lengkap (Web Admin, Backend, APK Android), Sewa Server VPS 1 Tahun, Domain Resmi 1 Tahun, Deployment, Dokumentasi, dan Garansi \\[4pt]
+        \textbf{Total Nilai Investasi} & : & \textbf{Rp 24.800.000 (Dua Puluh Empat Juta Delapan Ratus Ribu Rupiah)} \\[4pt]
+        \textbf{Status Harga} & : & \textbf{Negotiable (Dapat Dinegosiasikan)} \\
+    \end{tabular}
+
+    \vfill
+
+    \begin{framed}
+        \small
+        \textbf{Catatan Penting:} Seluruh rincian biaya pada dokumen ini sudah mencakup penyediaan infrastruktur Cloud VPS produksi selama 1 (satu) tahun penuh serta pendaftaran domain resmi 1 (satu) tahun beserta sertifikat keamanan SSL/HTTPS. Nilai investasi bersifat \textbf{negotiable} dan dapat disesuaikan melalui musyawarah bersama mengikuti kebutuhan operasional prioritas pihak klien.
+    \end{framed}
+
+    \vspace{0.8cm}
+    \rule{\textwidth}{0.8pt}\\[6pt]
+    \begin{tabularx}{\textwidth}{@{}Xr@{}}
+        \textbf{Disusun oleh:} Tim Pengembang Sistem SIAP & \textbf{Kepada Yth.:} Pimpinan / Manajemen Klien \\
+    \end{tabularx}
+\end{titlepage}
+
+% ==============================================================================
+% DAFTAR ISI
+% ==============================================================================
+\tableofcontents
+\vspace{8pt}
+\rule{\textwidth}{0.4pt}
+\newpage
+
+% ==============================================================================
+% BAB 1: RINGKASAN EKSEKUTIF
+% ==============================================================================
+\section{Ringkasan Eksekutif}
+
+Pengelolaan kehadiran dan pelaporan operasional personel lapangan lintas divisi (Keamanan/Satpam, Cleaning Service, dan Utility) memerlukan sistem digital yang akurat, terstruktur, dan dapat dipantau secara langsung (\textit{real-time}). Penggunaan metode manual konvensional (buku absensi fisik atau grup pesan singkat) memiliki berbagai kelemahan, antara lain rentan terhadap ketidaksesuaian jam kehadiran, keterlambatan laporan insiden fasilitas, potensi titip absen, serta besarnya beban administratif saat penyusunan rekapitulasi bulanan.
+
+Melalui proposal ini, kami menawarkan implementasi penuh \textbf{Sistem Informasi Absensi dan Pelaporan (SIAP)} sebagai solusi komprehensif dalam paket terima beres (\textit{turnkey solution}). Sistem ini mencakup tiga pilar utama yang saling terhubung:
+\begin{enumerate}
+    \item \textbf{Web Admin Command Center:} Pusat kendali berbasis peramban (\textit{browser}) untuk Administrator dan Manajemen guna memantau presensi harian, peta pemantauan staf secara langsung (\textit{live tracking}), evaluasi laporan kerja harian dan berkala, persetujuan izin/cuti, manajemen jadwal kerja shift, pusat respon peringatan darurat (SOS Alert), serta ekspor rekapitulasi bulanan untuk penggajian (\textit{payroll}).
+    \item \textbf{Aplikasi Mobile Android (File \texttt{.apk} Siap Pasang):} Aplikasi operasional khusus petugas di lapangan dengan fitur presensi selfie berstempel data (watermark GPS dan waktu), proteksi lokasi palsu (Anti Fake GPS), penguncian perangkat resmi (Device Binding), pelaporan kerja harian, laporan berkala per jam/3 jam, serah terima tugas (BAST) bertanda tangan digital, pengingat 1 jam sebelum shift, serta tombol darurat SOS.
+    \item \textbf{Infrastruktur Cloud VPS dan Domain Resmi (Termasuk 1 Tahun Penuh):} Penyediaan server produksi mandiri berkecepatan tinggi lengkap dengan basis data PostgreSQL, penyimpanan berkas terstruktur MinIO (kompatibel S3), nama domain resmi perusahaan, sertifikat keamanan SSL/HTTPS otomatis, serta pencadangan data (\textit{backup}) rutin harian.
+\end{enumerate}
+
+Total nilai investasi paket komprehensif ini adalah \textbf{Rp 24.800.000 (Dua Puluh Empat Juta Delapan Ratus Ribu Rupiah)}, bersifat \textbf{negotiable}, dan telah mencakup seluruh komponen perancangan fitur, penyediaan server dan domain tahun pertama, instalasi produksi, buku panduan resmi, pelatihan staf, serta masa garansi pemeliharaan.
+
+% ==============================================================================
+% BAB 2: RUANG LINGKUP SISTEM DAN RINCIAN FITUR
+% ==============================================================================
+\section{Ruang Lingkup Sistem dan Rincian Fitur}
+
+Sistem SIAP dirancang untuk memberikan transparansi penuh antara pihak manajemen dan petugas lapangan. Berikut adalah rincian fitur umum yang dikembangkan pada masing-masing komponen platform:
+
+\subsection{Aplikasi Web Admin (Command Center Manajemen)}
+Web Admin diakses oleh Administrator melalui komputer desktop, laptop, maupun peramban seluler dengan fungsionalitas utama sebagai berikut:
+\begin{itemize}
+    \item \textbf{Dashboard Analitik dan Statistik Kehadiran:} Menyajikan ringkasan kehadiran harian secara langsung, persentase kehadiran tepat waktu vs terlambat, komposisi status personel per divisi, grafik tren kehadiran berkala, serta daftar pekerjaan operasional yang membutuhkan persetujuan segera.
+    \item \textbf{Peta Pemantauan Langsung (Live Tracking Map):} Visualisasi posisi geografis seluruh petugas lapangan yang sedang aktif bertugas pada peta digital terintegrasi untuk memastikan personel berada di area tugas masing-masing.
+    \item \textbf{Monitoring Absensi dan Validasi Foto Masuk/Keluar:} Log presensi masuk, istirahat, dan pulang secara \textit{real-time}. Dilengkapi jendela pembanding bukti foto selfie masuk vs keluar beserta informasi koordinat GPS dan akurasi perangkat.
+    \item \textbf{Rekapitulasi Kehadiran dan Ekspor Data Penggajian:} Rekap presensi bulanan otomatis per pegawai atau per divisi yang dapat diunduh langsung ke format Microsoft Excel / CSV maupun PDF sebagai rujukan akurat perhitungan honorarium dan lembur.
+    \item \textbf{Manajemen Pengguna, Shift, dan Kalender Kerja:} Pendaftaran profil staf (Satpam, Cleaning Service, Utility), pembagian regu kerja, konfigurasi jam kerja shift (pagi, siang, malam lintas hari), serta tampilan visual Kalender Shift Harian untuk mempermudah pengaturan rotasi petugas.
+    \item \textbf{Pusat Evaluasi Laporan Kerja dan Laporan Rutin:} Peninjauan laporan kegiatan harian dan laporan patroli rutin per jam atau per 3 jam dari lapangan, lengkap dengan foto bukti pekerjaan, catatan evaluasi admin, serta status persetujuan (Disetujui/Ditolak).
+    \item \textbf{Pengawasan Berita Acara Serah Terima (BAST) \& Inventaris:} Arsip dokumen digital serah terima shift beserta checklist kondisi inventaris (kondisi baik, rusak, atau hilang), tanda tangan digital dua pihak, dan fasilitas unduh berkas resmi format PDF.
+    \item \textbf{Pusat Tanggap Darurat (SOS Alert) \& Web Push Service Worker:} Penerimaan sinyal darurat lapangan secara instan disertai peringatan suara sirine, deskripsi insiden, dan rujukan peta lokasi. Didukung teknologi \textit{Web Push PWA} sehingga notifikasi sistem operasi pada komputer/laptop Admin tetap berbunyi walaupun peramban sedang ditutup atau Admin belum login.
+    \item \textbf{Pencatatan Riwayat Aktivitas Admin (Audit Trail):} Rekaman log otomatis terhadap setiap tindakan penting yang dilakukan oleh Admin (seperti persetujuan laporan, verifikasi cuti, dan perubahan jadwal) guna menjaga transparansi dan integritas data.
+    \item \textbf{Konfigurasi Wilayah Tugas (Geofence) \& Pengumuman Resmi:} Penentuan titik koordinat dan batas radius area kerja melalui peta interaktif, serta penyiaran pengumuman prioritas langsung ke aplikasi ponsel seluruh personel lapangan.
+\end{itemize}
+
+\subsection{Aplikasi Mobile Android Petugas Lapangan (Format \texttt{.apk})}
+Aplikasi mobile dirancang khusus agar mudah digunakan oleh personel lapangan dengan antarmuka berbahasa Indonesia yang intuitif dan ringan:
+\begin{itemize}
+    \item \textbf{Presensi Selfie GPS dengan Stempel Data Otomatis (Watermark):} Pengambilan foto kehadiran selfie wajib melalui kamera langsung di lokasi kerja. Sistem secara otomatis mencantumkan nama staf, divisi, tanggal, jam akurat, dan koordinat GPS langsung ke dalam foto sebagai bukti otentik yang tidak dapat dimanipulasi.
+    \item \textbf{Validasi Jarak Radius (Geofencing) \& Proteksi Anti Fake GPS:} Pengecekan otomatis apakah posisi staf berada di dalam radius resmi area kerja. Dilengkapi sistem proteksi berlapis untuk mendeteksi dan menolak penggunaan aplikasi lokasi palsu (Fake GPS / Mock Location).
+    \item \textbf{Penguncian Perangkat Resmi (Device Binding):} Aplikasi terikat secara kriptografis pada satu perangkat ponsel pintar staf yang telah diverifikasi oleh Administrator guna mencegah praktik titip absen antar rekan kerja.
+    \item \textbf{Penyimpanan Presensi Mode Offline (Terenkripsi):} Apabila petugas berada di area titik buta sinyal (seperti lantai basement atau ruang tertutup), data presensi tersimpan aman secara terenkripsi di memori ponsel dan otomatis terkirim begitu ponsel mendapatkan koneksi internet kembali.
+    \item \textbf{Laporan Kerja Harian Tematik Sesuai Divisi:} Form pelaporan terstruktur dengan bukti foto kamera berstempel data:
+    \begin{itemize}
+        \item \textit{Divisi Keamanan (Satpam):} Laporan patroli area, pengamanan titik masuk/keluar, pengawalan, penanganan insiden, dan pemeliharaan ketertiban.
+        \item \textit{Divisi Kebersihan (Cleaning Service):} Pembersihan area kerja, sanitasi toilet berkala, pembuangan sampah, dan pemantauan stok bahan pembersih.
+        \item \textit{Divisi Utilitas (Utility):} Pemeriksaan rutin fasilitas gedung, pelaporan kerusakan teknis, tindakan perbaikan, dan pengujian peralatan operasional.
+    \end{itemize}
+    \item \textbf{Laporan Patroli Berkala Per Jam / 3 Jam (Khusus Satpam):} Formulir checklist kontrol titik pos patroli berkala selama shift aktif beserta pengingat otomatis di aplikasi.
+    \item \textbf{Berita Acara Serah Terima (BAST) dengan Tanda Tangan Digital:} Checklist kondisi perlengkapan inventaris operasional saat pergantian regu, pencatatan barang rusak/hilang, serta tanda tangan digital langsung pada layar ponsel oleh petugas yang menyerahkan dan yang menerima tugas.
+    \item \textbf{Pengajuan Izin, Sakit, dan Cuti Mandiri:} Formulir digital untuk mengajukan ketidakhadiran kerja yang disertai unggahan foto surat keterangan dokter atau dokumen pendukung, lengkap dengan pemantauan status persetujuan dari Admin.
+    \item \textbf{Pengingat Otomatis 1 Jam Sebelum Shift Kerja:} Sistem pengingat terpadu yang memunculkan notifikasi dan alarm lokal pada ponsel 1 jam sebelum jadwal bertugas dimulai (tetap berfungsi meskipun ponsel tidak terkoneksi internet).
+    \item \textbf{Tombol Darurat SOS dengan Keterangan Wajib \& Siaga Rekan:} Tombol darurat khusus yang mewajibkan pengisian rincian keadaan darurat serta koordinat lokasi. Mengirimkan sinyal bahaya ke layar Web Admin sekaligus memunculkan peringatan siaga ke ponsel seluruh rekan kerja aktif di lapangan.
+\end{itemize}
+
+% ==============================================================================
+% BAB 3: SPESIFIKASI INFRASTRUKTUR SERVER VPS & DOMAIN (TERMASUK 1 TAHUN)
+% ==============================================================================
+\section{Spesifikasi Infrastruktur Server VPS dan Domain (Termasuk 1 Tahun)}
+
+Paket penawaran ini \textbf{sudah termasuk} penyediaan, instalasi konfigurasi keamanan, dan masa operasional penuh selama \textbf{1 (satu) tahun pertama} untuk seluruh komponen infrastruktur berikut:
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{@{}L{4.2cm}X@{}}
+\toprule
+\textbf{Komponen Infrastruktur} & \textbf{Spesifikasi dan Ketentuan Layanan (Masa Aktif 1 Tahun Penuh)} \\
+\midrule
+Cloud VPS Mandiri & 2 sampai 4 vCPU, 4 GB RAM (+ 2 GB Swap), 80 sampai 100 GB NVMe SSD, Bandwidth minimal 2 TB per bulan, Sistem Operasi Ubuntu 24.04 LTS (Zona Waktu WIB / Asia/Jakarta), lokasi pusat data Indonesia atau Singapura untuk menjamin kecepatan akses optimal. \\
+\midrule
+Domain Resmi (1 Tahun) & Pendaftaran 1 nama domain resmi perusahaan (ekstensi \texttt{.com} atau \texttt{.id}, sesuai ketersediaan), lengkap dengan konfigurasi DNS terpusat dan subdomain operasional (Web Admin, Backend API, Object Storage, serta portal unduh berkas APK). \\
+\midrule
+Keamanan dan SSL/HTTPS & Konfigurasi Reverse Proxy Nginx, sertifikat enkripsi SSL/HTTPS otomatis (Let's Encrypt dengan perpanjangan otomatis), proteksi WebSocket aman (\texttt{wss://}), serta konfigurasi Firewall UFW untuk menutup seluruh port yang tidak diperlukan. \\
+\midrule
+Basis Data \& Media Storage & PostgreSQL versi modern sebagai database relasional utama dan MinIO S3-Compatible Object Storage untuk penyimpanan terstruktur seluruh foto absensi, foto laporan, tanda tangan digital, serta arsip berkas PDF BAST. \\
+\midrule
+Stabilitas \& Pencadangan & Manajemen proses latar belakang menggunakan PM2 dengan pemulihan otomatis jika server restart, serta skrip otomatis pencadangan data (\textit{daily backup}) basis data secara berkala. \\
+\bottomrule
+\end{tabularx}
+\caption{Spesifikasi Infrastruktur Server VPS dan Domain Tahun Pertama}
+\end{table}
+
+\textbf{Estimasi Kapasitas:} Kapasitas infrastruktur di atas dirancang sangat memadai untuk menampung lalu lintas data rutin dari \textbf{50 hingga 200 personel aktif} secara bersamaan dengan estimasi penyimpanan ratusan ribu foto berstempel data terkompresi secara optimal.
+
+% ==============================================================================
+% BAB 4: RINCIAN ANGGARAN BIAYA (RAB) - TOTAL RP 24.800.000
+% ==============================================================================
+\section{Rincian Anggaran Biaya (RAB)}
+
+Berikut adalah rincian terperinci alokasi investasi senilai total \textbf{Rp 24.800.000 (Dua Puluh Empat Juta Delapan Ratus Ribu Rupiah)} yang mencakup penyediaan infrastruktur server dan domain 1 tahun, pengembangan perangkat lunak terintegrasi, penerapan keamanan, penyiapan dokumen, pelatihan, dan masa garansi:
+
+\begin{longtable}{@{}C{0.8cm}L{11.0cm}R{3.2cm}@{}}
+\caption{Rincian Anggaran Biaya (RAB) Sistem SIAP} \\
+\toprule
+\textbf{No.} & \textbf{Uraian Komponen Pekerjaan dan Layanan} & \textbf{Biaya (Rp)} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{@{}l}{\footnotesize\textit{Lanjutan Tabel \thetable: Rincian Anggaran Biaya (RAB) Sistem SIAP}} \\
+\toprule
+\textbf{No.} & \textbf{Uraian Komponen Pekerjaan dan Layanan} & \textbf{Biaya (Rp)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\footnotesize\textit{Berlanjut ke halaman berikutnya...}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+% KATEGORI A
+\multicolumn{2}{@{}l}{\textbf{A. Penyediaan Infrastruktur Server VPS, Domain Resmi \& Keamanan (1 Tahun)}} & \textbf{3.800.000} \\
+\midrule
+1. & Sewa Cloud VPS Produksi Mandiri selama 1 Tahun Penuh (Spesifikasi 2-4 vCPU, 4 GB RAM, 80-100 GB NVMe SSD, Bandwidth 2 TB/bulan, OS Linux Ubuntu LTS, Pusat Data Regional Indonesia/Singapura) & 2.500.000 \\
+2. & Registrasi Kepemilikan Nama Domain Resmi 1 Tahun (\texttt{.com} atau \texttt{.id}) beserta Pengaturan DNS Subdomain Terpadu & 400.000 \\
+3. & Instalasi Arsitektur Server Produksi: Nginx Reverse Proxy, Enkripsi Sertifikat SSL/HTTPS Otomatis, Firewall UFW, Database PostgreSQL, MinIO Storage, PM2 Process Manager, dan Penjadwalan Backup Harian & 900.000 \\
+\midrule
+
+% KATEGORI B
+\multicolumn{2}{@{}l}{\textbf{B. Pengembangan Backend API, Basis Data \& Layanan Real-Time}} & \textbf{6.200.000} \\
+\midrule
+4. & Perancangan Arsitektur RESTful API \& Basis Data PostgreSQL: Skema tabel terstruktur, autentikasi aman JWT, kontrol hak akses berbasis peran (RBAC), manajemen staf lintas divisi, manajemen shift dan cuti, siaran pengumuman, serta sistem pencatatan log audit aktivitas admin & 2.800.000 \\
+5. & Modul Validasi Presensi Lapangan \& Pemrosesan Media: Keamanan pengikatan perangkat resmi (Device Binding RSA-2048), validasi jarak radius geofence, deteksi proteksi anti Fake GPS, sinkronisasi data presensi offline terenkripsi, pemrosesan stempel data otomatis (watermark foto), dan generator dokumen PDF resmi BAST & 2.000.000 \\
+6. & Layanan Notifikasi Terpadu \& Jalur Siaga Real-Time: Komunikasi dua arah Socket.io untuk pemantauan live lokasi, penjadwalan otomatis pengingat shift (Cron Jobs), server Web Push (VAPID) untuk notifikasi peramban, dan sistem siaga darurat SOS lintas platform & 1.400.000 \\
+\midrule
+
+% KATEGORI C
+\multicolumn{2}{@{}l}{\textbf{C. Pengembangan Aplikasi Web Admin (Pusat Kendali / Command Center)}} & \textbf{5.800.000} \\
+\midrule
+7. & Pusat Pemantauan Eksekutif \& Rekapitulasi Presensi: Dashboard statistik harian, grafik tren kehadiran dan analisis keterlambatan, peta pemantauan sebaran personel (Live Tracking Map), peninjauan bukti foto absensi masuk/keluar, verifikasi perangkat staf, serta rekapitulasi data bulanan siap ekspor ke format Excel/PDF untuk dasar perhitungan penggajian (payroll) & 3.200.000 \\
+8. & Pusat Manajemen Operasional Lapangan: Pengelolaan profil staf, pengaturan jadwal shift mingguan, kalender shift interaktif, persetujuan permohonan izin/cuti/sakit, evaluasi laporan kegiatan harian dan laporan berkala per jam/3 jam, pengawasan serah terima inventaris (BAST), siaran pengumuman prioritas, dan penetapan titik koordinat area kerja geofence & 1.750.000 \\
+9. & Panel Tanggap Darurat (SOS Alert) \& Notifikasi Browser PWA: Pusat penanganan sinyal darurat lapangan dengan alarm sirine visual dan audio, tampilan deskripsi insiden dan lokasi peta, serta implementasi Service Worker Web Push agar notifikasi darurat tetap muncul di komputer/laptop Admin meskipun peramban tidak sedang dibuka atau admin belum login & 850.000 \\
+\midrule
+
+\pagebreak
+% KATEGORI D
+\multicolumn{2}{@{}l}{\textbf{D. Pengembangan Aplikasi Mobile Android Petugas Lapangan (Format \texttt{.apk})}} & \textbf{6.200.000} \\
+\midrule
+10. & Modul Presensi \& Identitas Kerja Personel: Tampilan beranda interaktif, informasi shift aktif dan jadwal kerja mingguan, riwayat absensi harian, kamera presensi selfie dengan stempel data otomatis (watermark), fitur pembaruan akurasi lokasi GPS secara langsung, dan pengenalan perangkat resmi terdaftar & 2.800.000 \\
+11. & Modul Pelaporan Kerja, Serah Terima \& Izin Mandiri: Formulir laporan aktivitas kerja harian khusus per divisi (Keamanan, Kebersihan, Utilitas) dengan bukti foto kamera, laporan berkala per jam/3 jam khusus Satpam, berita acara serah terima tugas (BAST) dengan checklist inventaris dan tanda tangan digital langsung di layar HP, pengajuan izin/cuti mandiri beserta lampiran bukti, dan fitur penyimpanan bukti presensi saat offline & 2.000.000 \\
+12. & Modul Keselamatan Kerja (Tombol SOS Darurat) \& Pengingat Shift: Tombol darurat SOS dengan input wajib rincian kejadian dan kirim koordinat otomatis, penerima peringatan siaga ke seluruh HP rekan sekerja di lapangan, sistem pengingat otomatis 1 jam sebelum jadwal kerja dimulai yang tetap berdering meski HP tanpa internet, serta kompilasi dan penandatanganan berkas instalasi akhir (\texttt{.apk} release siap pasang) & 1.400.000 \\
+\midrule
+
+% KATEGORI E
+\multicolumn{2}{@{}l}{\textbf{E. Pengujian Sistem, Deployment, Buku Panduan \& Garansi Pemeliharaan}} & \textbf{2.800.000} \\
+\midrule
+13. & Pengujian Menyeluruh (User Acceptance Testing) \& Deployment Produksi: Uji kelayakan fungsional menyeluruh dari web admin hingga aplikasi mobile Android di berbagai skenario jaringan, instalasi sistem pada VPS produksi, serta penyediaan tautan unduh mandiri berkas \texttt{.apk} & 1.100.000 \\
+14. & Buku Panduan Operasional Resmi (Manual Guide PDF) \& Sesi Pelatihan: Penyusunan buku petunjuk teknis lengkap (48 halaman disertai 44 tangkapan layar panduan langkah demi langkah) serta pendampingan pelatihan langsung bagi Administrator dan perwakilan koordinator staf & 850.000 \\
+15. & Garansi Pemeliharaan Sistem \& Dukungan Teknis (3 Bulan): Layanan pemeliharaan teknis penuh pasca peluncuran, perbaikan bug jika ditemukan kendala, pendampingan kendala server, dan konsultasi operasional berkala selama 3 (tiga) bulan penuh & 850.000 \\
+\midrule
+\multicolumn{2}{@{}L{12.1cm}}{\textbf{TOTAL NILAI INVESTASI KESELURUHAN (SUDAH TERMASUK SERVER \& DOMAIN 1 TAHUN)}} & \textbf{Rp 24.800.000} \\
+\end{longtable}
+
+\begin{framed}
+    \small
+    \textbf{Catatan Khusus Harga (Negotiable) dan Ketentuan Biaya Lanjutan:}
+    \begin{enumerate}
+        \item \textbf{Bersifat Negotiable:} Total nilai penawaran sebesar \textbf{Rp 24.800.000 (Dua Puluh Empat Juta Delapan Ratus Ribu Rupiah)} bersifat \textbf{terbuka untuk negosiasi (negotiable)}. Penyesuaian rincian nilai anggaran dapat dibicarakan secara fleksibel mengikuti prioritas kebutuhan fitur maupun kebijakan anggaran pihak klien.
+        \item \textbf{Biaya Operasional Tahun ke-2 dan Seterusnya:} Seluruh sistem perangkat lunak (Web Admin, Backend API, dan Berkas APK Android) menjadi hak pakai penuh pihak klien tanpa dikenakan biaya lisensi perorangan maupun biaya sewa aplikasi berulang. Pada tahun kedua dan seterusnya, klien hanya menanggung biaya perpanjangan infrastruktur server VPS dan nama domain resmi (estimasi sekitar \textbf{Rp 2.900.000 per tahun}, menyesuaikan tarif penyedia server dan registrar domain pada saat perpanjangan).
+        \item \textbf{Distribusi Aplikasi Mobile:} Aplikasi Android didistribusikan dalam format berkas instalasi resmi (\texttt{.apk}) yang diunduh langsung melalui server mandiri klien sehingga tidak memerlukan biaya langganan akun toko aplikasi. Apabila di masa mendatang klien menghendaki publikasi ke Google Play Store, pembuatan akun Google Play Console dapat didaftarkan atas nama entitas klien.
+    \end{enumerate}
+\end{framed}
+
+\vspace{10pt}
+% ==============================================================================
+% BAB 5: JADWAL PELAKSANAAN IMPLEMENTASI
+% ==============================================================================
+\section{Jadwal Pelaksanaan Implementasi}
+
+Mengingat fondasi inti arsitektur SIAP telah terbangun dan teruji secara fungsional, proses implementasi penuh hingga sistem siap digunakan secara resmi (\textit{Go-Live}) dapat diselesaikan secara efektif dalam waktu \textbf{2 (dua) minggu kerja}:
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}C{1.8cm}L{4.4cm}X@{}}
+\toprule
+\textbf{Tahap} & \textbf{Waktu Pelaksanaan} & \textbf{Aktivitas Utama dan Hasil Kerja (Deliverables)} \\
+\midrule
+Tahap 1 & Hari ke-1 s.d. ke-3 & Pengadaan server Cloud VPS dan domain resmi, konfigurasi DNS terpusat, sertifikat SSL/HTTPS, basis data PostgreSQL, penyimpanan MinIO, serta instalasi Web Admin dan Backend ke lingkungan produksi. \\
+Tahap 2 & Hari ke-4 s.d. ke-7 & Penyesuaian parameter data organisasi klien (daftar personel awal, konfigurasi titik radius area kerja, pola jam kerja shift), kompilasi berkas \texttt{.apk} rilis produksi, serta pengujian internal awal. \\
+Tahap 3 & Hari ke-8 s.d. ke-11 & Pengujian penerimaan sistem bersama pengguna (\textit{User Acceptance Testing}) yang melibatkan Administrator dan perwakilan petugas lapangan (simulasi presensi GPS, pelaporan, BAST digital, cuti, serta alur darurat SOS). \\
+Tahap 4 & Hari ke-12 s.d. ke-14 & Sesi pelatihan operasional bagi Administrator, penyerahan buku Manual Guide PDF resmi, serah terima kredensial akses server/domain, dan peresmian sistem beroperasi penuh (\textit{Go-Live}) yang menandai dimulainya garansi 3 bulan. \\
+\bottomrule
+\end{tabularx}
+\caption{Rencana Jadwal Implementasi Sistem SIAP}
+\end{table}
+
+\newpage
+% ==============================================================================
+% BAB 6: GARANSI, KETENTUAN LAYANAN, DAN PENUTUP
+% ==============================================================================
+\section{Garansi, Ketentuan Layanan, dan Penutup}
+
+\subsection{Ketentuan Garansi dan Dukungan Purna Jual}
+\begin{itemize}
+    \item \textbf{Masa Garansi Penuh 3 (Tiga) Bulan:} Meliputi jaminan perbaikan kesalahan fungsional (\textit{bug fixing}), pendampingan kendala teknis pada Web Admin maupun aplikasi ponsel, serta pemantauan keandalan kinerja server pasca Go-Live tanpa pungutan biaya tambahan.
+    \item \textbf{Kedaulatan dan Kepemilikan Data Penuh:} Seluruh data operasional, riwayat presensi, foto laporan, akun domain resmi, hak akses kontrol server VPS, serta berkas kode program diserahkan secara utuh dan transparan kepada pihak klien.
+    \item \textbf{Pengembangan Lanjutan:} Penambahan modul atau penyesuaian alur kerja baru di luar ruang lingkup yang disepakati pada proposal ini dapat didiskusikan secara terpisah sebagai fase pengembangan lanjutan.
+\end{itemize}
+
+\subsection{Penutup}
+Demikian proposal penawaran pengembangan dan implementasi \textbf{Sistem Informasi Absensi dan Pelaporan (SIAP)} ini kami ajukan. Kami senantiasa siap untuk menghadiri sesi pertemuan presentasi, mendemonstrasikan cara kerja sistem secara langsung (Web Admin dan Aplikasi Mobile Android), serta mendiskusikan penyesuaian rencana kerja dan alokasi anggaran agar dapat memberikan nilai manfaat terbaik bagi operasional perusahaan Bapak/Ibu. Atas perhatian dan kesempatan yang diberikan, kami mengucapkan terima kasih.
+
+\vspace{0.8cm}
+\begin{tabularx}{\textwidth}{@{}C{7.5cm}C{7.5cm}@{}}
+    Hormat kami, & Menyetujui, \\
+    \textbf{Tim Pengembang Sistem SIAP} & \textbf{Pihak Klien / Manajemen} \\[1.7cm]
+    \rule{5.5cm}{0.5pt} & \rule{5.5cm}{0.5pt} \\
+    \textbf{Nama Perwakilan / Project Lead} & \textbf{Nama Pimpinan / Pejabat Berwenang} \\
+    \footnotesize Tanggal: 20 November 2026 & \footnotesize Tanggal: \underline{\hspace{3.2cm}} \\
+\end{tabularx}
+
+\end{document}

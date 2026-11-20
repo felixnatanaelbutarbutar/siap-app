@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Dimensions, Animated, Image } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Dimensions, Animated, Image, Modal } from 'react-native';
 import { TextInput, Text, ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '../../store/auth.store';
+import { getApiBaseUrl, setApiBaseUrl, initApiBaseUrl, DEFAULT_SERVER_URL } from '../../services/api';
+import { socketService } from '../../services/socket';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -10,11 +13,22 @@ export const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  const [currentServer, setCurrentServer] = useState(getApiBaseUrl());
+  const [showServerModal, setShowServerModal] = useState(false);
+  const [inputServer, setInputServer] = useState(getApiBaseUrl());
+
   const { login, isLoading, error } = useAuthStore();
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(40)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    initApiBaseUrl().then((url) => {
+      setCurrentServer(url);
+      setInputServer(url);
+    });
+  }, []);
 
   useEffect(() => {
     Animated.sequence([
@@ -29,6 +43,40 @@ export const LoginScreen = () => {
   const handleLogin = async () => {
     if (!nik || !password) return;
     await login(nik, password);
+  };
+
+  const handleSaveServer = async () => {
+    try {
+      const saved = await setApiBaseUrl(inputServer);
+      setCurrentServer(saved);
+      socketService.reconnect();
+      setShowServerModal(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Alamat Server Diperbarui',
+        text2: saved,
+      });
+    } catch {
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Menyimpan Alamat Server',
+      });
+    }
+  };
+
+  const handleResetServer = async () => {
+    try {
+      const saved = await setApiBaseUrl(DEFAULT_SERVER_URL);
+      setCurrentServer(saved);
+      setInputServer(saved);
+      socketService.reconnect();
+      setShowServerModal(false);
+      Toast.show({
+        type: 'info',
+        text1: 'Reset ke Default',
+        text2: saved,
+      });
+    } catch {}
   };
 
   return (
@@ -109,8 +157,55 @@ export const LoginScreen = () => {
               <Text style={styles.buttonText}>MASUK</Text>
             )}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.serverConfigBtn}
+            onPress={() => {
+              setInputServer(currentServer);
+              setShowServerModal(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.serverConfigLabel}>Server Host:</Text>
+            <Text style={styles.serverConfigVal} numberOfLines={1}>{currentServer}</Text>
+          </TouchableOpacity>
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* MODAL CONFIG SERVER */}
+      <Modal visible={showServerModal} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Alamat Server Laptop</Text>
+            <Text style={styles.modalDesc}>
+              Masukkan IP laptop server saat ini (misal di Wi-Fi kantor atau Hotspot HP Anda).
+            </Text>
+            <TextInput
+              mode="outlined"
+              label="Alamat URL Server"
+              value={inputServer}
+              onChangeText={setInputServer}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={{ backgroundColor: '#ffffff', marginBottom: 18 }}
+              outlineColor="#cfdcce"
+              activeOutlineColor="#006e2f"
+            />
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity style={styles.modalResetBtn} onPress={handleResetServer}>
+                <Text style={styles.modalResetText}>Reset</Text>
+              </TouchableOpacity>
+              <View style={{ flex: 1 }} />
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowServerModal(false)}>
+                <Text style={styles.modalCancelText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveBtn} onPress={handleSaveServer}>
+                <Text style={styles.modalSaveText}>Simpan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -118,18 +213,18 @@ export const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', // surface-container-lowest
+    backgroundColor: '#ffffff',
   },
   headerPanel: {
-    backgroundColor: '#006e2f', // primary
-    height: '40%',
+    backgroundColor: '#006e2f',
+    height: '38%',
     justifyContent: 'center',
     position: 'relative',
     zIndex: 1,
   },
   headerContent: {
     paddingHorizontal: 32,
-    marginTop: -40, // push up slightly
+    marginTop: -30,
   },
   logoImage: {
     width: 210,
@@ -139,7 +234,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4ae176', // inverse-primary for good contrast
+    color: '#4ae176',
     letterSpacing: 1,
     marginTop: 8,
   },
@@ -156,7 +251,7 @@ const styles = StyleSheet.create({
     left: -50,
     width: width * 1.5,
     height: 100,
-    backgroundColor: '#4ae176', // light green accent wave
+    backgroundColor: '#4ae176',
     borderTopRightRadius: 200,
     borderTopLeftRadius: 100,
     transform: [{ rotate: '-5deg' }],
@@ -168,7 +263,7 @@ const styles = StyleSheet.create({
     left: -20,
     width: width * 1.5,
     height: 100,
-    backgroundColor: '#ffffff', // main white background coming up
+    backgroundColor: '#ffffff',
     borderTopRightRadius: 200,
     borderTopLeftRadius: 150,
     transform: [{ rotate: '3deg' }],
@@ -177,7 +272,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     paddingHorizontal: 32,
-    paddingTop: 24,
+    paddingTop: 16,
     justifyContent: 'center',
     paddingBottom: 24,
     zIndex: 2,
@@ -188,56 +283,142 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#161d16', // on-surface
-    marginBottom: 32,
+    color: '#161d16',
+    marginBottom: 24,
     letterSpacing: -0.5,
   },
   inputWrapper: {
-    marginBottom: 20,
+    marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#f3fcef', // surface
+    backgroundColor: '#f3fcef',
     borderWidth: 1,
-    borderColor: '#dce5d9', // surface-variant
+    borderColor: '#dce5d9',
   },
   input: {
     backgroundColor: 'transparent',
     fontSize: 16,
-    height: 64,
+    height: 60,
     paddingHorizontal: 8,
   },
   buttonPrimary: {
-    backgroundColor: '#515f74', // secondary (slate-gray)
-    borderRadius: 12, // rounded-md
-    height: 60,
+    backgroundColor: '#006e2f',
+    borderRadius: 12,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 20,
     elevation: 3,
-    shadowColor: '#515f74',
+    shadowColor: '#006e2f',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
   buttonDisabled: {
-    backgroundColor: '#bccbb9', // outline-variant
+    backgroundColor: '#bccbb9',
     elevation: 0,
     shadowOpacity: 0,
   },
   buttonText: {
-    color: '#ffffff', // on-secondary
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 1,
   },
+  serverConfigBtn: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#f0f5ee',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e1eade',
+  },
+  serverConfigLabel: {
+    fontSize: 12,
+    color: '#556255',
+    marginRight: 6,
+    fontWeight: '600',
+  },
+  serverConfigVal: {
+    fontSize: 12,
+    color: '#006e2f',
+    fontWeight: '700',
+    maxWidth: '70%',
+  },
   errorText: {
-    color: '#ba1a1a', // error
-    marginBottom: 20,
+    color: '#ba1a1a',
+    marginBottom: 16,
     fontWeight: '600',
     fontSize: 14,
-    backgroundColor: '#ffdad6', // error-container
+    backgroundColor: '#ffdad6',
     padding: 12,
     borderRadius: 8,
     overflow: 'hidden',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    elevation: 6,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#161d16',
+    marginBottom: 8,
+  },
+  modalDesc: {
+    fontSize: 13,
+    color: '#556255',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  modalResetBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#f1f3f1',
+    borderRadius: 8,
+  },
+  modalResetText: {
+    fontSize: 13,
+    color: '#ba1a1a',
+    fontWeight: '600',
+  },
+  modalCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  modalCancelText: {
+    fontSize: 14,
+    color: '#556255',
+    fontWeight: '600',
+  },
+  modalSaveBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: '#006e2f',
+    borderRadius: 8,
+  },
+  modalSaveText: {
+    fontSize: 14,
+    color: '#ffffff',
+    fontWeight: '700',
   },
 });

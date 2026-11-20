@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/auth.store';
 import Geolocation from 'react-native-geolocation-service';
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL, getApiBaseUrl } from './api';
 import { queryClient } from './queryClient';
 import {
   displayShiftReminderNow,
@@ -23,8 +23,10 @@ class SocketService {
       this.socket = null;
     }
 
-    this.socket = io(API_BASE_URL, {
+    const currentUrl = getApiBaseUrl();
+    this.socket = io(currentUrl, {
       auth: { token },
+      transports: ['websocket', 'polling'],
     });
 
     this.socket.on('connect', () => {
@@ -108,6 +110,14 @@ class SocketService {
       clearInterval(this.locationInterval);
       this.locationInterval = null;
     }
+  }
+
+  reconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+    this.connect();
   }
 
   emitLocationNow(lat: number, lng: number, akurasi = 0) {

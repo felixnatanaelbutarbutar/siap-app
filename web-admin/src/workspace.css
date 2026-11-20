@@ -226,9 +226,11 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   margin-top: 16px;
+  -webkit-overflow-scrolling: touch;
 }
 .workspace-table {
   width: 100%;
+  min-width: 680px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 13px;

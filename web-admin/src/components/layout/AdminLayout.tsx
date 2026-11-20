@@ -86,7 +86,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div
-      className="min-h-screen flex flex-col md:flex-row"
+      className="min-h-screen flex flex-col md:flex-row w-full max-w-full overflow-x-hidden"
       style={{ background: "var(--bg-base)" }}
     >
       {/* Mobile Header */}
@@ -328,8 +328,8 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 md:ml-60 flex flex-col min-w-0">
-        <div className="flex-1 p-4 md:p-7 xl:p-8 overflow-auto">{children}</div>
+      <main className="flex-1 md:ml-60 flex flex-col min-w-0 w-full max-w-full overflow-x-hidden">
+        <div className="flex-1 p-3.5 sm:p-5 md:p-7 xl:p-8 min-w-0 max-w-full">{children}</div>
       </main>
 
       <ConfirmModal

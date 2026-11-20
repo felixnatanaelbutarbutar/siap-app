@@ -117,56 +117,58 @@ function JadwalPage() {
           {staffLoading ? (
             <div className="p-12 text-center text-sm" style={{ color: 'var(--text-dim)' }}>Memuat daftar staff...</div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr>{['Pilih Staff', 'Divisi', 'Status Akun', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {filteredStaff?.map((s: any) => (
-                  <tr key={s.id} 
-                    className="cursor-pointer transition-colors"
-                    onClick={() => navigate({ to: '/jadwal/$staffId', params: { staffId: s.id } })}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} 
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <td style={tdStyle}>
-                      <div className="flex items-center gap-3">
-                        {s.foto_profil ? (
-                          <img src={s.foto_profil} alt="" className="w-10 h-10 rounded-full object-cover" style={{ border: '1px solid var(--border)' }} />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
-                            style={{ background: 'rgba(30,215,96,0.15)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}>
-                            {s.nama?.charAt(0)}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[650px]">
+                <thead>
+                  <tr>{['Pilih Staff', 'Divisi', 'Status Akun', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {filteredStaff?.map((s: any) => (
+                    <tr key={s.id} 
+                      className="cursor-pointer transition-colors"
+                      onClick={() => navigate({ to: '/jadwal/$staffId', params: { staffId: s.id } })}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} 
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <td style={tdStyle}>
+                        <div className="flex items-center gap-3">
+                          {s.foto_profil ? (
+                            <img src={s.foto_profil} alt="" className="w-10 h-10 rounded-full object-cover" style={{ border: '1px solid var(--border)' }} />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+                              style={{ background: 'rgba(30,215,96,0.15)', color: 'var(--accent)', border: '1px solid var(--accent)30' }}>
+                              {s.nama?.charAt(0)}
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-bold text-sm" style={{ color: 'var(--text-base)' }}>{s.nama}</p>
+                            <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)', fontFamily: 'monospace' }}>NIK: {s.nik}</p>
                           </div>
-                        )}
-                        <div>
-                          <p className="font-bold text-sm" style={{ color: 'var(--text-base)' }}>{s.nama}</p>
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)', fontFamily: 'monospace' }}>NIK: {s.nik}</p>
                         </div>
-                      </div>
-                    </td>
-                    <td style={tdStyle}>
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'var(--bg-input)', color: 'var(--text-secondary)' }}>
-                        {s.divisi.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: s.aktif ? 'rgba(30,215,96,0.12)' : 'rgba(243,114,127,0.12)', color: s.aktif ? 'var(--accent)' : 'var(--error)' }}>
-                        {s.aktif ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase transition-colors" style={{ color: 'var(--accent)', letterSpacing: '0.5px' }}>
-                        Atur Jadwal <ArrowRight className="w-4 h-4" />
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {(!filteredStaff || filteredStaff.length === 0) && (
-                  <tr><td colSpan={4} style={{ ...tdStyle, textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>Tidak ada staff ditemukan</td></tr>
-                )}
-              </tbody>
-            </table>
+                      </td>
+                      <td style={tdStyle}>
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'var(--bg-input)', color: 'var(--text-secondary)' }}>
+                          {s.divisi.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: s.aktif ? 'rgba(30,215,96,0.12)' : 'rgba(243,114,127,0.12)', color: s.aktif ? 'var(--accent)' : 'var(--error)' }}>
+                          {s.aktif ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase transition-colors" style={{ color: 'var(--accent)', letterSpacing: '0.5px' }}>
+                          Atur Jadwal <ArrowRight className="w-4 h-4" />
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {(!filteredStaff || filteredStaff.length === 0) && (
+                    <tr><td colSpan={4} style={{ ...tdStyle, textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>Tidak ada staff ditemukan</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -176,42 +178,44 @@ function JadwalPage() {
           {rekapLoading ? (
             <div className="p-12 text-center text-sm" style={{ color: 'var(--text-dim)' }}>Memuat rekap...</div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr>{['Staff', 'Jadwal (Hari)', 'Total Kehadiran', 'Jam Aktual', 'Terjadwal', 'Terlambat', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {filteredRekap?.map((r: any) => (
-                  <tr key={r.staff_id} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={tdStyle}>
-                      <p className="font-bold" style={{ color: 'var(--text-base)' }}>{r.nama}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{r.divisi.replace('_', ' ')}</p>
-                    </td>
-                    <td style={tdStyle}>{r.total_jadwal_hari} Hari</td>
-                    <td style={tdStyle}>{r.total_kehadiran} Hari</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', color: 'var(--accent)', fontSize: 14 }}>{r.total_jam_aktual} Jam</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace' }}>{r.total_jam_kerja_terjadwal} Jam</td>
-                    <td style={tdStyle}>
-                      {r.total_terlambat > 0 ? (
-                        <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit" style={{ background: 'rgba(243,114,127,0.12)', color: 'var(--error)' }}>
-                          <AlertTriangle className="w-3 h-3" /> {r.total_terlambat} Kali
-                        </span>
-                      ) : (
-                        <span className="text-xs font-semibold" style={{ color: 'var(--text-dim)' }}>0</span>
-                      )}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      {r.total_terlambat > 0 && (
-                        <button onClick={() => window.location.assign(`/rekap?tab=attendance&status=TERLAMBAT&q=${encodeURIComponent(r.nama)}&from=${filterTahun}-${String(filterBulan).padStart(2,'0')}-01&to=${filterTahun}-${String(filterBulan).padStart(2,'0')}-${new Date(Number(filterTahun),Number(filterBulan),0).getDate()}`)} className="text-xs font-bold uppercase hover:underline" style={{ color: 'var(--info)', background: 'none', border: 'none', cursor: 'pointer' }}>Detail</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {(!filteredRekap || filteredRekap.length === 0) && (
-                  <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>Tidak ada rekap</td></tr>
-                )}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[780px]">
+                <thead>
+                  <tr>{['Staff', 'Jadwal (Hari)', 'Total Kehadiran', 'Jam Aktual', 'Terjadwal', 'Terlambat', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {filteredRekap?.map((r: any) => (
+                    <tr key={r.staff_id} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <td style={tdStyle}>
+                        <p className="font-bold" style={{ color: 'var(--text-base)' }}>{r.nama}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{r.divisi.replace('_', ' ')}</p>
+                      </td>
+                      <td style={tdStyle}>{r.total_jadwal_hari} Hari</td>
+                      <td style={tdStyle}>{r.total_kehadiran} Hari</td>
+                      <td style={{ ...tdStyle, fontFamily: 'monospace', color: 'var(--accent)', fontSize: 14 }}>{r.total_jam_aktual} Jam</td>
+                      <td style={{ ...tdStyle, fontFamily: 'monospace' }}>{r.total_jam_kerja_terjadwal} Jam</td>
+                      <td style={tdStyle}>
+                        {r.total_terlambat > 0 ? (
+                          <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit" style={{ background: 'rgba(243,114,127,0.12)', color: 'var(--error)' }}>
+                            <AlertTriangle className="w-3 h-3" /> {r.total_terlambat} Kali
+                          </span>
+                        ) : (
+                          <span className="text-xs font-semibold" style={{ color: 'var(--text-dim)' }}>0</span>
+                        )}
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>
+                        {r.total_terlambat > 0 && (
+                          <button onClick={() => window.location.assign(`/rekap?tab=attendance&status=TERLAMBAT&q=${encodeURIComponent(r.nama)}&from=${filterTahun}-${String(filterBulan).padStart(2,'0')}-01&to=${filterTahun}-${String(filterBulan).padStart(2,'0')}-${new Date(Number(filterTahun),Number(filterBulan),0).getDate()}`)} className="text-xs font-bold uppercase hover:underline" style={{ color: 'var(--info)', background: 'none', border: 'none', cursor: 'pointer' }}>Detail</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {(!filteredRekap || filteredRekap.length === 0) && (
+                    <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>Tidak ada rekap</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

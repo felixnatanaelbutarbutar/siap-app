@@ -30,6 +30,7 @@ logs/
 # Mobile
 mobile/android/.gradle/
 mobile/android/app/build/
+mobile/android/local.properties
 mobile/ios/Pods/
 mobile/ios/build/
 
@@ -40,6 +41,13 @@ infra/.env
 # Local caches & agent settings
 .tanstack/
 .claude/
+
+# Binary executables, app packages, and latex aux files
+*.exe
+*.apk
+*.aux
+*.out
+*.toc
 
 # Firebase local credentials and project configuration
 backend/serviceAccountKey.json

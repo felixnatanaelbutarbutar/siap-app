@@ -271,7 +271,8 @@ export function LaporanPage({
               border: "1px solid var(--border)",
             }}
           >
-            <table className="w-full">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[760px]">
               <thead>
                 <tr>
                   {[
@@ -395,6 +396,7 @@ export function LaporanPage({
             </table>
           </div>
         </div>
+      </div>
       )}
 
       {activeTab === "PER_JAM" && (

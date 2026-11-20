@@ -132,79 +132,81 @@ function SerahTerimaPage() {
             border: "1px solid var(--border)",
           }}
         >
-          <table className="w-full">
-            <thead>
-              <tr>
-                {["Tanggal", "Menyerahkan", "Menerima", "Divisi", "Status"].map(
-                  (h) => (
-                    <th key={h} style={thStyle}>
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {listBast?.map((bast: any) => (
-                <tr
-                  key={bast.id}
-                  className="cursor-pointer transition-colors"
-                  onClick={() => setSelectedBast(bast)}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "var(--bg-hover)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  <td style={tdStyle}>
-                    {format(
-                      new Date(bast.created_at || bast.tanggal),
-                      "dd MMM yyyy, HH:mm",
-                    )}
-                  </td>
-                  <td style={tdStyle}>
-                    {bast.staff_lama?.nama || bast.staffLama}
-                  </td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      color: "var(--text-base)",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {bast.staff_baru?.nama || bast.staffBaru}
-                  </td>
-                  <td style={tdStyle}>
-                    {bast.staff_lama?.divisi || bast.divisi}
-                  </td>
-                  <td style={tdStyle}>
-                    <StatusBadge
-                      status={
-                        bast.status ||
-                        (bast.ada_masalah ? "BERMASALAH" : "LENGKAP")
-                      }
-                    />
-                  </td>
-                </tr>
-              ))}
-              {(!listBast || listBast.length === 0) && (
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[700px]">
+              <thead>
                 <tr>
-                  <td
-                    colSpan={5}
-                    style={{
-                      ...tdStyle,
-                      textAlign: "center",
-                      padding: "40px 20px",
-                      color: "var(--text-dim)",
-                    }}
-                  >
-                    Belum ada data serah terima
-                  </td>
+                  {["Tanggal", "Menyerahkan", "Menerima", "Divisi", "Status"].map(
+                    (h) => (
+                      <th key={h} style={thStyle}>
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {listBast?.map((bast: any) => (
+                  <tr
+                    key={bast.id}
+                    className="cursor-pointer transition-colors"
+                    onClick={() => setSelectedBast(bast)}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "var(--bg-hover)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
+                  >
+                    <td style={tdStyle}>
+                      {format(
+                        new Date(bast.created_at || bast.tanggal),
+                        "dd MMM yyyy, HH:mm",
+                      )}
+                    </td>
+                    <td style={tdStyle}>
+                      {bast.staff_lama?.nama || bast.staffLama}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        color: "var(--text-base)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {bast.staff_baru?.nama || bast.staffBaru}
+                    </td>
+                    <td style={tdStyle}>
+                      {bast.staff_lama?.divisi || bast.divisi}
+                    </td>
+                    <td style={tdStyle}>
+                      <StatusBadge
+                        status={
+                          bast.status ||
+                          (bast.ada_masalah ? "BERMASALAH" : "LENGKAP")
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {(!listBast || listBast.length === 0) && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      style={{
+                        ...tdStyle,
+                        textAlign: "center",
+                        padding: "40px 20px",
+                        color: "var(--text-dim)",
+                      }}
+                    >
+                      Belum ada data serah terima
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -231,90 +233,92 @@ function SerahTerimaPage() {
               ⚠ Inventaris Bermasalah
             </span>
           </div>
-          <table className="w-full">
-            <thead>
-              <tr>
-                {["Barang", "Kondisi", "Divisi", "Tanggal", "Petugas"].map(
-                  (h) => (
-                    <th key={h} style={thStyle}>
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {listInv?.map((inv: any, i: number) => (
-                <tr
-                  key={inv.id || i}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(243,114,127,0.05)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  <td
-                    style={{
-                      ...tdStyle,
-                      color: "var(--error)",
-                      fontWeight: 600,
-                    }}
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr>
+                  {["Barang", "Kondisi", "Divisi", "Tanggal", "Petugas"].map(
+                    (h) => (
+                      <th key={h} style={thStyle}>
+                        {h}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {listInv?.map((inv: any, i: number) => (
+                  <tr
+                    key={inv.id || i}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(243,114,127,0.05)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
                   >
-                    {inv.barang || inv.nama}
-                  </td>
-                  <td style={tdStyle}>
-                    <span
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                    <td
                       style={{
-                        background: "rgba(243,114,127,0.12)",
+                        ...tdStyle,
                         color: "var(--error)",
+                        fontWeight: 600,
                       }}
                     >
-                      {inv.kondisi}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>{inv.divisi}</td>
-                  <td style={tdStyle}>
-                    {inv.tanggal
-                      ? format(new Date(inv.tanggal), "dd MMM yyyy")
-                      : "-"}
-                  </td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    {inv.staffLama || "-"}{" "}
-                    <ArrowRight
-                      className="w-3 h-3"
-                      style={{ color: "var(--text-dim)" }}
-                    />{" "}
-                    {inv.staffBaru || "-"}
-                  </td>
-                </tr>
-              ))}
-              {(!listInv || listInv.length === 0) && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    style={{
-                      ...tdStyle,
-                      textAlign: "center",
-                      padding: "40px 20px",
-                      color: "var(--text-dim)",
-                    }}
-                  >
-                    Tidak ada inventaris bermasalah
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      {inv.barang || inv.nama}
+                    </td>
+                    <td style={tdStyle}>
+                      <span
+                        className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                        style={{
+                          background: "rgba(243,114,127,0.12)",
+                          color: "var(--error)",
+                        }}
+                      >
+                        {inv.kondisi}
+                      </span>
+                    </td>
+                    <td style={tdStyle}>{inv.divisi}</td>
+                    <td style={tdStyle}>
+                      {inv.tanggal
+                        ? format(new Date(inv.tanggal), "dd MMM yyyy")
+                        : "-"}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {inv.staffLama || "-"}{" "}
+                      <ArrowRight
+                        className="w-3 h-3"
+                        style={{ color: "var(--text-dim)" }}
+                      />{" "}
+                      {inv.staffBaru || "-"}
+                    </td>
+                  </tr>
+                ))}
+                {(!listInv || listInv.length === 0) && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      style={{
+                        ...tdStyle,
+                        textAlign: "center",
+                        padding: "40px 20px",
+                        color: "var(--text-dim)",
+                      }}
+                    >
+                      Tidak ada inventaris bermasalah
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

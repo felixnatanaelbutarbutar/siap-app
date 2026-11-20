@@ -362,107 +362,109 @@ export function AbsensiPage({
               border: "1px solid var(--border)",
             }}
           >
-            <table className="w-full">
-              <thead>
-                <tr>
-                  {[
-                    "Nama",
-                    "Divisi",
-                    "Masuk",
-                    "Istirahat",
-                    "Keluar",
-                    "Total",
-                    "Status",
-                    "",
-                  ].map((h) => (
-                    <th key={h} style={thStyle}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {logs?.map((log: any) => (
-                  <tr
-                    key={log.id}
-                    className="transition-colors"
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "var(--bg-hover)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "transparent")
-                    }
-                  >
-                    <td
-                      style={{
-                        ...tdStyle,
-                        color: "var(--text-base)",
-                        fontWeight: 600,
-                      }}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[760px]">
+                <thead>
+                  <tr>
+                    {[
+                      "Nama",
+                      "Divisi",
+                      "Masuk",
+                      "Istirahat",
+                      "Keluar",
+                      "Total",
+                      "Status",
+                      "",
+                    ].map((h) => (
+                      <th key={h} style={thStyle}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs?.map((log: any) => (
+                    <tr
+                      key={log.id}
+                      className="transition-colors"
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "var(--bg-hover)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
                     >
-                      {log.nama}
-                    </td>
-                    <td style={tdStyle}>
-                      <DivisiBadge divisi={log.divisi} />
-                    </td>
-                    <td style={{ ...tdStyle, fontFamily: "monospace" }}>
-                      {log.masuk}
-                    </td>
-                    <td style={{ ...tdStyle, fontFamily: "monospace" }}>
-                      {log.istirahat}
-                    </td>
-                    <td style={{ ...tdStyle, fontFamily: "monospace" }}>
-                      {log.keluar}
-                    </td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        color: "var(--text-base)",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {log.total}
-                    </td>
-                    <td style={tdStyle}>
-                      <StatusBadge status={log.status} />
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: "right" }}>
-                      <button
-                        onClick={() => setSelectedRow(log)}
+                      <td
                         style={{
-                          color: "var(--accent)",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: 4,
+                          ...tdStyle,
+                          color: "var(--text-base)",
+                          fontWeight: 600,
                         }}
                       >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {(!logs || logs.length === 0) && (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      style={{
-                        ...tdStyle,
-                        textAlign: "center",
-                        padding: "40px 20px",
-                        color: "var(--text-dim)",
-                      }}
-                    >
-                      {loadingDaily
-                        ? "Memuat absensi…"
-                        : errorDaily
-                          ? "Data belum tersedia karena koneksi gagal."
-                          : "Tidak ada data absensi untuk tanggal ini"}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        {log.nama}
+                      </td>
+                      <td style={tdStyle}>
+                        <DivisiBadge divisi={log.divisi} />
+                      </td>
+                      <td style={{ ...tdStyle, fontFamily: "monospace" }}>
+                        {log.masuk}
+                      </td>
+                      <td style={{ ...tdStyle, fontFamily: "monospace" }}>
+                        {log.istirahat}
+                      </td>
+                      <td style={{ ...tdStyle, fontFamily: "monospace" }}>
+                        {log.keluar}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          color: "var(--text-base)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {log.total}
+                      </td>
+                      <td style={tdStyle}>
+                        <StatusBadge status={log.status} />
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: "right" }}>
+                        <button
+                          onClick={() => setSelectedRow(log)}
+                          style={{
+                            color: "var(--accent)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 4,
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {(!logs || logs.length === 0) && (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        style={{
+                          ...tdStyle,
+                          textAlign: "center",
+                          padding: "40px 20px",
+                          color: "var(--text-dim)",
+                        }}
+                      >
+                        {loadingDaily
+                          ? "Memuat absensi…"
+                          : errorDaily
+                            ? "Data belum tersedia karena koneksi gagal."
+                            : "Tidak ada data absensi untuk tanggal ini"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -561,47 +563,49 @@ export function AbsensiPage({
                 border: "1px solid var(--border)",
               }}
             >
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    {["Nama", "Hadir", "Jam Kerja", "Rata-rata"].map((h) => (
-                      <th key={h} style={thStyle}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats?.tableData?.map((row: any) => (
-                    <tr
-                      key={row.staff_id || row.id}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "var(--bg-hover)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                    >
-                      <td
-                        style={{
-                          ...tdStyle,
-                          color: "var(--text-base)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {row.nama}
-                      </td>
-                      <td style={tdStyle}>{row.total_hadir || row.hadir}</td>
-                      <td style={tdStyle}>
-                        {row.total_jam_kerja || row.jamKerja}h
-                      </td>
-                      <td style={tdStyle}>
-                        {row.rata_jam_per_hari || row.rataRata}h/hari
-                      </td>
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[550px]">
+                  <thead>
+                    <tr>
+                      {["Nama", "Hadir", "Jam Kerja", "Rata-rata"].map((h) => (
+                        <th key={h} style={thStyle}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {stats?.tableData?.map((row: any) => (
+                      <tr
+                        key={row.staff_id || row.id}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "var(--bg-hover)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                      >
+                        <td
+                          style={{
+                            ...tdStyle,
+                            color: "var(--text-base)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {row.nama}
+                        </td>
+                        <td style={tdStyle}>{row.total_hadir || row.hadir}</td>
+                        <td style={tdStyle}>
+                          {row.total_jam_kerja || row.jamKerja}h
+                        </td>
+                        <td style={tdStyle}>
+                          {row.rata_jam_per_hari || row.rataRata}h/hari
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div
               className="p-5 rounded-xl"

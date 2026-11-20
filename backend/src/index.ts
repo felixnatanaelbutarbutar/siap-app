@@ -6,11 +6,14 @@ import deviceRoutes from './routes/device.routes';
 import workforceRoutes from './routes/workforce.routes';
 import express from 'express';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cron from 'node-cron';
 
+import { downloadFile } from './services/storage.service';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
@@ -50,6 +53,29 @@ app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) }
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'SIAP Backend' });
+});
+
+// ─── Storage Proxy & APK Download (untuk Demo & Tunnel Internet) ──────────────
+app.get('/storage/:bucket/*', async (req, res) => {
+  try {
+    const objectKey = (req.params as any)[0];
+    const buffer = await downloadFile(objectKey);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(buffer);
+  } catch {
+    res.status(404).json({ success: false, message: 'File tidak ditemukan' });
+  }
+});
+
+app.get('/download/siap.apk', (_req, res) => {
+  const rootApk = path.resolve(__dirname, '../../SIAP_Aplikasi_Mobile.apk');
+  const releaseApk = path.resolve(__dirname, '../../mobile/android/app/build/outputs/apk/release/app-release.apk');
+  const target = fs.existsSync(rootApk) ? rootApk : releaseApk;
+  if (fs.existsSync(target)) {
+    res.download(target, 'SIAP_Aplikasi_Mobile.apk');
+  } else {
+    res.status(404).send('Berkas APK belum siap.');
+  }
 });
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
